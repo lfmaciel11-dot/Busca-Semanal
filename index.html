@@ -223,9 +223,12 @@
   .area-card[data-area="cond"]      h3 .area-name{color:var(--area-cond)}
 
   /* ── Query blocks ────────────────────────────────────────────────────────── */
+  .query-wrap{margin:6px 0}
   .query{
-    background:var(--panel2);border:1px solid var(--border);border-radius:8px;
-    padding:11px 70px 11px 12px;margin:6px 0;
+    background:var(--panel2);border:1px solid var(--border);
+    border-bottom:none;
+    border-radius:8px 8px 0 0;
+    padding:11px 70px 11px 12px;
     font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;
     color:var(--ink);position:relative;cursor:pointer;transition:.15s;line-height:1.5
   }
@@ -240,6 +243,26 @@
   .query:hover .copy{border-color:var(--muted);color:var(--muted)}
   .query.copied{border-color:var(--ok)}
   .query.copied .copy{color:var(--ok);border-color:var(--ok)}
+
+  /* ── Barra de ação abaixo de cada query ─────────────────────────────────── */
+  .query-actions{
+    display:flex;align-items:center;gap:0;
+    border:1px solid var(--border);border-radius:0 0 8px 8px;
+    overflow:hidden;background:var(--panel)
+  }
+  .query-wrap:hover .query-actions{border-color:var(--dim)}
+  .query-wrap:hover .query{border-color:var(--dim)}
+  .q-btn{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:5px;
+    padding:6px 10px;font-size:11px;font-weight:600;
+    background:none;border:none;cursor:pointer;transition:.15s;
+    text-decoration:none;color:var(--muted);letter-spacing:.2px
+  }
+  .q-btn:not(:last-child){border-right:1px solid var(--border)}
+  .q-btn:hover{background:var(--panel2);color:var(--ink)}
+  .q-btn.jus{color:#E8820A}
+  .q-btn.jus:hover{background:#E8820A;color:#fff}
+  .q-btn.jus .jus-logo{font-weight:800;font-style:italic;font-family:serif}
   .qlabel{
     font-size:11px;color:var(--muted);margin:12px 0 4px;
     font-weight:700;text-transform:uppercase;letter-spacing:.7px;
@@ -615,8 +638,35 @@ AREAS.forEach(a => {
     };
     d.onclick = doCopy;
     d.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); doCopy(); } };
+
+    // Barra de ação: copiar + abrir no JusBrasil
+    const actions = document.createElement("div");
+    actions.className = "query-actions";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "q-btn";
+    copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/></svg> Copiar termo`;
+    copyBtn.onclick = e => { e.stopPropagation(); doCopy(); };
+
+    const jusUrl = `https://www.jusbrasil.com.br/busca?q=${encodeURIComponent(qq.q)}`;
+    const jusBtn = document.createElement("a");
+    jusBtn.className = "q-btn jus";
+    jusBtn.href = jusUrl;
+    jusBtn.target = "_blank";
+    jusBtn.rel = "noopener";
+    jusBtn.innerHTML = `<span class="jus-logo">Jus</span>brasil →`;
+
+    actions.appendChild(copyBtn);
+    actions.appendChild(jusBtn);
+
+    // Agrupa query + ações num wrapper
+    const wrap = document.createElement("div");
+    wrap.className = "query-wrap";
+    wrap.appendChild(d);
+    wrap.appendChild(actions);
+
     card.appendChild(lbl);
-    card.appendChild(d);
+    card.appendChild(wrap);
   });
 
   bc.appendChild(card);
