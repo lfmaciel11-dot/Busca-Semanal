@@ -6,6 +6,9 @@
 <meta name="description" content="Painel de monitoramento jurídico semanal — TJSP, STJ, STF. Jurisprudência e legislação federal em 6 áreas de prática.">
 <title>Painel de Monitoramento Jurídico</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+<!-- Bibliotecas de exportação -->
+<script src="https://unpkg.com/docx@8/build/index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   /* ── Temas ──────────────────────────────────────────────────────────────── */
   :root {
@@ -111,6 +114,30 @@
   .action-btn:hover{border-color:var(--accent);color:var(--ink)}
   .action-btn.export{border-color:var(--accent2);color:var(--accent2)}
   .action-btn.export:hover{background:var(--accent2);color:#fff}
+
+  /* ── Menu de formato de exportação ─────────────────────────────────────── */
+  .export-group{position:relative;display:inline-block}
+  .export-group .export-menu{
+    display:none;position:absolute;bottom:calc(100% + 6px);left:0;
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    box-shadow:var(--shadow);z-index:20;min-width:160px;overflow:hidden
+  }
+  .export-group.open .export-menu{display:block}
+  .export-menu button{
+    display:block;width:100%;text-align:left;background:none;
+    border:none;color:var(--ink);padding:10px 14px;font-size:13px;
+    cursor:pointer;transition:.12s;border-bottom:1px solid var(--border)
+  }
+  .export-menu button:last-child{border-bottom:none}
+  .export-menu button:hover{background:var(--panel2);color:var(--accent)}
+  .export-menu button .fmt-badge{
+    font-size:10px;padding:1px 6px;border-radius:6px;margin-left:6px;
+    text-transform:uppercase;letter-spacing:.4px;font-weight:700
+  }
+  .fmt-docx{background:#1a3a6a;color:#90c0ff}
+  .fmt-pdf{background:#3a1a1a;color:#ff9090}
+  [data-theme="light"] .fmt-docx{background:#cce0ff;color:#1a4090}
+  [data-theme="light"] .fmt-pdf{background:#ffd5d5;color:#900}
 
   /* ── Layout ──────────────────────────────────────────────────────────────── */
   .twocol{display:grid;grid-template-columns:1fr 1fr;gap:18px}
@@ -484,81 +511,243 @@ function buildCheck(elId, title, items) {
     updateProgress();
   };
 
-  const exportBtn = document.createElement("button");
-  exportBtn.className = "action-btn export";
-  exportBtn.textContent = "Exportar .txt";
-  exportBtn.onclick = () => exportChecklist(elId, title, items);
-
   actions.appendChild(resetBtn);
-  actions.appendChild(exportBtn);
+  actions.appendChild(makeExportGroup(
+    "Exportar coluna",
+    fmt => exportChecklist(elId, title, items, fmt)
+  ));
   el.appendChild(actions);
 
   updateProgress();
 }
 
-function exportChecklist(elId, title, items) {
-  const checks = loadChecks();
-  const date   = new Date().toLocaleDateString("pt-BR");
-  const lines  = [
-    `Painel de Monitoramento Jurídico`,
-    `Checklist — ${title}`,
-    `Semana: ${currentWeek}  |  Exportado em: ${date}`,
-    "─".repeat(50),
-    ""
-  ];
-  items.forEach((it, i) => {
-    const key  = `${elId}-${i}`;
-    const mark = checks[key] ? "[✓]" : "[ ]";
-    lines.push(`${mark}  ${it[0]}  (${it[1]})`);
-  });
-  lines.push("", "─".repeat(50));
-
-  const blob = new Blob([lines.join("\n")], {type:"text/plain;charset=utf-8"});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href     = url;
-  a.download = `checklist-juridico-${currentWeek}-${elId}.txt`;
+/* ── Helpers de download ────────────────────────────────────────────────── */
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a   = Object.assign(document.createElement("a"), {href: url, download: filename});
   a.click();
   URL.revokeObjectURL(url);
 }
 
-function exportAll() {
+/* ── Botão de exportação com menu de formato ────────────────────────────── */
+function makeExportGroup(label, onFormat) {
+  const group = document.createElement("div");
+  group.className = "export-group";
+
+  const btn = document.createElement("button");
+  btn.className = "action-btn export";
+  btn.innerHTML = `${label} ▾`;
+  btn.setAttribute("aria-haspopup", "true");
+  btn.onclick = e => {
+    e.stopPropagation();
+    document.querySelectorAll(".export-group.open").forEach(g => { if (g !== group) g.classList.remove("open"); });
+    group.classList.toggle("open");
+  };
+
+  const menu = document.createElement("div");
+  menu.className = "export-menu";
+  menu.setAttribute("role", "menu");
+
+  [
+    {fmt:"docx", label:"Word (.docx)",  cls:"fmt-docx"},
+    {fmt:"pdf",  label:"PDF (.pdf)",    cls:"fmt-pdf"}
+  ].forEach(({fmt, label: lbl, cls}) => {
+    const item = document.createElement("button");
+    item.setAttribute("role", "menuitem");
+    item.innerHTML = `${lbl} <span class="fmt-badge ${cls}">${fmt}</span>`;
+    item.onclick = () => { group.classList.remove("open"); onFormat(fmt); };
+    menu.appendChild(item);
+  });
+
+  group.appendChild(btn);
+  group.appendChild(menu);
+  return group;
+}
+
+document.addEventListener("click", () => {
+  document.querySelectorAll(".export-group.open").forEach(g => g.classList.remove("open"));
+});
+
+/* ── Geração de dados para exportação ───────────────────────────────────── */
+function buildExportRows(items, elId) {
   const checks = loadChecks();
-  const date   = new Date().toLocaleDateString("pt-BR");
-  const lines  = [
-    `Painel de Monitoramento Jurídico`,
-    `Checklist Completo — Semana ${currentWeek}`,
-    `Exportado em: ${date}`,
-    "═".repeat(50),
-    ""
+  return items.map((it, i) => ({
+    label:    it[0],
+    category: it[1],
+    done:     !!checks[`${elId}-${i}`]
+  }));
+}
+
+function buildAllExportGroups() {
+  const checks = loadChecks();
+  return [
+    {title: "Fontes a verificar", rows: FONTES_ITEMS.map((it, i) => ({label: it[0], category: it[1], done: !!checks[`check-fontes-${i}`]}))},
+    {title: "Áreas cobertas",     rows: AREAS_ITEMS.map((it, i) => ({label: it[0], category: it[1], done: !!checks[`check-areas-${i}`]})) }
+  ];
+}
+
+/* ── Exportação .docx ───────────────────────────────────────────────────── */
+async function exportDocx(rows, title, filename) {
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = docx;
+
+  const date = new Date().toLocaleDateString("pt-BR");
+
+  const paragraphs = [
+    new Paragraph({
+      text: "Painel de Monitoramento Jurídico",
+      heading: HeadingLevel.HEADING_1,
+      alignment: AlignmentType.CENTER
+    }),
+    new Paragraph({
+      children: [new TextRun({text: title, bold: true, size: 26})],
+      alignment: AlignmentType.CENTER
+    }),
+    new Paragraph({
+      children: [new TextRun({text: `Semana: ${currentWeek}   |   Exportado em: ${date}`, color: "666666", size: 20})],
+      alignment: AlignmentType.CENTER,
+      spacing: {after: 300}
+    }),
   ];
 
-  const groups = {};
-  ALL_ITEMS_META.forEach(m => {
-    groups[m.elId] = groups[m.elId] || {title: m.elId === "check-fontes" ? "Fontes a verificar" : "Áreas cobertas", items: []};
-    groups[m.elId].items.push(m);
-  });
+  // Grupos (se vier array de grupos) ou lista simples
+  const groups = Array.isArray(rows[0]?.rows) ? rows : [{title: null, rows}];
 
-  Object.values(groups).forEach(g => {
-    lines.push(`▸ ${g.title}`);
-    g.items.forEach(m => {
-      const mark = checks[m.key] ? "[✓]" : "[ ]";
-      lines.push(`  ${mark}  ${m.label}  (${m.category})`);
+  groups.forEach(g => {
+    if (g.title) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun({text: g.title, bold: true, size: 24, color: "A07C10"})],
+        spacing: {before: 200, after: 80}
+      }));
+    }
+    g.rows.forEach(r => {
+      paragraphs.push(new Paragraph({
+        children: [
+          new TextRun({text: r.done ? "✓  " : "☐  ", bold: r.done, color: r.done ? "1A8A52" : "555555", size: 22}),
+          new TextRun({text: r.label, strike: r.done, size: 22, color: r.done ? "888888" : "1A2332"}),
+          new TextRun({text: `   (${r.category})`, size: 18, color: "999999"})
+        ],
+        spacing: {after: 60}
+      }));
     });
-    lines.push("");
   });
 
-  const done  = ALL_ITEMS_META.filter(m => checks[m.key]).length;
-  const total = ALL_ITEMS_META.length;
-  lines.push(`Progresso total: ${done}/${total} itens concluídos`);
+  // Progresso total no rodapé
+  const allRows = groups.flatMap(g => g.rows);
+  const done = allRows.filter(r => r.done).length;
+  paragraphs.push(new Paragraph({spacing: {before: 300}}));
+  paragraphs.push(new Paragraph({
+    children: [new TextRun({text: `Progresso: ${done}/${allRows.length} itens concluídos`, bold: true, size: 20, color: "1A8A52"})],
+    alignment: AlignmentType.RIGHT
+  }));
 
-  const blob = new Blob([lines.join("\n")], {type:"text/plain;charset=utf-8"});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href     = url;
-  a.download = `checklist-juridico-${currentWeek}-completo.txt`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const doc = new Document({sections: [{properties: {}, children: paragraphs}]});
+  const blob = await Packer.toBlob(doc);
+  triggerDownload(blob, filename);
+}
+
+/* ── Exportação .pdf ────────────────────────────────────────────────────── */
+function exportPdf(rows, title, filename) {
+  const { jsPDF } = window.jspdf;
+  const doc  = new jsPDF({orientation: "portrait", unit: "mm", format: "a4"});
+  const date = new Date().toLocaleDateString("pt-BR");
+  const PW   = 210; // largura A4
+  const M    = 20;  // margem
+  const CW   = PW - M * 2;
+  let y      = M;
+
+  const addPage = () => { doc.addPage(); y = M; };
+  const checkY  = (need = 8) => { if (y + need > 280) addPage(); };
+
+  // Título
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(160, 124, 16);
+  doc.text("Painel de Monitoramento Jurídico", PW / 2, y, {align: "center"});
+  y += 8;
+
+  doc.setFontSize(13);
+  doc.setTextColor(40, 40, 40);
+  doc.text(title, PW / 2, y, {align: "center"});
+  y += 6;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(120, 120, 120);
+  doc.text(`Semana: ${currentWeek}   |   Exportado em: ${date}`, PW / 2, y, {align: "center"});
+  y += 10;
+
+  // Linha separadora
+  doc.setDrawColor(200, 200, 200);
+  doc.line(M, y, PW - M, y);
+  y += 8;
+
+  const groups = Array.isArray(rows[0]?.rows) ? rows : [{title: null, rows}];
+
+  groups.forEach(g => {
+    if (g.title) {
+      checkY(10);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(160, 124, 16);
+      doc.text(g.title, M, y);
+      y += 7;
+    }
+    g.rows.forEach(r => {
+      checkY(7);
+      // Caixa do checkbox
+      doc.setDrawColor(r.done ? 26 : 150, r.done ? 138 : 150, r.done ? 82 : 150);
+      doc.setFillColor(r.done ? 26 : 255, r.done ? 138 : 255, r.done ? 82 : 255);
+      doc.roundedRect(M, y - 3.5, 4, 4, 0.5, 0.5, r.done ? "FD" : "S");
+      if (r.done) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7);
+        doc.setTextColor(255, 255, 255);
+        doc.text("✓", M + 0.7, y - 0.3);
+      }
+      // Texto
+      doc.setFont("helvetica", r.done ? "normal" : "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(r.done ? 150 : 30, r.done ? 150 : 35, r.done ? 150 : 50);
+      const lines = doc.splitTextToSize(r.label, CW - 12);
+      doc.text(lines, M + 7, y);
+      // Categoria
+      doc.setFontSize(8);
+      doc.setTextColor(160, 160, 160);
+      const labelW = doc.getTextWidth(lines[0]);
+      doc.text(`(${r.category})`, M + 7 + Math.min(labelW + 2, CW - 12 - 2), y);
+      y += lines.length * 5.5 + 1;
+    });
+    y += 3;
+  });
+
+  // Progresso
+  checkY(12);
+  doc.line(M, y, PW - M, y);
+  y += 6;
+  const allRows = groups.flatMap(g => g.rows);
+  const done    = allRows.filter(r => r.done).length;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(26, 138, 82);
+  doc.text(`Progresso: ${done}/${allRows.length} itens concluídos`, PW - M, y, {align: "right"});
+
+  doc.save(filename);
+}
+
+/* ── Despacho de formato ────────────────────────────────────────────────── */
+function exportChecklist(elId, title, items, fmt) {
+  const rows     = buildExportRows(items, elId);
+  const basename = `checklist-juridico-${currentWeek}-${elId}`;
+  if (fmt === "docx") exportDocx(rows, title, `${basename}.docx`);
+  else                exportPdf(rows, title, `${basename}.pdf`);
+}
+
+function exportAll(fmt) {
+  const groups   = buildAllExportGroups();
+  const basename = `checklist-juridico-${currentWeek}-completo`;
+  const title    = `Checklist Completo — Semana ${currentWeek}`;
+  if (fmt === "docx") exportDocx(groups, title, `${basename}.docx`);
+  else                exportPdf(groups, title, `${basename}.pdf`);
 }
 
 // Semana no subtítulo
@@ -569,13 +758,11 @@ buildCheck("check-fontes", "Fontes a verificar", FONTES_ITEMS);
 buildCheck("check-areas",  "Áreas cobertas",     AREAS_ITEMS);
 
 // Botão exportar tudo (abaixo das colunas)
-const checkSection = document.getElementById("checklist");
-const exportAllBtn = document.createElement("button");
-exportAllBtn.className = "action-btn export";
-exportAllBtn.style.cssText = "margin-top:16px;font-size:13px;padding:7px 16px";
-exportAllBtn.textContent = "Exportar checklist completo (.txt)";
-exportAllBtn.onclick = exportAll;
-checkSection.appendChild(exportAllBtn);
+const checkSection  = document.getElementById("checklist");
+const exportAllWrap = makeExportGroup("Exportar checklist completo", fmt => exportAll(fmt));
+exportAllWrap.style.cssText = "display:block;margin-top:18px";
+exportAllWrap.querySelector(".action-btn").style.cssText = "font-size:13px;padding:7px 18px";
+checkSection.appendChild(exportAllWrap);
 </script>
 </body>
 </html>
