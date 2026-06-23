@@ -7,90 +7,130 @@
 <title>Painel de Monitoramento Jurídico</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
 <style>
-  :root{
+  /* ── Temas ──────────────────────────────────────────────────────────────── */
+  :root {
     --bg:#0f1419; --panel:#1a212b; --panel2:#222c38; --border:#2e3a48;
     --ink:#e8eef4; --muted:#9aabbd; --accent:#c9a227; --accent2:#3d7eff;
     --ok:#2faa6e; --tag:#26323f;
+    --nav-bg:rgba(15,20,25,.96);
+    --alert-bg:#2a2218; --alert-border:#4a3a1c; --alert-ink:#e8d39a;
+    --shadow:0 2px 12px rgba(0,0,0,.35);
   }
+  [data-theme="light"] {
+    --bg:#f4f6f9; --panel:#ffffff; --panel2:#eef1f5; --border:#d0d8e4;
+    --ink:#1a2332; --muted:#5a6a7e; --accent:#a07c10; --accent2:#1a5fd4;
+    --ok:#1a8a52; --tag:#dde4ee;
+    --nav-bg:rgba(244,246,249,.96);
+    --alert-bg:#fdf6e3; --alert-border:#e0c96a; --alert-ink:#6b4e00;
+    --shadow:0 2px 12px rgba(0,0,0,.10);
+  }
+
+  /* ── Reset / base ───────────────────────────────────────────────────────── */
   *{box-sizing:border-box}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;transition:background .2s,color .2s}
 
-  /* Header */
+  /* ── Header ─────────────────────────────────────────────────────────────── */
   header{padding:28px 24px 18px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#141b24,#0f1419)}
-  header h1{margin:0 0 6px;font-size:24px;letter-spacing:.3px}
+  [data-theme="light"] header{background:linear-gradient(180deg,#dce4f0,#f4f6f9)}
+  header h1{margin:0 0 6px;font-size:24px;letter-spacing:.3px;color:var(--ink)}
   header p{margin:0;color:var(--muted);font-size:14px}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .header-left h1{margin:0 0 6px;font-size:24px;letter-spacing:.3px;color:var(--ink)}
+  .header-left p{margin:0;color:var(--muted);font-size:14px}
 
-  /* Nav */
-  nav{display:flex;gap:8px;flex-wrap:wrap;padding:16px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(15,20,25,.96);backdrop-filter:blur(6px);z-index:5}
+  /* ── Botão de tema ───────────────────────────────────────────────────────── */
+  #theme-btn{background:var(--panel);border:1px solid var(--border);color:var(--ink);padding:7px 13px;border-radius:20px;cursor:pointer;font-size:13px;white-space:nowrap;transition:.15s;flex-shrink:0}
+  #theme-btn:hover{border-color:var(--accent)}
+
+  /* ── Nav ─────────────────────────────────────────────────────────────────── */
+  nav{display:flex;gap:8px;flex-wrap:wrap;padding:16px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--nav-bg);backdrop-filter:blur(6px);z-index:5}
   nav button{background:var(--panel);color:var(--ink);border:1px solid var(--border);padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;transition:.15s}
   nav button:hover{border-color:var(--accent)}
   nav button.active{background:var(--accent);color:#1a1404;border-color:var(--accent);font-weight:600}
+  [data-theme="light"] nav button.active{color:#fff8e1}
   nav button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-  /* Sections */
+  /* ── Sections ────────────────────────────────────────────────────────────── */
   section{padding:26px 24px;max-width:1180px;margin:0 auto;display:none}
   section.active{display:block}
   h2{font-size:19px;margin:0 0 4px;color:var(--accent)}
   .sub{color:var(--muted);font-size:13px;margin:0 0 20px}
 
-  /* Cards / Grid */
+  /* ── Cards / Grid ────────────────────────────────────────────────────────── */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
   .card h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px}
   .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--tag);color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
   .b-jur{background:#1f3a2c;color:#7fe0a8}
   .b-leg{background:#2a2440;color:#c3b0ff}
+  [data-theme="light"] .b-jur{background:#d4f5e5;color:#1a6640}
+  [data-theme="light"] .b-leg{background:#e8e0ff;color:#4a2fa0}
   .card a{display:block;color:var(--accent2);text-decoration:none;font-size:13px;padding:5px 0;border-bottom:1px solid transparent;transition:.1s}
   .card a:hover{color:#7fa9ff}
   .card a::before{content:"→ ";color:var(--muted)}
   .note{font-size:12px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
 
-  /* Query blocks */
-  .query{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:8px 0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:#d7e3ef;position:relative;cursor:pointer;transition:.15s;padding-right:72px}
+  /* ── Filtro de área (Buscas) ─────────────────────────────────────────────── */
+  .filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+  .filter-btn{background:var(--panel);color:var(--muted);border:1px solid var(--border);padding:6px 14px;border-radius:16px;cursor:pointer;font-size:12px;transition:.15s}
+  .filter-btn:hover{border-color:var(--accent);color:var(--ink)}
+  .filter-btn.active{background:var(--accent);color:#1a1404;border-color:var(--accent);font-weight:600}
+  [data-theme="light"] .filter-btn.active{color:#fff8e1}
+  .area-card{transition:opacity .2s,transform .2s}
+  .area-card.hidden{display:none}
+
+  /* ── Query blocks ────────────────────────────────────────────────────────── */
+  .query{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:8px 0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--ink);position:relative;cursor:pointer;transition:.15s;padding-right:72px}
   .query:hover{border-color:var(--accent)}
   .query .copy{position:absolute;right:10px;top:10px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;user-select:none}
   .query.copied{border-color:var(--ok)}
   .query.copied .copy{color:var(--ok)}
   .qlabel{font-size:12px;color:var(--muted);margin:14px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 
-  /* Steps */
+  /* ── Steps ───────────────────────────────────────────────────────────────── */
   ol.steps{padding-left:0;list-style:none;counter-reset:s}
-  ol.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px 14px 54px;margin:10px 0;position:relative}
+  ol.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px 14px 54px;margin:10px 0;position:relative;box-shadow:var(--shadow)}
   ol.steps li::before{content:counter(s);position:absolute;left:14px;top:50%;transform:translateY(-50%);width:28px;height:28px;background:var(--accent);color:#1a1404;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+  [data-theme="light"] ol.steps li::before{color:#fff8e1}
   ol.steps li b{color:var(--ink)}
   ol.steps li span{display:block;color:var(--muted);font-size:13px;margin-top:3px}
 
-  /* Checklist */
+  /* ── Checklist ───────────────────────────────────────────────────────────── */
   .check-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
   .check-header h3{margin:0;font-size:15px}
   .progress{font-size:12px;color:var(--muted)}
   .progress b{color:var(--ok)}
   .check{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer}
-  .check:last-child{border-bottom:none}
+  .check:last-of-type{border-bottom:none}
   .check input{margin-top:4px;width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
   .check label{cursor:pointer;font-size:14px}
   .check .area{color:var(--muted);font-size:12px;display:block}
   .check.done label{text-decoration:line-through;color:var(--muted)}
-  .week-tag{font-size:12px;color:var(--muted);background:var(--tag);padding:3px 10px;border-radius:10px}
-  .reset-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;margin-top:14px;display:block;transition:.15s}
-  .reset-btn:hover{border-color:var(--accent);color:var(--ink)}
+  .check-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .action-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;transition:.15s}
+  .action-btn:hover{border-color:var(--accent);color:var(--ink)}
+  .action-btn.export{border-color:var(--accent2);color:var(--accent2)}
+  .action-btn.export:hover{background:var(--accent2);color:#fff}
 
-  /* Layout */
+  /* ── Layout ──────────────────────────────────────────────────────────────── */
   .twocol{display:grid;grid-template-columns:1fr 1fr;gap:18px}
   @media(max-width:760px){.twocol{grid-template-columns:1fr}}
+  @media(max-width:560px){.wrap{flex-direction:column;align-items:flex-start}}
 
-  /* Misc */
+  /* ── Misc ────────────────────────────────────────────────────────────────── */
   footer{padding:24px;text-align:center;color:var(--muted);font-size:12px;border-top:1px solid var(--border);margin-top:20px}
-  .alert{background:#2a2218;border:1px solid #4a3a1c;border-radius:10px;padding:12px 16px;font-size:13px;color:#e8d39a;margin-bottom:18px}
+  .alert{background:var(--alert-bg);border:1px solid var(--alert-border);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--alert-ink);margin-bottom:18px}
 </style>
 </head>
 <body>
 
 <header>
   <div class="wrap">
-    <h1>Painel de Monitoramento Jurídico</h1>
-    <p>Jurisprudência (TJSP · STJ · STF) e legislação federal — atualização semanal · 6 áreas de prática</p>
+    <div class="header-left">
+      <h1>Painel de Monitoramento Jurídico</h1>
+      <p>Jurisprudência (TJSP · STJ · STF) e legislação federal — atualização semanal · 6 áreas de prática</p>
+    </div>
+    <button id="theme-btn" aria-label="Alternar tema">☀ Modo claro</button>
   </div>
 </header>
 
@@ -172,13 +212,14 @@
   <h2>Buscas Prontas por Área</h2>
   <p class="sub">Clique em qualquer caixa para copiar. Cole no campo de busca do tribunal ou em buscadores. Ajuste o intervalo de datas para a última semana.</p>
   <div class="alert">Nos sistemas do TJSP e STJ, use os filtros nativos de <b>data de julgamento</b>. Os termos abaixo são o núcleo da pesquisa — combine com aspas para expressão exata e operadores E/OU (AND/OR) quando o sistema permitir.</div>
+  <div class="filter-bar" id="filter-bar" role="group" aria-label="Filtrar por área"></div>
   <div id="buscas-content"></div>
 </section>
 
 <!-- CHECKLIST -->
 <section id="checklist" role="tabpanel">
   <h2>Checklist Semanal</h2>
-  <p class="sub">Marque conforme avança. O progresso é salvo no navegador e reinicia automaticamente a cada semana.</p>
+  <p class="sub" id="checklist-sub">Marque conforme avança. O progresso é salvo no navegador e reinicia automaticamente a cada semana.</p>
   <div class="twocol">
     <div class="card" id="check-fontes"></div>
     <div class="card" id="check-areas"></div>
@@ -190,15 +231,36 @@
 </footer>
 
 <script>
-/* ── Navegação ─────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   TEMA
+═══════════════════════════════════════════════════════════════════════════ */
+const THEME_KEY = "jur_theme";
+const themeBtn  = document.getElementById("theme-btn");
+
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  themeBtn.textContent = t === "light" ? "🌙 Modo escuro" : "☀ Modo claro";
+  localStorage.setItem(THEME_KEY, t);
+}
+
+themeBtn.onclick = () => {
+  const current = document.documentElement.getAttribute("data-theme");
+  applyTheme(current === "light" ? "dark" : "light");
+};
+
+applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NAVEGAÇÃO
+═══════════════════════════════════════════════════════════════════════════ */
 const TABS = [
-  {id:"roteiro", label:"Roteiro Semanal"},
-  {id:"fontes",  label:"Fontes Oficiais"},
-  {id:"buscas",  label:"Buscas Prontas"},
-  {id:"checklist",label:"Checklist"}
+  {id:"roteiro",   label:"Roteiro Semanal"},
+  {id:"fontes",    label:"Fontes Oficiais"},
+  {id:"buscas",    label:"Buscas Prontas"},
+  {id:"checklist", label:"Checklist"}
 ];
 
-const nav = document.getElementById("nav");
+const navEl = document.getElementById("nav");
 TABS.forEach((t, i) => {
   const b = document.createElement("button");
   b.textContent = t.label;
@@ -209,67 +271,108 @@ TABS.forEach((t, i) => {
   b.onclick = () => {
     document.querySelectorAll("nav button").forEach(x => {
       x.classList.remove("active");
-      x.setAttribute("aria-selected","false");
+      x.setAttribute("aria-selected", "false");
     });
     document.querySelectorAll("section").forEach(x => x.classList.remove("active"));
     b.classList.add("active");
-    b.setAttribute("aria-selected","true");
+    b.setAttribute("aria-selected", "true");
     document.getElementById(t.id).classList.add("active");
     window.scrollTo({top: 0, behavior: "smooth"});
   };
-  nav.appendChild(b);
+  navEl.appendChild(b);
 });
 
-/* ── Áreas e queries ───────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   DADOS — ÁREAS E QUERIES
+═══════════════════════════════════════════════════════════════════════════ */
 const AREAS = [
   {nome:"Direito do Trabalho", queries:[
-    {l:"TJSP / TRT — geral",       q:'rescisão indireta OR justa causa OR horas extras OR vínculo empregatício'},
-    {l:"Tema quente",               q:'pejotização OR terceirização OR responsabilidade subsidiária'},
-    {l:"Web ampla",                 q:'TST jurisprudência recente rescisão indireta 2026'}
+    {l:"TJSP / TRT — geral",   q:'rescisão indireta OR justa causa OR horas extras OR vínculo empregatício'},
+    {l:"Tema quente",           q:'pejotização OR terceirização OR responsabilidade subsidiária'},
+    {l:"Web ampla",             q:'TST jurisprudência recente rescisão indireta 2026'}
   ]},
   {nome:"Direito Digital", queries:[
-    {l:"STJ / TJSP",                q:'Marco Civil da Internet OR remoção de conteúdo OR responsabilidade de provedor'},
-    {l:"Dados / LGPD",              q:'LGPD OR vazamento de dados OR dano moral OR tratamento de dados pessoais'},
-    {l:"Web ampla",                 q:'decisão STF artigo 19 Marco Civil Internet 2026'}
+    {l:"STJ / TJSP",            q:'Marco Civil da Internet OR remoção de conteúdo OR responsabilidade de provedor'},
+    {l:"Dados / LGPD",          q:'LGPD OR vazamento de dados OR dano moral OR tratamento de dados pessoais'},
+    {l:"Web ampla",             q:'decisão STF artigo 19 Marco Civil Internet 2026'}
   ]},
   {nome:"Direito Civil", queries:[
-    {l:"STJ — Informativo",         q:'responsabilidade civil OR dano moral OR usucapião OR contrato'},
-    {l:"Família / Sucessões",       q:'união estável OR partilha OR alimentos OR inventário'},
-    {l:"Web ampla",                 q:'STJ Jurisprudência em Teses direito civil edição recente 2026'}
+    {l:"STJ — Informativo",     q:'responsabilidade civil OR dano moral OR usucapião OR contrato'},
+    {l:"Família / Sucessões",   q:'união estável OR partilha OR alimentos OR inventário'},
+    {l:"Web ampla",             q:'STJ Jurisprudência em Teses direito civil edição recente 2026'}
   ]},
   {nome:"Direito Previdenciário", queries:[
-    {l:"STJ / TNU",                 q:'aposentadoria especial OR revisão da vida toda OR benefício por incapacidade'},
-    {l:"Custeio",                   q:'contribuição previdenciária OR salário-maternidade OR base de cálculo'},
-    {l:"Web ampla",                 q:'TNU TRF3 tese previdenciária recente 2026'}
+    {l:"STJ / TNU",             q:'aposentadoria especial OR revisão da vida toda OR benefício por incapacidade'},
+    {l:"Custeio",               q:'contribuição previdenciária OR salário-maternidade OR base de cálculo'},
+    {l:"Web ampla",             q:'TNU TRF3 tese previdenciária recente 2026'}
   ]},
   {nome:"Direito Empresarial", queries:[
-    {l:"STJ",                       q:'recuperação judicial OR falência OR dissolução de sociedade OR desconsideração'},
-    {l:"Societário / Títulos",      q:'sociedade limitada OR duplicata OR cédula de crédito OR responsabilidade do sócio'},
-    {l:"Web ampla",                 q:'STJ recuperação judicial tese recente 2026'}
+    {l:"STJ",                   q:'recuperação judicial OR falência OR dissolução de sociedade OR desconsideração'},
+    {l:"Societário / Títulos",  q:'sociedade limitada OR duplicata OR cédula de crédito OR responsabilidade do sócio'},
+    {l:"Web ampla",             q:'STJ recuperação judicial tese recente 2026'}
   ]},
   {nome:"Direito Condominial", queries:[
-    {l:"TJSP",                      q:'condomínio OR taxa condominial OR convenção de condomínio OR multa'},
-    {l:"Conflitos",                 q:'animais em condomínio OR uso de área comum OR penhora imóvel condomínio'},
-    {l:"Web ampla",                 q:'TJSP condomínio cobrança taxa decisão recente 2026'}
+    {l:"TJSP",                  q:'condomínio OR taxa condominial OR convenção de condomínio OR multa'},
+    {l:"Conflitos",             q:'animais em condomínio OR uso de área comum OR penhora imóvel condomínio'},
+    {l:"Web ampla",             q:'TJSP condomínio cobrança taxa decisão recente 2026'}
   ]}
 ];
 
-const bc = document.getElementById("buscas-content");
+/* ═══════════════════════════════════════════════════════════════════════════
+   BUSCAS PRONTAS + FILTRO DE ÁREA
+═══════════════════════════════════════════════════════════════════════════ */
+const filterBar = document.getElementById("filter-bar");
+const bc        = document.getElementById("buscas-content");
+
+let activeFilter = "Todas";
+const areaCards  = [];
+
+// Botão "Todas"
+const allBtn = document.createElement("button");
+allBtn.className = "filter-btn active";
+allBtn.textContent = "Todas";
+allBtn.onclick = () => setFilter("Todas");
+filterBar.appendChild(allBtn);
+
+// Botões por área
+AREAS.forEach(a => {
+  const fb = document.createElement("button");
+  fb.className = "filter-btn";
+  fb.textContent = a.nome.replace("Direito ", "");
+  fb.onclick = () => setFilter(a.nome);
+  filterBar.appendChild(fb);
+});
+
+function setFilter(nome) {
+  activeFilter = nome;
+  document.querySelectorAll(".filter-btn").forEach((b, i) => {
+    const match = i === 0 ? nome === "Todas" : AREAS[i-1].nome === nome;
+    b.classList.toggle("active", match);
+  });
+  areaCards.forEach(({card, nome: n}) => {
+    card.classList.toggle("hidden", nome !== "Todas" && n !== nome);
+  });
+}
+
+// Cards de queries
 AREAS.forEach(a => {
   const card = document.createElement("div");
-  card.className = "card";
+  card.className = "card area-card";
   card.style.marginBottom = "16px";
   card.innerHTML = `<h3>${a.nome}</h3>`;
+
   a.queries.forEach(qq => {
     const lbl = document.createElement("div");
     lbl.className = "qlabel";
     lbl.textContent = qq.l;
+
     const d = document.createElement("div");
     d.className = "query";
-    d.setAttribute("role","button");
-    d.setAttribute("tabindex","0");
+    d.setAttribute("role", "button");
+    d.setAttribute("tabindex", "0");
     d.setAttribute("aria-label", `Copiar: ${qq.q}`);
     d.innerHTML = `<span class="copy" aria-hidden="true">copiar</span>${qq.q}`;
+
     const doCopy = () => {
       navigator.clipboard.writeText(qq.q).then(() => {
         d.classList.add("copied");
@@ -285,24 +388,27 @@ AREAS.forEach(a => {
     card.appendChild(lbl);
     card.appendChild(d);
   });
+
   bc.appendChild(card);
+  areaCards.push({card, nome: a.nome});
 });
 
-/* ── Checklist com persistência semanal ───────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   CHECKLIST — persistência semanal + exportação
+═══════════════════════════════════════════════════════════════════════════ */
 function getISOWeek(date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const d   = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const day = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - day);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return `${d.getUTCFullYear()}-W${String(Math.ceil((((d - yearStart) / 86400000) + 1) / 7)).padStart(2,"0")}`;
+  return `${d.getUTCFullYear()}-W${String(Math.ceil((((d - yearStart) / 86400000) + 1) / 7)).padStart(2, "0")}`;
 }
 
-const WEEK_KEY = "jur_week";
-const DATA_KEY = "jur_checks";
+const WEEK_KEY    = "jur_week";
+const DATA_KEY    = "jur_checks";
 const currentWeek = getISOWeek(new Date());
 
-let savedWeek = localStorage.getItem(WEEK_KEY);
-if (savedWeek !== currentWeek) {
+if (localStorage.getItem(WEEK_KEY) !== currentWeek) {
   localStorage.setItem(WEEK_KEY, currentWeek);
   localStorage.removeItem(DATA_KEY);
 }
@@ -315,17 +421,20 @@ function saveChecks(data) {
 }
 
 const FONTES_ITEMS = [
-  ["Informativo STJ — edição da semana",      "Jurisprudência"],
-  ["Informativo / Teses RG do STF",            "Jurisprudência"],
-  ["Jurisprudência em Teses STJ",              "Jurisprudência"],
-  ["TJSP 2º Grau — busca por data",           "Jurisprudência"],
-  ["TST — informativo / súmulas",             "Trabalhista"],
-  ["Legislação federal — DOU / Planalto",     "Legislação"]
+  ["Informativo STJ — edição da semana",   "Jurisprudência"],
+  ["Informativo / Teses RG do STF",         "Jurisprudência"],
+  ["Jurisprudência em Teses STJ",           "Jurisprudência"],
+  ["TJSP 2º Grau — busca por data",        "Jurisprudência"],
+  ["TST — informativo / súmulas",          "Trabalhista"],
+  ["Legislação federal — DOU / Planalto",  "Legislação"]
 ];
 const AREAS_ITEMS = AREAS.map(a => [a.nome, "Buscas rodadas + registro"]);
 
+// Coleta todos os itens para exportação global
+const ALL_ITEMS_META = []; // {elId, index, label, category, key}
+
 function buildCheck(elId, title, items) {
-  const el = document.getElementById(elId);
+  const el     = document.getElementById(elId);
   const checks = loadChecks();
 
   const header = document.createElement("div");
@@ -336,12 +445,13 @@ function buildCheck(elId, title, items) {
   const updateProgress = () => {
     const all  = el.querySelectorAll("input[type=checkbox]");
     const done = el.querySelectorAll("input[type=checkbox]:checked");
-    const prog = el.querySelector(`#prog-${elId}`);
-    prog.innerHTML = `<b>${done.length}</b>/${all.length}`;
+    document.getElementById(`prog-${elId}`).innerHTML = `<b>${done.length}</b>/${all.length}`;
   };
 
   items.forEach((it, i) => {
     const key = `${elId}-${i}`;
+    ALL_ITEMS_META.push({elId, index: i, label: it[0], category: it[1], key});
+
     const row = document.createElement("div");
     row.className = "check" + (checks[key] ? " done" : "");
     const id = "chk-" + key;
@@ -357,11 +467,15 @@ function buildCheck(elId, title, items) {
     el.appendChild(row);
   });
 
+  // Botões de ação
+  const actions = document.createElement("div");
+  actions.className = "check-actions";
+
   const resetBtn = document.createElement("button");
-  resetBtn.className = "reset-btn";
+  resetBtn.className = "action-btn";
   resetBtn.textContent = "Limpar tudo";
   resetBtn.onclick = () => {
-    if (!confirm("Limpar todos os itens marcados?")) return;
+    if (!confirm("Limpar todos os itens marcados nesta coluna?")) return;
     const data = loadChecks();
     items.forEach((_, i) => { delete data[`${elId}-${i}`]; });
     saveChecks(data);
@@ -369,18 +483,99 @@ function buildCheck(elId, title, items) {
     el.querySelectorAll(".check").forEach(r => r.classList.remove("done"));
     updateProgress();
   };
-  el.appendChild(resetBtn);
+
+  const exportBtn = document.createElement("button");
+  exportBtn.className = "action-btn export";
+  exportBtn.textContent = "Exportar .txt";
+  exportBtn.onclick = () => exportChecklist(elId, title, items);
+
+  actions.appendChild(resetBtn);
+  actions.appendChild(exportBtn);
+  el.appendChild(actions);
 
   updateProgress();
 }
 
-const weekLabel = document.querySelector("#checklist .sub");
-if (weekLabel) {
-  weekLabel.textContent += ` Semana atual: ${currentWeek}.`;
+function exportChecklist(elId, title, items) {
+  const checks = loadChecks();
+  const date   = new Date().toLocaleDateString("pt-BR");
+  const lines  = [
+    `Painel de Monitoramento Jurídico`,
+    `Checklist — ${title}`,
+    `Semana: ${currentWeek}  |  Exportado em: ${date}`,
+    "─".repeat(50),
+    ""
+  ];
+  items.forEach((it, i) => {
+    const key  = `${elId}-${i}`;
+    const mark = checks[key] ? "[✓]" : "[ ]";
+    lines.push(`${mark}  ${it[0]}  (${it[1]})`);
+  });
+  lines.push("", "─".repeat(50));
+
+  const blob = new Blob([lines.join("\n")], {type:"text/plain;charset=utf-8"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = `checklist-juridico-${currentWeek}-${elId}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
+
+function exportAll() {
+  const checks = loadChecks();
+  const date   = new Date().toLocaleDateString("pt-BR");
+  const lines  = [
+    `Painel de Monitoramento Jurídico`,
+    `Checklist Completo — Semana ${currentWeek}`,
+    `Exportado em: ${date}`,
+    "═".repeat(50),
+    ""
+  ];
+
+  const groups = {};
+  ALL_ITEMS_META.forEach(m => {
+    groups[m.elId] = groups[m.elId] || {title: m.elId === "check-fontes" ? "Fontes a verificar" : "Áreas cobertas", items: []};
+    groups[m.elId].items.push(m);
+  });
+
+  Object.values(groups).forEach(g => {
+    lines.push(`▸ ${g.title}`);
+    g.items.forEach(m => {
+      const mark = checks[m.key] ? "[✓]" : "[ ]";
+      lines.push(`  ${mark}  ${m.label}  (${m.category})`);
+    });
+    lines.push("");
+  });
+
+  const done  = ALL_ITEMS_META.filter(m => checks[m.key]).length;
+  const total = ALL_ITEMS_META.length;
+  lines.push(`Progresso total: ${done}/${total} itens concluídos`);
+
+  const blob = new Blob([lines.join("\n")], {type:"text/plain;charset=utf-8"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = `checklist-juridico-${currentWeek}-completo.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Semana no subtítulo
+const checkSub = document.getElementById("checklist-sub");
+checkSub.textContent += ` Semana atual: ${currentWeek}.`;
 
 buildCheck("check-fontes", "Fontes a verificar", FONTES_ITEMS);
 buildCheck("check-areas",  "Áreas cobertas",     AREAS_ITEMS);
+
+// Botão exportar tudo (abaixo das colunas)
+const checkSection = document.getElementById("checklist");
+const exportAllBtn = document.createElement("button");
+exportAllBtn.className = "action-btn export";
+exportAllBtn.style.cssText = "margin-top:16px;font-size:13px;padding:7px 16px";
+exportAllBtn.textContent = "Exportar checklist completo (.txt)";
+exportAllBtn.onclick = exportAll;
+checkSection.appendChild(exportAllBtn);
 </script>
 </body>
 </html>
