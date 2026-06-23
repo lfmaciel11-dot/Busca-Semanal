@@ -10,112 +10,301 @@
 <script src="https://unpkg.com/docx@8/build/index.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-  /* ── Temas ──────────────────────────────────────────────────────────────── */
+  /* ══════════════════════════════════════════════════════════════════════════
+     LEGAL DESIGN — Sistema de cores
+     Princípios aplicados:
+     · Cada área de prática tem identidade cromática própria e consistente
+     · Cor como navegação (reduz carga cognitiva, não é ornamental)
+     · Hierarquia tipográfica clara: peso + tamanho, não só cor
+     · Paleta base: azul-marinho (autoridade) + dourado (justiça)
+     · Contraste WCAG AA garantido em ambos os temas
+  ══════════════════════════════════════════════════════════════════════════ */
+
+  /* ── Cores por área de prática ──────────────────────────────────────────── */
   :root {
-    --bg:#0f1419; --panel:#1a212b; --panel2:#222c38; --border:#2e3a48;
-    --ink:#e8eef4; --muted:#9aabbd; --accent:#c9a227; --accent2:#3d7eff;
-    --ok:#2faa6e; --tag:#26323f;
-    --nav-bg:rgba(15,20,25,.96);
-    --alert-bg:#2a2218; --alert-border:#4a3a1c; --alert-ink:#e8d39a;
-    --shadow:0 2px 12px rgba(0,0,0,.35);
+    --area-trabalho:   #E07B2A; /* âmbar-laranja — ação, relação de trabalho   */
+    --area-digital:    #7B40E8; /* violeta       — tecnologia, inovação         */
+    --area-civil:      #1A72C8; /* azul clássico — confiança, tradição civil    */
+    --area-prev:       #0FA86A; /* esmeralda     — seguridade, proteção social  */
+    --area-emp:        #0D7896; /* teal escuro   — negócios, formalidade        */
+    --area-cond:       #C24B28; /* terracota     — propriedade, comunidade      */
+
+    /* Temas neutros — escuro (padrão) */
+    --bg:      #0C1520;
+    --panel:   #132030;
+    --panel2:  #1A2B3D;
+    --border:  #243650;
+    --ink:     #DDE8F4;
+    --muted:   #6F8AA8;
+    --dim:     #405870;
+    --accent:  #C8980F; /* dourado jurídico */
+    --accent2: #3A80F0;
+    --ok:      #0FA86A;
+    --tag:     #1A2B3D;
+    --nav-bg:  rgba(12,21,32,.97);
+    --alert-bg:#1E2A18; --alert-border:#3A5220; --alert-ink:#C8E09A;
+    --shadow:  0 2px 16px rgba(0,0,0,.4);
+    --shadow-sm:0 1px 6px rgba(0,0,0,.28);
+    --header-grad: linear-gradient(160deg,#0C1A2A 0%,#0C1520 100%);
   }
+
   [data-theme="light"] {
-    --bg:#f4f6f9; --panel:#ffffff; --panel2:#eef1f5; --border:#d0d8e4;
-    --ink:#1a2332; --muted:#5a6a7e; --accent:#a07c10; --accent2:#1a5fd4;
-    --ok:#1a8a52; --tag:#dde4ee;
-    --nav-bg:rgba(244,246,249,.96);
-    --alert-bg:#fdf6e3; --alert-border:#e0c96a; --alert-ink:#6b4e00;
-    --shadow:0 2px 12px rgba(0,0,0,.10);
+    --bg:      #EEF2F8;
+    --panel:   #FFFFFF;
+    --panel2:  #E6ECF5;
+    --border:  #C0CFE4;
+    --ink:     #0D1D30;
+    --muted:   #4E6882;
+    --dim:     #8AA4C0;
+    --accent:  #9A7208;
+    --accent2: #1555C8;
+    --ok:      #0A7A4E;
+    --tag:     #D8E4F2;
+    --nav-bg:  rgba(238,242,248,.97);
+    --alert-bg:#FEFAE8; --alert-border:#D4B840; --alert-ink:#5A4000;
+    --shadow:  0 2px 12px rgba(0,0,0,.10);
+    --shadow-sm:0 1px 4px rgba(0,0,0,.07);
+    --header-grad: linear-gradient(160deg,#D4DFF0 0%,#EEF2F8 100%);
   }
 
   /* ── Reset / base ───────────────────────────────────────────────────────── */
   *{box-sizing:border-box}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;transition:background .2s,color .2s}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.55;
+    transition:background .2s,color .2s;font-size:15px
+  }
 
   /* ── Header ─────────────────────────────────────────────────────────────── */
-  header{padding:28px 24px 18px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#141b24,#0f1419)}
-  [data-theme="light"] header{background:linear-gradient(180deg,#dce4f0,#f4f6f9)}
-  header h1{margin:0 0 6px;font-size:24px;letter-spacing:.3px;color:var(--ink)}
-  header p{margin:0;color:var(--muted);font-size:14px}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .header-left h1{margin:0 0 6px;font-size:24px;letter-spacing:.3px;color:var(--ink)}
-  .header-left p{margin:0;color:var(--muted);font-size:14px}
+  header{
+    padding:26px 24px 20px;
+    border-bottom:2px solid var(--accent);
+    background:var(--header-grad)
+  }
+  .wrap{
+    max-width:1180px;margin:0 auto;padding:0 24px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px
+  }
+  .header-left{display:flex;align-items:center;gap:14px}
+  .header-icon{
+    font-size:32px;line-height:1;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))
+  }
+  .header-left h1{
+    margin:0 0 4px;font-size:22px;font-weight:700;
+    letter-spacing:.2px;color:var(--ink)
+  }
+  .header-left p{margin:0;color:var(--muted);font-size:13px}
+  .header-gold{color:var(--accent)}
 
   /* ── Botão de tema ───────────────────────────────────────────────────────── */
-  #theme-btn{background:var(--panel);border:1px solid var(--border);color:var(--ink);padding:7px 13px;border-radius:20px;cursor:pointer;font-size:13px;white-space:nowrap;transition:.15s;flex-shrink:0}
-  #theme-btn:hover{border-color:var(--accent)}
+  #theme-btn{
+    background:rgba(255,255,255,.06);border:1px solid var(--border);
+    color:var(--muted);padding:7px 13px;border-radius:20px;cursor:pointer;
+    font-size:13px;white-space:nowrap;transition:.15s;flex-shrink:0
+  }
+  #theme-btn:hover{border-color:var(--accent);color:var(--ink)}
 
   /* ── Nav ─────────────────────────────────────────────────────────────────── */
-  nav{display:flex;gap:8px;flex-wrap:wrap;padding:16px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--nav-bg);backdrop-filter:blur(6px);z-index:5}
-  nav button{background:var(--panel);color:var(--ink);border:1px solid var(--border);padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;transition:.15s}
-  nav button:hover{border-color:var(--accent)}
-  nav button.active{background:var(--accent);color:#1a1404;border-color:var(--accent);font-weight:600}
-  [data-theme="light"] nav button.active{color:#fff8e1}
+  nav{
+    display:flex;gap:6px;flex-wrap:wrap;padding:14px 24px;
+    border-bottom:1px solid var(--border);
+    position:sticky;top:0;background:var(--nav-bg);
+    backdrop-filter:blur(8px);z-index:5
+  }
+  nav button{
+    background:transparent;color:var(--muted);
+    border:1px solid transparent;
+    padding:7px 16px;border-radius:6px;
+    cursor:pointer;font-size:13px;font-weight:500;transition:.15s
+  }
+  nav button:hover{background:var(--panel2);color:var(--ink)}
+  nav button.active{
+    background:var(--panel);color:var(--accent);
+    border-color:var(--accent);font-weight:600;
+    box-shadow:var(--shadow-sm)
+  }
   nav button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
   /* ── Sections ────────────────────────────────────────────────────────────── */
-  section{padding:26px 24px;max-width:1180px;margin:0 auto;display:none}
+  section{padding:28px 24px;max-width:1180px;margin:0 auto;display:none}
   section.active{display:block}
-  h2{font-size:19px;margin:0 0 4px;color:var(--accent)}
-  .sub{color:var(--muted);font-size:13px;margin:0 0 20px}
+
+  .section-title{margin:0 0 2px;font-size:20px;font-weight:700;color:var(--ink)}
+  .section-title span{color:var(--accent)}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 22px;line-height:1.6}
 
   /* ── Cards / Grid ────────────────────────────────────────────────────────── */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
-  .card h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px}
-  .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--tag);color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-  .b-jur{background:#1f3a2c;color:#7fe0a8}
-  .b-leg{background:#2a2440;color:#c3b0ff}
-  [data-theme="light"] .b-jur{background:#d4f5e5;color:#1a6640}
-  [data-theme="light"] .b-leg{background:#e8e0ff;color:#4a2fa0}
-  .card a{display:block;color:var(--accent2);text-decoration:none;font-size:13px;padding:5px 0;border-bottom:1px solid transparent;transition:.1s}
-  .card a:hover{color:#7fa9ff}
-  .card a::before{content:"→ ";color:var(--muted)}
-  .note{font-size:12px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+  .card{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;padding:18px 20px;box-shadow:var(--shadow-sm)
+  }
+  .card h3{
+    margin:0 0 12px;font-size:14px;font-weight:700;
+    display:flex;align-items:center;gap:8px;
+    text-transform:uppercase;letter-spacing:.5px;color:var(--muted)
+  }
+  .card h3 .icon{font-size:16px}
+  .badge{
+    font-size:9px;padding:2px 7px;border-radius:8px;
+    background:var(--tag);color:var(--muted);
+    text-transform:uppercase;letter-spacing:.6px;font-weight:600
+  }
+  .b-jur{background:#0F2A1E;color:#4CC98A}
+  .b-leg{background:#1C1430;color:#A88FFF}
+  [data-theme="light"] .b-jur{background:#CCEEDB;color:#0A6035}
+  [data-theme="light"] .b-leg{background:#E0D6FF;color:#4820A0}
+  .card a{
+    display:flex;align-items:center;gap:6px;
+    color:var(--accent2);text-decoration:none;font-size:13px;
+    padding:6px 0;border-bottom:1px solid var(--border);transition:.12s
+  }
+  .card a:last-of-type{border-bottom:none}
+  .card a:hover{color:var(--ink);padding-left:4px}
+  .card a::before{content:"›";color:var(--dim);font-size:16px;line-height:1}
+  .note{
+    font-size:12px;color:var(--muted);margin-top:12px;
+    padding:10px 12px;border-radius:8px;
+    background:var(--panel2);
+    border-left:3px solid var(--accent);line-height:1.5
+  }
 
-  /* ── Filtro de área (Buscas) ─────────────────────────────────────────────── */
-  .filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-  .filter-btn{background:var(--panel);color:var(--muted);border:1px solid var(--border);padding:6px 14px;border-radius:16px;cursor:pointer;font-size:12px;transition:.15s}
-  .filter-btn:hover{border-color:var(--accent);color:var(--ink)}
-  .filter-btn.active{background:var(--accent);color:#1a1404;border-color:var(--accent);font-weight:600}
-  [data-theme="light"] .filter-btn.active{color:#fff8e1}
-  .area-card{transition:opacity .2s,transform .2s}
+  /* ── Filtro de área ─────────────────────────────────────────────────────── */
+  .filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+
+  /* Botão "Todas" */
+  .filter-btn{
+    background:var(--panel2);color:var(--muted);
+    border:1px solid var(--border);
+    padding:6px 14px;border-radius:20px;
+    cursor:pointer;font-size:12px;font-weight:500;transition:.15s;
+    display:flex;align-items:center;gap:6px
+  }
+  .filter-btn:hover{border-color:var(--dim);color:var(--ink)}
+
+  /* Cada botão de área usa a cor da sua área */
+  .filter-btn[data-area]{border-left-width:3px}
+  .filter-btn[data-area="trabalho"]{border-left-color:var(--area-trabalho)}
+  .filter-btn[data-area="digital"]  {border-left-color:var(--area-digital)}
+  .filter-btn[data-area="civil"]    {border-left-color:var(--area-civil)}
+  .filter-btn[data-area="prev"]     {border-left-color:var(--area-prev)}
+  .filter-btn[data-area="emp"]      {border-left-color:var(--area-emp)}
+  .filter-btn[data-area="cond"]     {border-left-color:var(--area-cond)}
+
+  .filter-btn.active{color:#fff;font-weight:600;border-left-width:1px}
+  .filter-btn.active[data-area="trabalho"]{background:var(--area-trabalho);border-color:var(--area-trabalho)}
+  .filter-btn.active[data-area="digital"]  {background:var(--area-digital);border-color:var(--area-digital)}
+  .filter-btn.active[data-area="civil"]    {background:var(--area-civil);border-color:var(--area-civil)}
+  .filter-btn.active[data-area="prev"]     {background:var(--area-prev);border-color:var(--area-prev)}
+  .filter-btn.active[data-area="emp"]      {background:var(--area-emp);border-color:var(--area-emp)}
+  .filter-btn.active[data-area="cond"]     {background:var(--area-cond);border-color:var(--area-cond)}
+  .filter-btn.active[data-area="todas"]    {background:var(--accent);border-color:var(--accent);color:#1A1000}
+  [data-theme="light"] .filter-btn.active[data-area="todas"]{color:#fff}
+
   .area-card.hidden{display:none}
 
-  /* ── Query blocks ────────────────────────────────────────────────────────── */
-  .query{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:8px 0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--ink);position:relative;cursor:pointer;transition:.15s;padding-right:72px}
-  .query:hover{border-color:var(--accent)}
-  .query .copy{position:absolute;right:10px;top:10px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;user-select:none}
-  .query.copied{border-color:var(--ok)}
-  .query.copied .copy{color:var(--ok)}
-  .qlabel{font-size:12px;color:var(--muted);margin:14px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  /* Cards de área com faixa colorida à esquerda */
+  .area-card{border-left-width:4px;border-left-style:solid}
+  .area-card[data-area="trabalho"]{border-left-color:var(--area-trabalho)}
+  .area-card[data-area="digital"]  {border-left-color:var(--area-digital)}
+  .area-card[data-area="civil"]    {border-left-color:var(--area-civil)}
+  .area-card[data-area="prev"]     {border-left-color:var(--area-prev)}
+  .area-card[data-area="emp"]      {border-left-color:var(--area-emp)}
+  .area-card[data-area="cond"]     {border-left-color:var(--area-cond)}
 
-  /* ── Steps ───────────────────────────────────────────────────────────────── */
+  /* Títulos de área com cor da área */
+  .area-card[data-area="trabalho"] h3 .area-name{color:var(--area-trabalho)}
+  .area-card[data-area="digital"]   h3 .area-name{color:var(--area-digital)}
+  .area-card[data-area="civil"]     h3 .area-name{color:var(--area-civil)}
+  .area-card[data-area="prev"]      h3 .area-name{color:var(--area-prev)}
+  .area-card[data-area="emp"]       h3 .area-name{color:var(--area-emp)}
+  .area-card[data-area="cond"]      h3 .area-name{color:var(--area-cond)}
+
+  /* ── Query blocks ────────────────────────────────────────────────────────── */
+  .query{
+    background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+    padding:11px 70px 11px 12px;margin:6px 0;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;
+    color:var(--ink);position:relative;cursor:pointer;transition:.15s;line-height:1.5
+  }
+  .query:hover{border-color:var(--dim);background:var(--panel)}
+  .query .copy{
+    position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    font-size:10px;color:var(--dim);text-transform:uppercase;
+    letter-spacing:.5px;user-select:none;font-weight:600;
+    background:var(--panel);border:1px solid var(--border);
+    padding:2px 7px;border-radius:5px
+  }
+  .query:hover .copy{border-color:var(--muted);color:var(--muted)}
+  .query.copied{border-color:var(--ok)}
+  .query.copied .copy{color:var(--ok);border-color:var(--ok)}
+  .qlabel{
+    font-size:11px;color:var(--muted);margin:12px 0 4px;
+    font-weight:700;text-transform:uppercase;letter-spacing:.7px;
+    display:flex;align-items:center;gap:6px
+  }
+  .qlabel::before{content:"";display:inline-block;width:3px;height:10px;border-radius:2px;background:var(--dim)}
+
+  /* ── Steps (Roteiro) ─────────────────────────────────────────────────────── */
   ol.steps{padding-left:0;list-style:none;counter-reset:s}
-  ol.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px 14px 54px;margin:10px 0;position:relative;box-shadow:var(--shadow)}
-  ol.steps li::before{content:counter(s);position:absolute;left:14px;top:50%;transform:translateY(-50%);width:28px;height:28px;background:var(--accent);color:#1a1404;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
-  [data-theme="light"] ol.steps li::before{color:#fff8e1}
-  ol.steps li b{color:var(--ink)}
-  ol.steps li span{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+  ol.steps li{
+    counter-increment:s;
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px 16px 62px;margin:10px 0;position:relative;
+    box-shadow:var(--shadow-sm);transition:.15s
+  }
+  ol.steps li:hover{border-color:var(--dim);box-shadow:var(--shadow)}
+  ol.steps li::before{
+    content:counter(s);position:absolute;left:16px;top:50%;transform:translateY(-50%);
+    width:32px;height:32px;background:var(--accent);
+    color:#1A0F00;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:14px
+  }
+  [data-theme="light"] ol.steps li::before{color:#fff}
+  ol.steps li b{color:var(--ink);font-size:15px}
+  ol.steps li span{display:block;color:var(--muted);font-size:13px;margin-top:4px}
 
   /* ── Checklist ───────────────────────────────────────────────────────────── */
-  .check-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-  .check-header h3{margin:0;font-size:15px}
-  .progress{font-size:12px;color:var(--muted)}
-  .progress b{color:var(--ok)}
-  .check{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer}
+  .check-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .check-header h3{margin:0;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .progress-wrap{display:flex;align-items:center;gap:8px}
+  .progress{font-size:13px;font-weight:700;color:var(--ok)}
+  .prog-bar-wrap{width:60px;height:5px;background:var(--panel2);border-radius:4px;overflow:hidden}
+  .prog-bar{height:100%;background:var(--ok);border-radius:4px;transition:width .3s}
+
+  .check{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
   .check:last-of-type{border-bottom:none}
-  .check input{margin-top:4px;width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
-  .check label{cursor:pointer;font-size:14px}
-  .check .area{color:var(--muted);font-size:12px;display:block}
-  .check.done label{text-decoration:line-through;color:var(--muted)}
+  .check input{margin-top:3px;width:16px;height:16px;accent-color:var(--ok);cursor:pointer;flex-shrink:0}
+  .check label{cursor:pointer;font-size:14px;line-height:1.4}
+  .check .cat{
+    display:inline-block;margin-top:3px;
+    font-size:10px;padding:1px 7px;border-radius:6px;
+    background:var(--panel2);color:var(--muted);
+    text-transform:uppercase;letter-spacing:.4px;font-weight:600
+  }
+  .check.done label{text-decoration:line-through;color:var(--dim)}
+  .check.done .cat{opacity:.5}
+
+  /* Ponto colorido na área no checklist */
+  .check .area-dot{
+    display:inline-block;width:8px;height:8px;border-radius:50%;
+    margin-right:5px;vertical-align:middle;flex-shrink:0
+  }
+
   .check-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-  .action-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;transition:.15s}
-  .action-btn:hover{border-color:var(--accent);color:var(--ink)}
+  .action-btn{
+    background:none;border:1px solid var(--border);color:var(--muted);
+    padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;
+    font-weight:500;transition:.15s
+  }
+  .action-btn:hover{border-color:var(--dim);color:var(--ink)}
   .action-btn.export{border-color:var(--accent2);color:var(--accent2)}
   .action-btn.export:hover{background:var(--accent2);color:#fff}
 
-  /* ── Menu de formato de exportação ─────────────────────────────────────── */
+  /* ── Menu de exportação ──────────────────────────────────────────────────── */
   .export-group{position:relative;display:inline-block}
   .export-group .export-menu{
     display:none;position:absolute;bottom:calc(100% + 6px);left:0;
@@ -130,23 +319,31 @@
   }
   .export-menu button:last-child{border-bottom:none}
   .export-menu button:hover{background:var(--panel2);color:var(--accent)}
-  .export-menu button .fmt-badge{
-    font-size:10px;padding:1px 6px;border-radius:6px;margin-left:6px;
+  .fmt-badge{
+    font-size:10px;padding:1px 6px;border-radius:5px;margin-left:6px;
     text-transform:uppercase;letter-spacing:.4px;font-weight:700
   }
-  .fmt-docx{background:#1a3a6a;color:#90c0ff}
-  .fmt-pdf{background:#3a1a1a;color:#ff9090}
-  [data-theme="light"] .fmt-docx{background:#cce0ff;color:#1a4090}
-  [data-theme="light"] .fmt-pdf{background:#ffd5d5;color:#900}
+  .fmt-docx{background:#0F2A50;color:#70AAFF}
+  .fmt-pdf{background:#3A0E0E;color:#FF8080}
+  [data-theme="light"] .fmt-docx{background:#C8DEFF;color:#0C3A90}
+  [data-theme="light"] .fmt-pdf{background:#FFCCCC;color:#800000}
 
   /* ── Layout ──────────────────────────────────────────────────────────────── */
   .twocol{display:grid;grid-template-columns:1fr 1fr;gap:18px}
   @media(max-width:760px){.twocol{grid-template-columns:1fr}}
   @media(max-width:560px){.wrap{flex-direction:column;align-items:flex-start}}
 
-  /* ── Misc ────────────────────────────────────────────────────────────────── */
-  footer{padding:24px;text-align:center;color:var(--muted);font-size:12px;border-top:1px solid var(--border);margin-top:20px}
-  .alert{background:var(--alert-bg);border:1px solid var(--alert-border);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--alert-ink);margin-bottom:18px}
+  /* ── Footer / Alert ──────────────────────────────────────────────────────── */
+  footer{
+    padding:22px;text-align:center;color:var(--muted);font-size:12px;
+    border-top:1px solid var(--border);margin-top:24px
+  }
+  .alert{
+    background:var(--alert-bg);border:1px solid var(--alert-border);
+    border-left-width:4px;border-radius:10px;
+    padding:12px 16px;font-size:13px;color:var(--alert-ink);margin-bottom:20px;
+    line-height:1.6
+  }
 </style>
 </head>
 <body>
@@ -154,8 +351,11 @@
 <header>
   <div class="wrap">
     <div class="header-left">
-      <h1>Painel de Monitoramento Jurídico</h1>
-      <p>Jurisprudência (TJSP · STJ · STF) e legislação federal — atualização semanal · 6 áreas de prática</p>
+      <span class="header-icon" aria-hidden="true">⚖️</span>
+      <div>
+        <h1>Painel de Monitoramento <span class="header-gold">Jurídico</span></h1>
+        <p>TJSP · STJ · STF · TST — jurisprudência e legislação federal · atualização semanal · 6 áreas de prática</p>
+      </div>
     </div>
     <button id="theme-btn" aria-label="Alternar tema">☀ Modo claro</button>
   </div>
@@ -165,9 +365,9 @@
 
 <!-- ROTEIRO -->
 <section id="roteiro" class="active" role="tabpanel">
-  <h2>Roteiro Semanal</h2>
+  <h2 class="section-title">Roteiro <span>Semanal</span></h2>
   <p class="sub">Sequência sugerida para cobrir as 6 áreas em ~40 min, uma vez por semana (ex.: toda segunda de manhã).</p>
-  <div class="alert">Dica: os informativos do STJ e do STF saem em ciclos próprios. Comece sempre pelos boletins consolidados (passos 1–3) antes de fazer buscas livres, porque eles já filtram o que é relevante.</div>
+  <div class="alert">💡 Os informativos do STJ e do STF saem em ciclos próprios. Comece sempre pelos boletins consolidados (passos 1–3) antes de fazer buscas livres — eles já filtram o que é relevante.</div>
   <ol class="steps">
     <li><b>Informativo de Jurisprudência do STJ</b><span>Abra a edição mais recente. Cada edição traz teses novas organizadas por ramo do Direito, com o número do REsp e a data de julgamento.</span></li>
     <li><b>Informativo de Jurisprudência do STF</b><span>Confira as teses de repercussão geral mais recentes e o informativo semanal. Filtre pelos temas das suas áreas.</span></li>
@@ -181,11 +381,11 @@
 
 <!-- FONTES -->
 <section id="fontes" role="tabpanel">
-  <h2>Fontes Oficiais</h2>
+  <h2 class="section-title">Fontes <span>Oficiais</span></h2>
   <p class="sub">Links diretos para os canais de atualização. Marque os de atualização periódica como favoritos.</p>
   <div class="grid">
     <div class="card">
-      <h3>STJ <span class="badge b-jur">Jurisprudência</span></h3>
+      <h3><span class="icon">🏛️</span> STJ <span class="badge b-jur">Jurisprudência</span></h3>
       <a href="https://scon.stj.jus.br/jurisprudencia/externo/informativo/" target="_blank" rel="noopener">Informativo de Jurisprudência (edições)</a>
       <a href="https://www.stj.jus.br/SCON/jt/" target="_blank" rel="noopener">Jurisprudência em Teses</a>
       <a href="https://processo.stj.jus.br/SCON/" target="_blank" rel="noopener">Pesquisa de Jurisprudência (SCON)</a>
@@ -193,7 +393,7 @@
       <div class="note">Informativo sai periodicamente; Jurisprudência em Teses é temático.</div>
     </div>
     <div class="card">
-      <h3>STF <span class="badge b-jur">Jurisprudência</span></h3>
+      <h3><span class="icon">⚖️</span> STF <span class="badge b-jur">Jurisprudência</span></h3>
       <a href="https://portal.stf.jus.br/repercussaogeral/teses.asp" target="_blank" rel="noopener">Teses de Repercussão Geral</a>
       <a href="https://portal.stf.jus.br/informativos/" target="_blank" rel="noopener">Informativo do STF</a>
       <a href="https://jurisprudencia.stf.jus.br/pages/search" target="_blank" rel="noopener">Pesquisa de Jurisprudência</a>
@@ -201,7 +401,7 @@
       <div class="note">Teses de RG divulgadas assim que fixadas, antes da publicação do acórdão.</div>
     </div>
     <div class="card">
-      <h3>TJSP <span class="badge b-jur">Jurisprudência</span></h3>
+      <h3><span class="icon">🏢</span> TJSP <span class="badge b-jur">Jurisprudência</span></h3>
       <a href="https://www.tjsp.jus.br/jurisprudencia" target="_blank" rel="noopener">Portal de Jurisprudência (SAJ + eproc)</a>
       <a href="https://esaj.tjsp.jus.br/cjsg/consultaCompleta.do" target="_blank" rel="noopener">Consulta de Acórdãos 2º Grau (e-SAJ)</a>
       <a href="https://esaj.tjsp.jus.br/gecon/jurisprudencia/consulta" target="_blank" rel="noopener">Jurisprudência Selecionada (GECON)</a>
@@ -209,7 +409,7 @@
       <div class="note">Filtre por classe, órgão julgador e data de julgamento na busca avançada.</div>
     </div>
     <div class="card">
-      <h3>Legislação Federal <span class="badge b-leg">Legislação</span></h3>
+      <h3><span class="icon">📜</span> Legislação Federal <span class="badge b-leg">Legislação</span></h3>
       <a href="https://www.planalto.gov.br/ccivil_03/Portaria/quadro_portaria.htm" target="_blank" rel="noopener">Planalto — Legislação</a>
       <a href="https://www.in.gov.br/leiturajornal" target="_blank" rel="noopener">Diário Oficial da União (DOU)</a>
       <a href="https://www.congressonacional.leg.br/materias" target="_blank" rel="noopener">Congresso — Matérias / Veto</a>
@@ -217,7 +417,7 @@
       <div class="note">DOU edição diária; Planalto consolida leis sancionadas.</div>
     </div>
     <div class="card">
-      <h3>Trabalhista <span class="badge b-jur">Jurisprudência</span></h3>
+      <h3><span class="icon">👷</span> Trabalhista <span class="badge b-jur">Jurisprudência</span></h3>
       <a href="https://www.tst.jus.br/web/guest/informativo-tst" target="_blank" rel="noopener">TST — Informativo</a>
       <a href="https://jurisprudencia.tst.jus.br/" target="_blank" rel="noopener">TST — Pesquisa de Jurisprudência</a>
       <a href="https://www.trtsp.jus.br/" target="_blank" rel="noopener">TRT-2 (SP capital)</a>
@@ -225,7 +425,7 @@
       <div class="note">Súmulas e OJs do TST mudam por sessões; acompanhe o informativo.</div>
     </div>
     <div class="card">
-      <h3>Previdenciário <span class="badge b-jur">Jurisprudência</span></h3>
+      <h3><span class="icon">🛡️</span> Previdenciário <span class="badge b-jur">Jurisprudência</span></h3>
       <a href="https://www.gov.br/inss/pt-br" target="_blank" rel="noopener">INSS — Atos e instruções</a>
       <a href="https://www.cjf.jus.br/cjf/corregedoria-da-justica-federal/turma-nacional-de-uniformizacao" target="_blank" rel="noopener">TNU — Turma Nacional de Uniformização</a>
       <a href="https://www.trf3.jus.br/" target="_blank" rel="noopener">TRF-3 (SP/MS)</a>
@@ -236,16 +436,16 @@
 
 <!-- BUSCAS PRONTAS -->
 <section id="buscas" role="tabpanel">
-  <h2>Buscas Prontas por Área</h2>
-  <p class="sub">Clique em qualquer caixa para copiar. Cole no campo de busca do tribunal ou em buscadores. Ajuste o intervalo de datas para a última semana.</p>
-  <div class="alert">Nos sistemas do TJSP e STJ, use os filtros nativos de <b>data de julgamento</b>. Os termos abaixo são o núcleo da pesquisa — combine com aspas para expressão exata e operadores E/OU (AND/OR) quando o sistema permitir.</div>
+  <h2 class="section-title">Buscas Prontas <span>por Área</span></h2>
+  <p class="sub">Clique em qualquer caixa para copiar o termo. Cole no campo de busca do tribunal ou em buscadores e ajuste o intervalo de datas para a última semana.</p>
+  <div class="alert">🔍 Nos sistemas do TJSP e STJ, use os filtros nativos de <b>data de julgamento</b>. Os termos abaixo são o núcleo da pesquisa — combine com aspas para expressão exata e operadores E/OU (AND/OR) quando o sistema permitir.</div>
   <div class="filter-bar" id="filter-bar" role="group" aria-label="Filtrar por área"></div>
   <div id="buscas-content"></div>
 </section>
 
 <!-- CHECKLIST -->
 <section id="checklist" role="tabpanel">
-  <h2>Checklist Semanal</h2>
+  <h2 class="section-title">Checklist <span>Semanal</span></h2>
   <p class="sub" id="checklist-sub">Marque conforme avança. O progresso é salvo no navegador e reinicia automaticamente a cada semana.</p>
   <div class="twocol">
     <div class="card" id="check-fontes"></div>
@@ -313,32 +513,32 @@ TABS.forEach((t, i) => {
    DADOS — ÁREAS E QUERIES
 ═══════════════════════════════════════════════════════════════════════════ */
 const AREAS = [
-  {nome:"Direito do Trabalho", queries:[
+  {nome:"Direito do Trabalho",    key:"trabalho", icon:"👷", short:"Trabalho",    queries:[
     {l:"TJSP / TRT — geral",   q:'rescisão indireta OR justa causa OR horas extras OR vínculo empregatício'},
     {l:"Tema quente",           q:'pejotização OR terceirização OR responsabilidade subsidiária'},
     {l:"Web ampla",             q:'TST jurisprudência recente rescisão indireta 2026'}
   ]},
-  {nome:"Direito Digital", queries:[
+  {nome:"Direito Digital",        key:"digital",  icon:"💻", short:"Digital",     queries:[
     {l:"STJ / TJSP",            q:'Marco Civil da Internet OR remoção de conteúdo OR responsabilidade de provedor'},
     {l:"Dados / LGPD",          q:'LGPD OR vazamento de dados OR dano moral OR tratamento de dados pessoais'},
     {l:"Web ampla",             q:'decisão STF artigo 19 Marco Civil Internet 2026'}
   ]},
-  {nome:"Direito Civil", queries:[
+  {nome:"Direito Civil",          key:"civil",    icon:"📋", short:"Civil",       queries:[
     {l:"STJ — Informativo",     q:'responsabilidade civil OR dano moral OR usucapião OR contrato'},
     {l:"Família / Sucessões",   q:'união estável OR partilha OR alimentos OR inventário'},
     {l:"Web ampla",             q:'STJ Jurisprudência em Teses direito civil edição recente 2026'}
   ]},
-  {nome:"Direito Previdenciário", queries:[
+  {nome:"Direito Previdenciário", key:"prev",     icon:"🛡️", short:"Previdenciário", queries:[
     {l:"STJ / TNU",             q:'aposentadoria especial OR revisão da vida toda OR benefício por incapacidade'},
     {l:"Custeio",               q:'contribuição previdenciária OR salário-maternidade OR base de cálculo'},
     {l:"Web ampla",             q:'TNU TRF3 tese previdenciária recente 2026'}
   ]},
-  {nome:"Direito Empresarial", queries:[
+  {nome:"Direito Empresarial",    key:"emp",      icon:"🏢", short:"Empresarial", queries:[
     {l:"STJ",                   q:'recuperação judicial OR falência OR dissolução de sociedade OR desconsideração'},
     {l:"Societário / Títulos",  q:'sociedade limitada OR duplicata OR cédula de crédito OR responsabilidade do sócio'},
     {l:"Web ampla",             q:'STJ recuperação judicial tese recente 2026'}
   ]},
-  {nome:"Direito Condominial", queries:[
+  {nome:"Direito Condominial",    key:"cond",     icon:"🏘️", short:"Condominial", queries:[
     {l:"TJSP",                  q:'condomínio OR taxa condominial OR convenção de condomínio OR multa'},
     {l:"Conflitos",             q:'animais em condomínio OR uso de área comum OR penhora imóvel condomínio'},
     {l:"Web ampla",             q:'TJSP condomínio cobrança taxa decisão recente 2026'}
@@ -357,15 +557,17 @@ const areaCards  = [];
 // Botão "Todas"
 const allBtn = document.createElement("button");
 allBtn.className = "filter-btn active";
-allBtn.textContent = "Todas";
+allBtn.setAttribute("data-area", "todas");
+allBtn.textContent = "Todas as áreas";
 allBtn.onclick = () => setFilter("Todas");
 filterBar.appendChild(allBtn);
 
-// Botões por área
+// Botões por área com ícone e cor própria
 AREAS.forEach(a => {
   const fb = document.createElement("button");
   fb.className = "filter-btn";
-  fb.textContent = a.nome.replace("Direito ", "");
+  fb.setAttribute("data-area", a.key);
+  fb.innerHTML = `${a.icon} ${a.short}`;
   fb.onclick = () => setFilter(a.nome);
   filterBar.appendChild(fb);
 });
@@ -381,12 +583,13 @@ function setFilter(nome) {
   });
 }
 
-// Cards de queries
+// Cards de queries com identidade de área
 AREAS.forEach(a => {
   const card = document.createElement("div");
   card.className = "card area-card";
+  card.setAttribute("data-area", a.key);
   card.style.marginBottom = "16px";
-  card.innerHTML = `<h3>${a.nome}</h3>`;
+  card.innerHTML = `<h3>${a.icon} <span class="area-name">${a.nome}</span></h3>`;
 
   a.queries.forEach(qq => {
     const lbl = document.createElement("div");
@@ -455,7 +658,7 @@ const FONTES_ITEMS = [
   ["TST — informativo / súmulas",          "Trabalhista"],
   ["Legislação federal — DOU / Planalto",  "Legislação"]
 ];
-const AREAS_ITEMS = AREAS.map(a => [a.nome, "Buscas rodadas + registro"]);
+const AREAS_ITEMS = AREAS.map(a => [a.nome, "Buscas rodadas + registro", a.key, a.icon]);
 
 // Coleta todos os itens para exportação global
 const ALL_ITEMS_META = []; // {elId, index, label, category, key}
@@ -466,13 +669,20 @@ function buildCheck(elId, title, items) {
 
   const header = document.createElement("div");
   header.className = "check-header";
-  header.innerHTML = `<h3>${title}</h3><span class="progress" id="prog-${elId}"></span>`;
+  header.innerHTML = `
+    <h3>${title}</h3>
+    <div class="progress-wrap">
+      <span class="progress" id="prog-${elId}"></span>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="bar-${elId}" style="width:0%"></div></div>
+    </div>`;
   el.appendChild(header);
 
   const updateProgress = () => {
     const all  = el.querySelectorAll("input[type=checkbox]");
     const done = el.querySelectorAll("input[type=checkbox]:checked");
-    document.getElementById(`prog-${elId}`).innerHTML = `<b>${done.length}</b>/${all.length}`;
+    const pct  = all.length ? Math.round(done.length / all.length * 100) : 0;
+    document.getElementById(`prog-${elId}`).textContent = `${done.length}/${all.length}`;
+    document.getElementById(`bar-${elId}`).style.width = `${pct}%`;
   };
 
   items.forEach((it, i) => {
@@ -482,7 +692,15 @@ function buildCheck(elId, title, items) {
     const row = document.createElement("div");
     row.className = "check" + (checks[key] ? " done" : "");
     const id = "chk-" + key;
-    row.innerHTML = `<input type="checkbox" id="${id}"${checks[key] ? " checked" : ""}><label for="${id}">${it[0]}<span class="area">${it[1]}</span></label>`;
+    const areaKey  = it[2] || "";
+    const areaIcon = it[3] || "";
+    const dot = areaKey
+      ? `<span class="area-dot" style="background:var(--area-${areaKey})"></span>`
+      : "";
+    const label = areaKey
+      ? `${areaIcon} ${it[0]}`
+      : it[0];
+    row.innerHTML = `<input type="checkbox" id="${id}"${checks[key] ? " checked" : ""}><label for="${id}">${dot}${label}<span class="cat">${it[1]}</span></label>`;
     const cb = row.querySelector("input");
     cb.addEventListener("change", () => {
       const data = loadChecks();
