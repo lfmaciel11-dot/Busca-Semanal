@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Painel de monitoramento jurídico semanal — TJSP, STJ, STF. Jurisprudência e legislação federal em 6 áreas de prática.">
+<title>Painel de Monitoramento Jurídico</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+<style>
+  :root{
+    --bg:#0f1419; --panel:#1a212b; --panel2:#222c38; --border:#2e3a48;
+    --ink:#e8eef4; --muted:#9aabbd; --accent:#c9a227; --accent2:#3d7eff;
+    --ok:#2faa6e; --tag:#26323f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+
+  /* Header */
+  header{padding:28px 24px 18px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#141b24,#0f1419)}
+  header h1{margin:0 0 6px;font-size:24px;letter-spacing:.3px}
+  header p{margin:0;color:var(--muted);font-size:14px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+  /* Nav */
+  nav{display:flex;gap:8px;flex-wrap:wrap;padding:16px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(15,20,25,.96);backdrop-filter:blur(6px);z-index:5}
+  nav button{background:var(--panel);color:var(--ink);border:1px solid var(--border);padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;transition:.15s}
+  nav button:hover{border-color:var(--accent)}
+  nav button.active{background:var(--accent);color:#1a1404;border-color:var(--accent);font-weight:600}
+  nav button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* Sections */
+  section{padding:26px 24px;max-width:1180px;margin:0 auto;display:none}
+  section.active{display:block}
+  h2{font-size:19px;margin:0 0 4px;color:var(--accent)}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 20px}
+
+  /* Cards / Grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px}
+  .card h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px}
+  .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--tag);color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .b-jur{background:#1f3a2c;color:#7fe0a8}
+  .b-leg{background:#2a2440;color:#c3b0ff}
+  .card a{display:block;color:var(--accent2);text-decoration:none;font-size:13px;padding:5px 0;border-bottom:1px solid transparent;transition:.1s}
+  .card a:hover{color:#7fa9ff}
+  .card a::before{content:"→ ";color:var(--muted)}
+  .note{font-size:12px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+
+  /* Query blocks */
+  .query{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:8px 0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:#d7e3ef;position:relative;cursor:pointer;transition:.15s;padding-right:72px}
+  .query:hover{border-color:var(--accent)}
+  .query .copy{position:absolute;right:10px;top:10px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;user-select:none}
+  .query.copied{border-color:var(--ok)}
+  .query.copied .copy{color:var(--ok)}
+  .qlabel{font-size:12px;color:var(--muted);margin:14px 0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+  /* Steps */
+  ol.steps{padding-left:0;list-style:none;counter-reset:s}
+  ol.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px 14px 54px;margin:10px 0;position:relative}
+  ol.steps li::before{content:counter(s);position:absolute;left:14px;top:50%;transform:translateY(-50%);width:28px;height:28px;background:var(--accent);color:#1a1404;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+  ol.steps li b{color:var(--ink)}
+  ol.steps li span{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+
+  /* Checklist */
+  .check-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .check-header h3{margin:0;font-size:15px}
+  .progress{font-size:12px;color:var(--muted)}
+  .progress b{color:var(--ok)}
+  .check{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer}
+  .check:last-child{border-bottom:none}
+  .check input{margin-top:4px;width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+  .check label{cursor:pointer;font-size:14px}
+  .check .area{color:var(--muted);font-size:12px;display:block}
+  .check.done label{text-decoration:line-through;color:var(--muted)}
+  .week-tag{font-size:12px;color:var(--muted);background:var(--tag);padding:3px 10px;border-radius:10px}
+  .reset-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;margin-top:14px;display:block;transition:.15s}
+  .reset-btn:hover{border-color:var(--accent);color:var(--ink)}
+
+  /* Layout */
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:760px){.twocol{grid-template-columns:1fr}}
+
+  /* Misc */
+  footer{padding:24px;text-align:center;color:var(--muted);font-size:12px;border-top:1px solid var(--border);margin-top:20px}
+  .alert{background:#2a2218;border:1px solid #4a3a1c;border-radius:10px;padding:12px 16px;font-size:13px;color:#e8d39a;margin-bottom:18px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>Painel de Monitoramento Jurídico</h1>
+    <p>Jurisprudência (TJSP · STJ · STF) e legislação federal — atualização semanal · 6 áreas de prática</p>
+  </div>
+</header>
+
+<nav id="nav" role="tablist" aria-label="Navegação principal"></nav>
+
+<!-- ROTEIRO -->
+<section id="roteiro" class="active" role="tabpanel">
+  <h2>Roteiro Semanal</h2>
+  <p class="sub">Sequência sugerida para cobrir as 6 áreas em ~40 min, uma vez por semana (ex.: toda segunda de manhã).</p>
+  <div class="alert">Dica: os informativos do STJ e do STF saem em ciclos próprios. Comece sempre pelos boletins consolidados (passos 1–3) antes de fazer buscas livres, porque eles já filtram o que é relevante.</div>
+  <ol class="steps">
+    <li><b>Informativo de Jurisprudência do STJ</b><span>Abra a edição mais recente. Cada edição traz teses novas organizadas por ramo do Direito, com o número do REsp e a data de julgamento.</span></li>
+    <li><b>Informativo de Jurisprudência do STF</b><span>Confira as teses de repercussão geral mais recentes e o informativo semanal. Filtre pelos temas das suas áreas.</span></li>
+    <li><b>Jurisprudência em Teses do STJ</b><span>Veja se há edição nova nas suas áreas (Civil, Empresarial, Previdenciário, Digital). É um compilado temático — ótimo para teses consolidadas.</span></li>
+    <li><b>TJSP — Jurisprudência de 2º Grau</b><span>Rode as buscas prontas (aba Buscas Prontas) com filtro de data de julgamento na última semana. Use o e-SAJ ou a Jurisprudência Selecionada.</span></li>
+    <li><b>Legislação federal</b><span>Cheque o portal do Planalto e o Diário Oficial da União por leis sancionadas/MPs/decretos na semana nas suas áreas.</span></li>
+    <li><b>Registro</b><span>Anote no seu controle: tribunal, nº do processo/lei, área, tese/mudança e link. Use o checklist desta página.</span></li>
+  </ol>
+  <p class="sub" style="margin-top:18px">Para buscas pontuais ao longo da semana, use diretamente as queries da aba de cada área.</p>
+</section>
+
+<!-- FONTES -->
+<section id="fontes" role="tabpanel">
+  <h2>Fontes Oficiais</h2>
+  <p class="sub">Links diretos para os canais de atualização. Marque os de atualização periódica como favoritos.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>STJ <span class="badge b-jur">Jurisprudência</span></h3>
+      <a href="https://scon.stj.jus.br/jurisprudencia/externo/informativo/" target="_blank" rel="noopener">Informativo de Jurisprudência (edições)</a>
+      <a href="https://www.stj.jus.br/SCON/jt/" target="_blank" rel="noopener">Jurisprudência em Teses</a>
+      <a href="https://processo.stj.jus.br/SCON/" target="_blank" rel="noopener">Pesquisa de Jurisprudência (SCON)</a>
+      <a href="https://www.stj.jus.br/sites/portalp/Inicio" target="_blank" rel="noopener">Portal STJ / Notícias</a>
+      <div class="note">Informativo sai periodicamente; Jurisprudência em Teses é temático.</div>
+    </div>
+    <div class="card">
+      <h3>STF <span class="badge b-jur">Jurisprudência</span></h3>
+      <a href="https://portal.stf.jus.br/repercussaogeral/teses.asp" target="_blank" rel="noopener">Teses de Repercussão Geral</a>
+      <a href="https://portal.stf.jus.br/informativos/" target="_blank" rel="noopener">Informativo do STF</a>
+      <a href="https://jurisprudencia.stf.jus.br/pages/search" target="_blank" rel="noopener">Pesquisa de Jurisprudência</a>
+      <a href="https://portal.stf.jus.br/" target="_blank" rel="noopener">Portal STF / Notícias</a>
+      <div class="note">Teses de RG divulgadas assim que fixadas, antes da publicação do acórdão.</div>
+    </div>
+    <div class="card">
+      <h3>TJSP <span class="badge b-jur">Jurisprudência</span></h3>
+      <a href="https://www.tjsp.jus.br/jurisprudencia" target="_blank" rel="noopener">Portal de Jurisprudência (SAJ + eproc)</a>
+      <a href="https://esaj.tjsp.jus.br/cjsg/consultaCompleta.do" target="_blank" rel="noopener">Consulta de Acórdãos 2º Grau (e-SAJ)</a>
+      <a href="https://esaj.tjsp.jus.br/gecon/jurisprudencia/consulta" target="_blank" rel="noopener">Jurisprudência Selecionada (GECON)</a>
+      <a href="https://www.tjsp.jus.br/SecaoDireitoPrivado/SecaoDireitoPrivado/Jurisprudencias" target="_blank" rel="noopener">Seção de Direito Privado — por tema</a>
+      <div class="note">Filtre por classe, órgão julgador e data de julgamento na busca avançada.</div>
+    </div>
+    <div class="card">
+      <h3>Legislação Federal <span class="badge b-leg">Legislação</span></h3>
+      <a href="https://www.planalto.gov.br/ccivil_03/Portaria/quadro_portaria.htm" target="_blank" rel="noopener">Planalto — Legislação</a>
+      <a href="https://www.in.gov.br/leiturajornal" target="_blank" rel="noopener">Diário Oficial da União (DOU)</a>
+      <a href="https://www.congressonacional.leg.br/materias" target="_blank" rel="noopener">Congresso — Matérias / Veto</a>
+      <a href="https://www.camara.leg.br/legislacao" target="_blank" rel="noopener">Câmara — Legislação</a>
+      <div class="note">DOU edição diária; Planalto consolida leis sancionadas.</div>
+    </div>
+    <div class="card">
+      <h3>Trabalhista <span class="badge b-jur">Jurisprudência</span></h3>
+      <a href="https://www.tst.jus.br/web/guest/informativo-tst" target="_blank" rel="noopener">TST — Informativo</a>
+      <a href="https://jurisprudencia.tst.jus.br/" target="_blank" rel="noopener">TST — Pesquisa de Jurisprudência</a>
+      <a href="https://www.trtsp.jus.br/" target="_blank" rel="noopener">TRT-2 (SP capital)</a>
+      <a href="https://www.trt15.jus.br/" target="_blank" rel="noopener">TRT-15 (Campinas/interior SP)</a>
+      <div class="note">Súmulas e OJs do TST mudam por sessões; acompanhe o informativo.</div>
+    </div>
+    <div class="card">
+      <h3>Previdenciário <span class="badge b-jur">Jurisprudência</span></h3>
+      <a href="https://www.gov.br/inss/pt-br" target="_blank" rel="noopener">INSS — Atos e instruções</a>
+      <a href="https://www.cjf.jus.br/cjf/corregedoria-da-justica-federal/turma-nacional-de-uniformizacao" target="_blank" rel="noopener">TNU — Turma Nacional de Uniformização</a>
+      <a href="https://www.trf3.jus.br/" target="_blank" rel="noopener">TRF-3 (SP/MS)</a>
+      <div class="note">Combine teses do STJ/STF com atos normativos do INSS.</div>
+    </div>
+  </div>
+</section>
+
+<!-- BUSCAS PRONTAS -->
+<section id="buscas" role="tabpanel">
+  <h2>Buscas Prontas por Área</h2>
+  <p class="sub">Clique em qualquer caixa para copiar. Cole no campo de busca do tribunal ou em buscadores. Ajuste o intervalo de datas para a última semana.</p>
+  <div class="alert">Nos sistemas do TJSP e STJ, use os filtros nativos de <b>data de julgamento</b>. Os termos abaixo são o núcleo da pesquisa — combine com aspas para expressão exata e operadores E/OU (AND/OR) quando o sistema permitir.</div>
+  <div id="buscas-content"></div>
+</section>
+
+<!-- CHECKLIST -->
+<section id="checklist" role="tabpanel">
+  <h2>Checklist Semanal</h2>
+  <p class="sub">Marque conforme avança. O progresso é salvo no navegador e reinicia automaticamente a cada semana.</p>
+  <div class="twocol">
+    <div class="card" id="check-fontes"></div>
+    <div class="card" id="check-areas"></div>
+  </div>
+</section>
+
+<footer>
+  Painel de referência · Fontes oficiais consultadas em jun/2026 · Verifique sempre a vigência e a publicação oficial antes de citar.
+</footer>
+
+<script>
+/* ── Navegação ─────────────────────────────────────────────────────────── */
+const TABS = [
+  {id:"roteiro", label:"Roteiro Semanal"},
+  {id:"fontes",  label:"Fontes Oficiais"},
+  {id:"buscas",  label:"Buscas Prontas"},
+  {id:"checklist",label:"Checklist"}
+];
+
+const nav = document.getElementById("nav");
+TABS.forEach((t, i) => {
+  const b = document.createElement("button");
+  b.textContent = t.label;
+  b.className = i === 0 ? "active" : "";
+  b.setAttribute("role", "tab");
+  b.setAttribute("aria-selected", i === 0 ? "true" : "false");
+  b.setAttribute("aria-controls", t.id);
+  b.onclick = () => {
+    document.querySelectorAll("nav button").forEach(x => {
+      x.classList.remove("active");
+      x.setAttribute("aria-selected","false");
+    });
+    document.querySelectorAll("section").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    b.setAttribute("aria-selected","true");
+    document.getElementById(t.id).classList.add("active");
+    window.scrollTo({top: 0, behavior: "smooth"});
+  };
+  nav.appendChild(b);
+});
+
+/* ── Áreas e queries ───────────────────────────────────────────────────── */
+const AREAS = [
+  {nome:"Direito do Trabalho", queries:[
+    {l:"TJSP / TRT — geral",       q:'rescisão indireta OR justa causa OR horas extras OR vínculo empregatício'},
+    {l:"Tema quente",               q:'pejotização OR terceirização OR responsabilidade subsidiária'},
+    {l:"Web ampla",                 q:'TST jurisprudência recente rescisão indireta 2026'}
+  ]},
+  {nome:"Direito Digital", queries:[
+    {l:"STJ / TJSP",                q:'Marco Civil da Internet OR remoção de conteúdo OR responsabilidade de provedor'},
+    {l:"Dados / LGPD",              q:'LGPD OR vazamento de dados OR dano moral OR tratamento de dados pessoais'},
+    {l:"Web ampla",                 q:'decisão STF artigo 19 Marco Civil Internet 2026'}
+  ]},
+  {nome:"Direito Civil", queries:[
+    {l:"STJ — Informativo",         q:'responsabilidade civil OR dano moral OR usucapião OR contrato'},
+    {l:"Família / Sucessões",       q:'união estável OR partilha OR alimentos OR inventário'},
+    {l:"Web ampla",                 q:'STJ Jurisprudência em Teses direito civil edição recente 2026'}
+  ]},
+  {nome:"Direito Previdenciário", queries:[
+    {l:"STJ / TNU",                 q:'aposentadoria especial OR revisão da vida toda OR benefício por incapacidade'},
+    {l:"Custeio",                   q:'contribuição previdenciária OR salário-maternidade OR base de cálculo'},
+    {l:"Web ampla",                 q:'TNU TRF3 tese previdenciária recente 2026'}
+  ]},
+  {nome:"Direito Empresarial", queries:[
+    {l:"STJ",                       q:'recuperação judicial OR falência OR dissolução de sociedade OR desconsideração'},
+    {l:"Societário / Títulos",      q:'sociedade limitada OR duplicata OR cédula de crédito OR responsabilidade do sócio'},
+    {l:"Web ampla",                 q:'STJ recuperação judicial tese recente 2026'}
+  ]},
+  {nome:"Direito Condominial", queries:[
+    {l:"TJSP",                      q:'condomínio OR taxa condominial OR convenção de condomínio OR multa'},
+    {l:"Conflitos",                 q:'animais em condomínio OR uso de área comum OR penhora imóvel condomínio'},
+    {l:"Web ampla",                 q:'TJSP condomínio cobrança taxa decisão recente 2026'}
+  ]}
+];
+
+const bc = document.getElementById("buscas-content");
+AREAS.forEach(a => {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.style.marginBottom = "16px";
+  card.innerHTML = `<h3>${a.nome}</h3>`;
+  a.queries.forEach(qq => {
+    const lbl = document.createElement("div");
+    lbl.className = "qlabel";
+    lbl.textContent = qq.l;
+    const d = document.createElement("div");
+    d.className = "query";
+    d.setAttribute("role","button");
+    d.setAttribute("tabindex","0");
+    d.setAttribute("aria-label", `Copiar: ${qq.q}`);
+    d.innerHTML = `<span class="copy" aria-hidden="true">copiar</span>${qq.q}`;
+    const doCopy = () => {
+      navigator.clipboard.writeText(qq.q).then(() => {
+        d.classList.add("copied");
+        d.querySelector(".copy").textContent = "copiado ✓";
+        setTimeout(() => {
+          d.classList.remove("copied");
+          d.querySelector(".copy").textContent = "copiar";
+        }, 1400);
+      });
+    };
+    d.onclick = doCopy;
+    d.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); doCopy(); } };
+    card.appendChild(lbl);
+    card.appendChild(d);
+  });
+  bc.appendChild(card);
+});
+
+/* ── Checklist com persistência semanal ───────────────────────────────── */
+function getISOWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return `${d.getUTCFullYear()}-W${String(Math.ceil((((d - yearStart) / 86400000) + 1) / 7)).padStart(2,"0")}`;
+}
+
+const WEEK_KEY = "jur_week";
+const DATA_KEY = "jur_checks";
+const currentWeek = getISOWeek(new Date());
+
+let savedWeek = localStorage.getItem(WEEK_KEY);
+if (savedWeek !== currentWeek) {
+  localStorage.setItem(WEEK_KEY, currentWeek);
+  localStorage.removeItem(DATA_KEY);
+}
+
+function loadChecks() {
+  try { return JSON.parse(localStorage.getItem(DATA_KEY)) || {}; } catch { return {}; }
+}
+function saveChecks(data) {
+  localStorage.setItem(DATA_KEY, JSON.stringify(data));
+}
+
+const FONTES_ITEMS = [
+  ["Informativo STJ — edição da semana",      "Jurisprudência"],
+  ["Informativo / Teses RG do STF",            "Jurisprudência"],
+  ["Jurisprudência em Teses STJ",              "Jurisprudência"],
+  ["TJSP 2º Grau — busca por data",           "Jurisprudência"],
+  ["TST — informativo / súmulas",             "Trabalhista"],
+  ["Legislação federal — DOU / Planalto",     "Legislação"]
+];
+const AREAS_ITEMS = AREAS.map(a => [a.nome, "Buscas rodadas + registro"]);
+
+function buildCheck(elId, title, items) {
+  const el = document.getElementById(elId);
+  const checks = loadChecks();
+
+  const header = document.createElement("div");
+  header.className = "check-header";
+  header.innerHTML = `<h3>${title}</h3><span class="progress" id="prog-${elId}"></span>`;
+  el.appendChild(header);
+
+  const updateProgress = () => {
+    const all  = el.querySelectorAll("input[type=checkbox]");
+    const done = el.querySelectorAll("input[type=checkbox]:checked");
+    const prog = el.querySelector(`#prog-${elId}`);
+    prog.innerHTML = `<b>${done.length}</b>/${all.length}`;
+  };
+
+  items.forEach((it, i) => {
+    const key = `${elId}-${i}`;
+    const row = document.createElement("div");
+    row.className = "check" + (checks[key] ? " done" : "");
+    const id = "chk-" + key;
+    row.innerHTML = `<input type="checkbox" id="${id}"${checks[key] ? " checked" : ""}><label for="${id}">${it[0]}<span class="area">${it[1]}</span></label>`;
+    const cb = row.querySelector("input");
+    cb.addEventListener("change", () => {
+      const data = loadChecks();
+      data[key] = cb.checked;
+      saveChecks(data);
+      row.classList.toggle("done", cb.checked);
+      updateProgress();
+    });
+    el.appendChild(row);
+  });
+
+  const resetBtn = document.createElement("button");
+  resetBtn.className = "reset-btn";
+  resetBtn.textContent = "Limpar tudo";
+  resetBtn.onclick = () => {
+    if (!confirm("Limpar todos os itens marcados?")) return;
+    const data = loadChecks();
+    items.forEach((_, i) => { delete data[`${elId}-${i}`]; });
+    saveChecks(data);
+    el.querySelectorAll("input[type=checkbox]").forEach(cb => { cb.checked = false; });
+    el.querySelectorAll(".check").forEach(r => r.classList.remove("done"));
+    updateProgress();
+  };
+  el.appendChild(resetBtn);
+
+  updateProgress();
+}
+
+const weekLabel = document.querySelector("#checklist .sub");
+if (weekLabel) {
+  weekLabel.textContent += ` Semana atual: ${currentWeek}.`;
+}
+
+buildCheck("check-fontes", "Fontes a verificar", FONTES_ITEMS);
+buildCheck("check-areas",  "Áreas cobertas",     AREAS_ITEMS);
+</script>
+</body>
+</html>
