@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maciel Advocacia | Assessoria e consultoria jurídica em Araraquara/SP</title>
-<meta name="description" content="Maciel Advocacia — Direito Civil, Empresarial, Digital, Previdenciário e Trabalhista em Araraquara/SP. Atendimento a pessoas físicas e assessoria jurídica especializada para empresas.">
+<meta name="description" content="Maciel Advocacia — Direito Civil, Empresarial, Digital, Previdenciário e Trabalhista em Araraquara/SP. Atendimento a pessoas físicas e assessoria jurídica para empresas.">
 <meta property="og:title" content="Maciel Advocacia">
 <meta property="og:description" content="Assessoria e consultoria jurídica em Araraquara/SP. Pessoas físicas e empresas.">
 <meta property="og:type" content="website">
@@ -34,7 +34,8 @@
   ]
 }
 </script>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -235,6 +236,11 @@
   .wa-float { position: fixed; right: 20px; bottom: 20px; z-index: 60; width: 58px; height: 58px; border-radius: 50%; background: #25D366; color: #fff; display: grid; place-items: center; box-shadow: 0 8px 24px rgba(0,0,0,.25); transition: transform .2s; }
   .wa-float:hover { transform: scale(1.07); }
   .wa-float svg { width: 30px; height: 30px; }
+  @media (max-width: 820px) {
+    .wa-float { width: 52px; height: 52px; right: 16px; bottom: 16px; transition: transform .2s, opacity .25s; }
+    .wa-float svg { width: 27px; height: 27px; }
+    .wa-float:not(.show) { opacity: 0; transform: scale(.8); pointer-events: none; }
+  }
 
   /* ── Animação de entrada ────────────────────────────────────────────── */
   .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
@@ -361,7 +367,7 @@
         <ul>
           <li>LGPD e proteção de dados</li>
           <li>Termos de uso e políticas de privacidade</li>
-          <li>Fraudes, golpes e crimes virtuais</li>
+          <li>Fraudes e golpes virtuais — reparação de danos</li>
           <li>Remoção de conteúdo e direito à imagem</li>
         </ul>
       </article>
@@ -399,8 +405,8 @@
       <h2>Atendimento sob medida para cada realidade.</h2>
     </div>
     <div class="tabs" role="tablist">
-      <button class="tab" role="tab" aria-selected="true" aria-controls="pf" id="tab-pf">Pessoa Física</button>
-      <button class="tab" role="tab" aria-selected="false" aria-controls="pj" id="tab-pj">Pessoa Jurídica</button>
+      <button class="tab" role="tab" aria-selected="true" aria-controls="pf" id="tab-pf" tabindex="0">Pessoa Física</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="pj" id="tab-pj" tabindex="-1">Pessoa Jurídica</button>
     </div>
 
     <div class="panel active" id="pf" role="tabpanel" aria-labelledby="tab-pf">
@@ -439,7 +445,7 @@
     <div class="section-head reveal">
       <span class="eyebrow">Assessoria jurídica empresarial</span>
       <h2>Prevenir custa menos do que remediar.</h2>
-      <p>Nossa especialidade: assessoria jurídica contínua para empresas de Araraquara e região, integrada às rotinas do negócio, antecipando riscos e dando segurança às decisões — nas áreas cível, empresarial, digital e trabalhista.</p>
+      <p>Nosso foco: assessoria jurídica contínua para empresas de Araraquara e região, integrada às rotinas do negócio, antecipando riscos e dando segurança às decisões — nas áreas cível, empresarial, digital e trabalhista.</p>
     </div>
     <div class="pillars">
       <div class="pillar reveal">
@@ -500,7 +506,7 @@
       <span class="eyebrow">Sobre</span>
       <h2>Advocacia próxima, técnica e transparente.</h2>
       <p>Me chamo Luiz Felipe, sou advogado com 9 anos de experiência. Nosso escritório atua para pessoas físicas e jurídicas, buscando soluções adequadas para cada caso e para cada empresa.</p>
-      <p>Nossa expertise é a assessoria jurídica especializada para empresas da região de Araraquara — com atendimento próximo, técnico e transparente, explicando cada etapa com clareza.</p>
+      <p>Nosso foco é a assessoria jurídica dedicada às empresas da região de Araraquara — com atendimento próximo, técnico e transparente, explicando cada etapa com clareza.</p>
       <div class="values">
         <div><strong>9 anos</strong><span>de experiência na advocacia.</span></div>
         <div><strong>Clareza</strong><span>Linguagem simples, sem juridiquês.</span></div>
@@ -585,7 +591,7 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1l-.9 1.2c-.2.2-.3.2-.6.1a8.2 8.2 0 0 1-4-3.5c-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5 1.9.8 2.6.9 3.6.7.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4l-.8-.5ZM12 2a10 10 0 0 0-8.6 15l-1.4 5 5.1-1.3A10 10 0 1 0 12 2Z"/></svg>
         Enviar pelo WhatsApp
       </button>
-      <p class="form-note">Ao enviar, você concorda com o uso dos dados informados exclusivamente para retorno do contato, nos termos da LGPD.</p>
+      <p class="form-note">Ao enviar, você concorda com o uso dos dados informados exclusivamente para retorno do contato, nos termos da LGPD. Veja a <a href="privacidade.html" style="text-decoration:underline">Política de Privacidade</a>.</p>
     </form>
   </div>
 </section>
@@ -604,6 +610,7 @@
         <a href="#assessoria">Empresas</a>
         <a href="#sobre">Sobre</a>
         <a href="#contato">Contato</a>
+        <a href="privacidade.html">Privacidade</a>
         <a href="https://instagram.com/macieladvocaciadigital" target="_blank" rel="noopener">Instagram</a>
         <a href="https://www.linkedin.com/in/luiz-felipe-maciel-ab41a834" target="_blank" rel="noopener">LinkedIn</a>
       </nav>
@@ -626,7 +633,15 @@
 
   // Cabeçalho sólido ao rolar
   const header = document.querySelector('header');
-  const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 20);
+  const waFloat = document.getElementById('wa-float');
+  const hero = document.querySelector('.hero');
+  const onScroll = () => {
+    header.classList.toggle('scrolled', window.scrollY > 20);
+    // no celular, o botão flutuante só aparece depois do topo (que já tem os próprios botões)
+    const show = window.scrollY > hero.offsetHeight - 200;
+    waFloat.classList.toggle('show', show);
+    waFloat.tabIndex = show || innerWidth > 820 ? 0 : -1;
+  };
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
 
   // Menu mobile
@@ -642,10 +657,19 @@
 
   // Abas PF / PJ
   const tabs = document.querySelectorAll('.tab');
-  tabs.forEach(tab => tab.addEventListener('click', () => {
-    tabs.forEach(t => t.setAttribute('aria-selected', t === tab));
+  const selecionarAba = tab => {
+    tabs.forEach(t => { t.setAttribute('aria-selected', t === tab); t.tabIndex = t === tab ? 0 : -1; });
     document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === tab.getAttribute('aria-controls')));
-  }));
+  };
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => selecionarAba(tab));
+    tab.addEventListener('keydown', e => {
+      const passo = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      if (!passo) return;
+      const prox = tabs[(i + passo + tabs.length) % tabs.length];
+      selecionarAba(prox); prox.focus(); e.preventDefault();
+    });
+  });
 
   // Formulário: mostra campo "Empresa" para PJ e pré-seleciona perfil vindo dos CTAs
   const form = document.getElementById('form');
