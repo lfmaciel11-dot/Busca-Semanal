@@ -207,7 +207,7 @@
   .info-list small { display: block; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--on-dark-muted); }
   form { background: #fff; color: var(--ink); border-radius: 20px; padding: 34px; display: grid; gap: 16px; }
   form h3 { font-size: 1.7rem; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
   label { display: grid; gap: 6px; font-size: .85rem; font-weight: 600; }
   input, select, textarea { font: inherit; font-weight: 400; font-size: .95rem; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg2); color: var(--ink); width: 100%; transition: border-color .2s, box-shadow .2s; }
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(33,136,202,.18); background: #fff; }
@@ -216,6 +216,11 @@
   .radio-group label { flex: 1; display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; cursor: pointer; font-weight: 500; background: var(--bg2); }
   .radio-group input { width: auto; accent-color: var(--blue); }
   .form-note { font-size: .78rem; color: var(--muted); }
+  .field-error { font-size: .78rem; font-weight: 500; color: #C0392B; min-height: 0; }
+  .field-error:empty { display: none; }
+  input[aria-invalid="true"] { border-color: #C0392B; background: #FDF3F2; }
+  input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(192,57,43,.18); border-color: #C0392B; }
+  input.is-valid { border-color: #2E9E5B; }
   form .btn { justify-content: center; }
 
   /* ── Rodapé ─────────────────────────────────────────────────────────── */
@@ -560,8 +565,8 @@
         <label><input type="radio" name="perfil" value="Pessoa Jurídica"> Pessoa Jurídica</label>
       </div>
       <div class="row">
-        <label>Nome<input name="nome" required autocomplete="name" placeholder="Seu nome"></label>
-        <label>Telefone<input name="tel" type="tel" required autocomplete="tel" placeholder="(00) 00000-0000"></label>
+        <label>Nome<input name="nome" required autocomplete="name" placeholder="Seu nome" aria-describedby="nome-erro"><span class="field-error" id="nome-erro" aria-live="polite"></span></label>
+        <label>Telefone<input name="tel" type="tel" inputmode="numeric" required autocomplete="tel-national" maxlength="15" placeholder="(16) 99999-9999" aria-describedby="tel-erro"><span class="field-error" id="tel-erro" aria-live="polite"></span></label>
       </div>
       <label id="empresa-field" hidden>Empresa<input name="empresa" autocomplete="organization" placeholder="Razão social ou nome fantasia"></label>
       <label>Área
@@ -654,14 +659,62 @@
   document.querySelectorAll('[data-perfil]').forEach(a => a.addEventListener('click', () =>
     setPerfil(a.dataset.perfil === 'pj' ? 'Pessoa Jurídica' : 'Pessoa Física')));
 
-  // Envio: monta a mensagem e abre o WhatsApp
+  // Telefone: máscara (00) 00000-0000 e validação de número brasileiro
+  const DDDS = new Set(('11 12 13 14 15 16 17 18 19 21 22 24 27 28 31 32 33 34 35 37 38 41 42 43 44 45 46 47 48 49 ' +
+    '51 53 54 55 61 62 63 64 65 66 67 68 69 71 73 74 75 77 79 81 82 83 84 85 86 87 88 89 91 92 93 94 95 96 97 98 99').split(' '));
+  // Remove código do país (+55) e o 0 de operadora; nenhum DDD começa com 0
+  const soDigitos = v => {
+    let d = v.replace(/\D/g, '');
+    if (v.trim().startsWith('+') || (d.length > 11 && d.startsWith('55'))) d = d.replace(/^55/, '');
+    return d.replace(/^0+/, '').slice(0, 11);
+  };
+  const mascara = d => {
+    if (d.length <= 2) return d.length ? `(${d}` : '';
+    const ddd = d.slice(0, 2), num = d.slice(2);
+    const corte = d.length === 11 ? 5 : 4;
+    return num.length > corte ? `(${ddd}) ${num.slice(0, corte)}-${num.slice(corte)}` : `(${ddd}) ${num}`;
+  };
+  const erroTelefone = v => {
+    const d = soDigitos(v);
+    if (!d) return 'Informe um telefone para retorno.';
+    if (d.length < 10) return 'Telefone incompleto. Informe DDD + número.';
+    if (!DDDS.has(d.slice(0, 2))) return `DDD ${d.slice(0, 2)} inválido.`;
+    if (/^(\d)\1+$/.test(d.slice(2))) return 'Número inválido.';
+    if (d.length === 11 && d[2] !== '9') return 'Celular deve começar com 9 após o DDD.';
+    if (d.length === 10 && !/[2-5]/.test(d[2])) return 'Telefone fixo deve começar com 2, 3, 4 ou 5 após o DDD. Se for celular, inclua o 9.';
+    return '';
+  };
+  const erroNome = v => v.trim().length < 2 ? 'Informe seu nome.' : '';
+
+  const marcar = (input, msg) => {
+    document.getElementById(input.getAttribute('aria-describedby')).textContent = msg;
+    input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+    input.classList.toggle('is-valid', !msg);
+    return !msg;
+  };
+  const tel = form.tel, nome = form.nome;
+  tel.addEventListener('input', () => {
+    // enquanto digita o código do país (+5, +55), mantém o texto como está
+    if (/^\s*\+\s*5?5?\s*$/.test(tel.value)) return;
+    tel.value = mascara(soDigitos(tel.value));
+    // durante a digitação só limpa o erro; a mensagem aparece ao sair do campo ou ao enviar
+    if (tel.getAttribute('aria-invalid') === 'true' && !erroTelefone(tel.value)) marcar(tel, '');
+  });
+  // Ao clicar em "Enviar" com o telefone em foco, o erro só aparece no envio — se surgisse no blur,
+  // empurraria o botão para baixo e o clique se perderia.
+  const enviar = form.querySelector('button[type="submit"]');
+  let clicandoEnviar = false;
+  enviar.addEventListener('pointerdown', () => { clicandoEnviar = true; });
+  addEventListener('pointerup', () => setTimeout(() => { clicandoEnviar = false; }));
+  tel.addEventListener('blur', () => { if (tel.value && !clicandoEnviar) marcar(tel, erroTelefone(tel.value)); });
+  nome.addEventListener('input', () => { if (nome.getAttribute('aria-invalid') === 'true') marcar(nome, erroNome(nome.value)); });
+
+  // Envio: valida, monta a mensagem e abre o WhatsApp
   form.addEventListener('submit', e => {
     e.preventDefault();
-    const nome = form.nome, tel = form.tel;
-    for (const f of [nome, tel]) {
-      if (!f.value.trim()) { f.focus(); f.style.borderColor = '#C0392B'; return; }
-      f.style.borderColor = '';
-    }
+    const okNome = marcar(nome, erroNome(nome.value));
+    const okTel = marcar(tel, erroTelefone(tel.value));
+    if (!okNome || !okTel) { (okNome ? tel : nome).focus(); return; }
     const linhas = [
       'Olá! Gostaria de solicitar um atendimento.',
       `*Nome:* ${nome.value.trim()}`,
