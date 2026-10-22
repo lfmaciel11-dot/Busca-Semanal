@@ -105,6 +105,11 @@
     font-size:13px;white-space:nowrap;transition:.15s;flex-shrink:0
   }
   #theme-btn:hover{border-color:var(--accent);color:var(--ink)}
+  #sim-link{
+    border:1px solid var(--area-trabalho);color:var(--area-trabalho);
+    padding:7px 13px;border-radius:20px;font-size:13px;white-space:nowrap;text-decoration:none;transition:.15s
+  }
+  #sim-link:hover{background:var(--area-trabalho);color:#fff}
 
   /* ── Nav ─────────────────────────────────────────────────────────────────── */
   nav{
@@ -380,7 +385,10 @@
         <p>TJSP · STJ · STF · TST — jurisprudência e legislação federal · atualização semanal · 6 áreas de prática</p>
       </div>
     </div>
-    <button id="theme-btn" aria-label="Alternar tema">☀ Modo claro</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a id="sim-link" href="simulador-6x1.html">🧮 Simulador fim da 6x1</a>
+      <button id="theme-btn" aria-label="Alternar tema">☀ Modo claro</button>
+    </div>
   </div>
 </header>
 

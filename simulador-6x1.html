@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Simulador para empresas do impacto do fim da escala 6x1 (EC 141/2026): jornada de 44h → 42h → 40h sem redução salarial.">
+<title>Simulador Fim da 6x1</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>">
+<style>
+  /* Mesmo sistema de cores do Painel de Monitoramento Jurídico */
+  :root {
+    --area-trabalho: #E07B2A;
+    --bg:      #0C1520;
+    --panel:   #132030;
+    --panel2:  #1A2B3D;
+    --border:  #243650;
+    --ink:     #DDE8F4;
+    --muted:   #6F8AA8;
+    --dim:     #405870;
+    --accent:  #C8980F;
+    --accent2: #3A80F0;
+    --ok:      #0FA86A;
+    --warn:    #E0A42A;
+    --bad:     #E0563A;
+    --s-atual: #6F8AA8;
+    --s-f1:    #E07B2A;
+    --s-f2:    #C8980F;
+    --alert-bg:#1E2A18; --alert-border:#3A5220; --alert-ink:#C8E09A;
+    --warn-bg: #2A2112; --warn-border:#5A4520; --warn-ink:#F0D08A;
+    --shadow-sm:0 1px 6px rgba(0,0,0,.28);
+    --header-grad: linear-gradient(160deg,#0C1A2A 0%,#0C1520 100%);
+  }
+  [data-theme="light"] {
+    --area-trabalho: #B85E14;
+    --bg:      #EEF2F8;
+    --panel:   #FFFFFF;
+    --panel2:  #E6ECF5;
+    --border:  #C0CFE4;
+    --ink:     #0D1D30;
+    --muted:   #4E6882;
+    --dim:     #8AA4C0;
+    --accent:  #9A7208;
+    --accent2: #1555C8;
+    --ok:      #0A7A4E;
+    --warn:    #9A6A08;
+    --bad:     #B8381E;
+    --s-atual: #8AA4C0;
+    --s-f1:    #D06A1C;
+    --s-f2:    #9A7208;
+    --alert-bg:#FEFAE8; --alert-border:#D4B840; --alert-ink:#5A4000;
+    --warn-bg: #FFF3E6; --warn-border:#E0A060; --warn-ink:#6A3A00;
+    --shadow-sm:0 1px 4px rgba(0,0,0,.07);
+    --header-grad: linear-gradient(160deg,#D4DFF0 0%,#EEF2F8 100%);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.55;font-size:15px;
+    transition:background .2s,color .2s
+  }
+  a{color:var(--accent2)}
+
+  header{padding:26px 0 20px;border-bottom:2px solid var(--accent);background:var(--header-grad)}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .header-left{display:flex;align-items:center;gap:14px}
+  .header-icon{font-size:32px;line-height:1}
+  .header-left h1{margin:0 0 4px;font-size:22px;font-weight:700}
+  .header-left p{margin:0;color:var(--muted);font-size:13px}
+  .header-gold{color:var(--accent)}
+  .header-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .pill-btn{
+    background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);
+    padding:7px 13px;border-radius:20px;cursor:pointer;font-size:13px;white-space:nowrap;
+    text-decoration:none;transition:.15s;font-family:inherit
+  }
+  .pill-btn:hover{border-color:var(--accent);color:var(--ink)}
+
+  main{max-width:1180px;margin:0 auto;padding:24px}
+  section{margin-bottom:28px}
+  h2.section-title{font-size:19px;margin:0 0 4px}
+  h2.section-title span{color:var(--accent)}
+  .sub{color:var(--muted);margin:0 0 14px;font-size:14px}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;box-shadow:var(--shadow-sm)}
+  .card + .card{margin-top:14px}
+  .card h3{margin:0 0 12px;font-size:15px}
+
+  .alert{background:var(--alert-bg);border:1px solid var(--alert-border);color:var(--alert-ink);border-radius:8px;padding:11px 14px;font-size:13.5px;margin-bottom:14px}
+  .alert.warn{background:var(--warn-bg);border-color:var(--warn-border);color:var(--warn-ink)}
+
+  /* Linha do tempo */
+  .timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .tl-item{background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--c);border-radius:10px;padding:14px}
+  .tl-item b{display:block;font-size:22px;color:var(--c)}
+  .tl-item .date{font-size:13px;color:var(--ink);font-weight:600}
+  .tl-item p{margin:6px 0 0;color:var(--muted);font-size:13px}
+  .tl-item .status{display:inline-block;margin-top:8px;font-size:11.5px;padding:2px 8px;border-radius:10px;background:var(--panel2);color:var(--muted)}
+  .tl-item .status.now{background:var(--c);color:#fff}
+
+  /* Formulários */
+  .grid-params{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  label.field{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
+  label.field small{color:var(--dim);font-size:11.5px}
+  input[type=number],input[type=text],select{
+    background:var(--panel2);border:1px solid var(--border);color:var(--ink);
+    border-radius:6px;padding:8px 10px;font-size:14px;font-family:inherit;width:100%
+  }
+  input:focus,select:focus{outline:2px solid var(--accent2);outline-offset:1px}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .range-row{display:flex;align-items:center;gap:10px}
+  .range-row output{min-width:44px;text-align:right;font-weight:600;color:var(--ink)}
+
+  /* Tabela de cargos */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{padding:8px 8px;text-align:left;border-bottom:1px solid var(--border);vertical-align:middle}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  #roles input{min-width:70px}
+  #roles td:first-child input{min-width:150px}
+  .icon-btn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer;padding:5px 9px;font-size:13px}
+  .icon-btn:hover{color:var(--bad);border-color:var(--bad)}
+  .add-btn{margin-top:10px;background:var(--panel2);border:1px dashed var(--border);color:var(--ink);border-radius:6px;padding:8px 14px;cursor:pointer;font-size:13px;font-family:inherit}
+  .add-btn:hover{border-color:var(--accent)}
+  .chk{display:flex;justify-content:center}
+  .chk input{width:17px;height:17px;accent-color:var(--accent)}
+
+  /* KPIs */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+  .kpi{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px}
+  .kpi .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+  .kpi .val{font-size:24px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+  .kpi .note{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .kpi.f1 .val{color:var(--s-f1)}
+  .kpi.f2 .val{color:var(--s-f2)}
+
+  /* Barras */
+  .bars{display:flex;flex-direction:column;gap:14px}
+  .bar-group h4{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:600}
+  .bar-row{display:grid;grid-template-columns:110px 1fr 130px;align-items:center;gap:10px;font-size:13px;margin-bottom:4px}
+  .bar-track{background:var(--panel2);border-radius:4px;height:16px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:4px;transition:width .3s}
+  .bar-row .v{text-align:right;font-variant-numeric:tabular-nums}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+  .tag{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:10px;background:var(--panel2);color:var(--muted)}
+  .tag.ok{color:var(--ok)} .tag.warn{color:var(--warn)} .tag.bad{color:var(--bad)}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  ul.check{list-style:none;padding:0;margin:0}
+  ul.check li{padding:7px 0;border-bottom:1px solid var(--border);font-size:13.5px;display:flex;gap:10px}
+  ul.check li:last-child{border-bottom:none}
+  ul.check input{accent-color:var(--ok);margin-top:3px;flex-shrink:0}
+  .muted{color:var(--muted)}
+  .small{font-size:12.5px}
+
+  footer{max-width:1180px;margin:0 auto;padding:18px 24px 40px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--border)}
+
+  @media (max-width:760px){
+    .wrap,main{padding-left:16px;padding-right:16px}
+    .timeline,.two-col{grid-template-columns:1fr}
+    .bar-row{grid-template-columns:80px 1fr 100px}
+  }
+  @media print{
+    .header-actions,.add-btn,.icon-btn,#no-print{display:none!important}
+    body{background:#fff;color:#000}
+    .card,.kpi,.tl-item{box-shadow:none;break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="header-left">
+      <span class="header-icon" aria-hidden="true">🧮</span>
+      <div>
+        <h1>Simulador do <span class="header-gold">Fim da Escala 6x1</span></h1>
+        <p>EC 141/2026 · jornada máxima de 44h → 42h → 40h semanais · dois dias de descanso · sem redução salarial</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a class="pill-btn" href="index.html">← Painel jurídico</a>
+      <button class="pill-btn" id="csv-btn">⬇ Exportar CSV</button>
+      <button class="pill-btn" id="print-btn">🖨 Imprimir / PDF</button>
+      <button class="pill-btn" id="theme-btn" aria-label="Alternar tema">☀ Modo claro</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- LINHA DO TEMPO -->
+<section>
+  <h2 class="section-title">O que foi <span>aprovado</span></h2>
+  <p class="sub">PEC 221/2019 aprovada na Câmara (27/05/2026) e no Senado (14/10/2026); promulgada como Emenda Constitucional 141 em 16/10/2026.</p>
+  <div class="timeline" id="timeline"></div>
+  <div class="alert warn" style="margin-top:14px">
+    ⚠ As datas das etapas são estimadas a partir da publicação (60 dias para 42h; mais 12 meses para 40h). As notícias divergem sobre a contagem do segundo prazo. <b>Confirme no texto da EC 141/2026 publicado no DOU</b> e na convenção coletiva da categoria antes de decidir.
+  </div>
+</section>
+
+<!-- PARÂMETROS -->
+<section>
+  <h2 class="section-title">1. Dados da <span>empresa</span></h2>
+  <p class="sub">Os valores vêm preenchidos com um exemplo de varejo. Troque pelos números reais; tudo fica salvo neste navegador.</p>
+
+  <div class="card">
+    <h3>Cargos afetados</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Cargo / função</th>
+            <th class="num">Empregados</th>
+            <th class="num">Salário-base (R$)</th>
+            <th class="num">Jornada atual (h/sem)</th>
+            <th title="Empregado com diploma de nível superior e salário a partir de R$ 21.188,00 — excluído das novas regras pelo texto aprovado">Excluído?</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="roles"></tbody>
+      </table>
+    </div>
+    <button class="add-btn" id="add-role">+ Adicionar cargo</button>
+    <p class="small muted" style="margin:10px 0 0">“Excluído?”: marque para empregados com diploma de nível superior e salário a partir de R$ 21.188,00, que o texto aprovado deixa fora das novas regras (servidores públicos também ficam de fora).</p>
+  </div>
+
+  <div class="card">
+    <h3>Custos e premissas</h3>
+    <div class="grid-params">
+      <label class="field">Regime tributário
+        <select id="regime">
+          <option value="68">Lucro Presumido / Real (~68%)</option>
+          <option value="37">Simples Nacional (~37%)</option>
+          <option value="custom">Personalizado</option>
+        </select>
+        <small>Define o percentual de encargos sobre a folha.</small>
+      </label>
+      <label class="field">Encargos + provisões (%)
+        <input type="number" id="encargos" min="0" max="150" step="1">
+        <small>INSS patronal, FGTS, RAT, terceiros, 13º, férias + 1/3.</small>
+      </label>
+      <label class="field">Benefícios por empregado (R$/mês)
+        <input type="number" id="beneficios" min="0" step="10">
+        <small>VT, VR/VA, plano de saúde, etc. Entra só no custo das novas contratações.</small>
+      </label>
+      <label class="field">Custo de admissão (R$/contratação)
+        <input type="number" id="admissao" min="0" step="50">
+        <small>Recrutamento, exame admissional, uniforme, treinamento.</small>
+      </label>
+      <label class="field">Adicional de hora extra (%)
+        <input type="number" id="adicionalHE" min="50" max="200" step="5">
+        <small>Mínimo constitucional de 50%. Verifique a CCT.</small>
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Como a empresa vai repor as horas</h3>
+    <div class="grid-params">
+      <label class="field">Ganho de produtividade / reorganização
+        <div class="range-row"><input type="range" id="produtividade" min="0" max="100" step="5"><output id="produtividade-out"></output></div>
+        <small>Parte das horas perdidas que deixa de precisar de reposição (ajuste de processos, tecnologia, escala melhor distribuída).</small>
+      </label>
+      <label class="field">Do restante, repor via horas extras
+        <div class="range-row"><input type="range" id="mixHE" min="0" max="100" step="5"><output id="mixHE-out"></output></div>
+        <small>O que sobrar é reposto com novas contratações.</small>
+      </label>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTADOS -->
+<section>
+  <h2 class="section-title">2. Impacto <span>financeiro</span></h2>
+  <p class="sub">Custo mensal da mão de obra afetada em cada etapa, com salários preservados.</p>
+  <div class="kpis" id="kpis"></div>
+
+  <div class="card">
+    <h3>Custo mensal por estratégia</h3>
+    <div class="legend">
+      <span><i style="background:var(--s-atual)"></i>Hoje (até 44h)</span>
+      <span><i style="background:var(--s-f1)"></i>Etapa 1 · 42h</span>
+      <span><i style="background:var(--s-f2)"></i>Etapa 2 · 40h</span>
+    </div>
+    <div class="bars" id="bars"></div>
+    <p class="small muted" style="margin:12px 0 0">“Só horas extras” e “só contratações” mostram os extremos. “Sua estratégia” usa o ganho de produtividade e a divisão escolhidos acima.</p>
+  </div>
+
+  <div class="card">
+    <h3>Detalhamento por cargo</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Cargo</th>
+            <th>Etapa</th>
+            <th class="num">Valor-hora</th>
+            <th class="num">Horas a repor/sem</th>
+            <th class="num">HE por empregado/sem</th>
+            <th class="num">Contratações</th>
+            <th class="num">Custo extra/mês</th>
+          </tr>
+        </thead>
+        <tbody id="detail"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="warnings"></div>
+</section>
+
+<!-- DIMENSIONAMENTO -->
+<section>
+  <h2 class="section-title">3. Dimensionamento da <span>escala</span></h2>
+  <p class="sub">Quantas pessoas são necessárias para manter o mesmo horário de funcionamento, agora com dois dias de folga por semana.</p>
+  <div class="card">
+    <div class="grid-params">
+      <label class="field">Dias de funcionamento por semana
+        <input type="number" id="diasFunc" min="1" max="7" step="1">
+      </label>
+      <label class="field">Horas de funcionamento por dia
+        <input type="number" id="horasDia" min="1" max="24" step="0.5">
+      </label>
+      <label class="field">Postos ocupados ao mesmo tempo
+        <input type="number" id="postos" min="1" step="1">
+        <small>Ex.: 3 caixas abertos o dia todo = 3.</small>
+      </label>
+      <label class="field">Pessoas na equipe hoje
+        <input type="number" id="equipeAtual" min="0" step="1">
+      </label>
+    </div>
+    <div class="table-scroll" style="margin-top:16px">
+      <table>
+        <thead>
+          <tr><th>Cenário</th><th class="num">Horas-posto/sem</th><th class="num">Capacidade por pessoa</th><th class="num">Equipe mínima</th><th class="num">Diferença</th><th>Situação</th></tr>
+        </thead>
+        <tbody id="dimens"></tbody>
+      </table>
+    </div>
+    <p class="small muted" style="margin:12px 0 0">Equipe mínima teórica, sem folga para férias, faltas e afastamentos (some 8% a 12% para cobrir o absenteísmo). Escalas como 5x2 com rodízio de folgas, 4x3 ou 12x36 continuam possíveis, desde que respeitem o novo limite semanal e sejam previstas em acordo ou convenção coletiva quando a lei exigir.</p>
+  </div>
+</section>
+
+<!-- CHECKLIST -->
+<section>
+  <h2 class="section-title">4. Checklist de <span>adequação</span></h2>
+  <p class="sub">Itens para revisar com o RH, o contador e o jurídico antes de cada etapa.</p>
+  <div class="two-col">
+    <div class="card">
+      <h3>Até a etapa 1 (42h)</h3>
+      <ul class="check" data-list="f1"></ul>
+    </div>
+    <div class="card">
+      <h3>Até a etapa 2 (40h)</h3>
+      <ul class="check" data-list="f2"></ul>
+    </div>
+  </div>
+</section>
+
+<section id="no-print">
+  <div class="card small muted">
+    <b style="color:var(--ink)">Como o cálculo funciona.</b>
+    Valor-hora = salário ÷ (jornada semanal × 5), mesmo critério do divisor da CLT (220 para 44h, 210 para 42h, 200 para 40h). Como o salário não pode ser reduzido, o valor-hora sobe quando a jornada cai.
+    Horas a repor = empregados × (jornada atual − novo limite), quando a jornada atual passa do limite, descontado o ganho de produtividade.
+    Horas extras/mês = horas semanais × 5 (aproximação que inclui o reflexo no DSR), pagas com o adicional informado e com encargos.
+    Contratações = horas a repor ÷ novo limite semanal, arredondado para cima por cargo, com salário, encargos e benefícios; o custo de admissão é pontual e aparece separado.
+    É uma estimativa para planejamento e não substitui o cálculo da folha nem uma orientação jurídica.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Simulador de referência · Fontes: Agência Senado e Agência Brasil (out/2026) sobre a EC 141/2026 · Verifique sempre o texto oficial publicado e a convenção coletiva aplicável.
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   TEMA (mesma chave do painel principal)
+═══════════════════════════════════════════════════════════════════════════ */
+const THEME_KEY = "jur_theme";
+const themeBtn  = document.getElementById("theme-btn");
+
+function store(get, key, value) {
+  try {
+    if (get) return localStorage.getItem(key);
+    localStorage.setItem(key, value);
+  } catch { return null; }
+}
+
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  themeBtn.textContent = t === "light" ? "🌙 Modo escuro" : "☀ Modo claro";
+  store(false, THEME_KEY, t);
+}
+
+themeBtn.onclick = () => {
+  const current = document.documentElement.getAttribute("data-theme");
+  applyTheme(current === "light" ? "dark" : "light");
+};
+
+applyTheme(store(true, THEME_KEY) || "dark");
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   REGRAS DA EC 141/2026
+═══════════════════════════════════════════════════════════════════════════ */
+const PUBLICACAO = new Date(2026, 9, 16);
+const ETAPAS = [
+  { id: "atual", nome: "Hoje",    limite: 44, inicio: null,                     cor: "var(--s-atual)" },
+  { id: "f1",    nome: "Etapa 1", limite: 42, inicio: new Date(2026, 11, 15),   cor: "var(--s-f1)" },
+  { id: "f2",    nome: "Etapa 2", limite: 40, inicio: new Date(2027, 11, 15),   cor: "var(--s-f2)" },
+];
+
+const fmtData = d => d.toLocaleDateString("pt-BR");
+const brl  = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const brl2 = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const num1 = v => v.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+const pct  = v => (v * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%";
+const esc  = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function renderTimeline() {
+  const hoje = new Date();
+  const atualIdx = ETAPAS.reduce((acc, e, i) => (e.inicio && hoje >= e.inicio ? i : acc), 0);
+  const itens = [
+    { b: "44h", date: "Até " + fmtData(new Date(2026, 11, 14)), p: "Regra anterior: até 44h semanais e 8h diárias; escala 6x1 permitida.", c: "var(--s-atual)" },
+    { b: "42h", date: "A partir de ~" + fmtData(ETAPAS[1].inicio), p: "60 dias após a publicação (" + fmtData(PUBLICACAO) + "). Cláusulas coletivas incompatíveis perdem validade.", c: "var(--s-f1)" },
+    { b: "40h", date: "A partir de ~" + fmtData(ETAPAS[2].inicio), p: "12 meses após a etapa 1. Até 8h por dia e dois dias de descanso, um deles preferencialmente aos domingos.", c: "var(--s-f2)" },
+  ];
+  document.getElementById("timeline").innerHTML = itens.map((it, i) => `
+    <div class="tl-item" style="--c:${it.c}">
+      <b>${it.b}</b><span class="date">${it.date}</span>
+      <p>${it.p}</p>
+      <span class="status ${i === atualIdx ? "now" : ""}">${i === atualIdx ? "Em vigor hoje" : i < atualIdx ? "Encerrada" : "Próxima"}</span>
+    </div>`).join("");
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ESTADO
+═══════════════════════════════════════════════════════════════════════════ */
+const STATE_KEY = "sim6x1_state";
+const DEFAULT = {
+  roles: [
+    { nome: "Operador(a) de caixa", qtd: 12, salario: 1950, jornada: 44, excluido: false },
+    { nome: "Repositor(a)",         qtd: 8,  salario: 1850, jornada: 44, excluido: false },
+    { nome: "Fiscal de loja",       qtd: 3,  salario: 2600, jornada: 44, excluido: false },
+    { nome: "Administrativo",       qtd: 4,  salario: 3200, jornada: 40, excluido: false },
+  ],
+  regime: "68", encargos: 68, beneficios: 750, admissao: 1500, adicionalHE: 50,
+  produtividade: 20, mixHE: 30,
+  diasFunc: 7, horasDia: 13, postos: 11, equipeAtual: 23,
+};
+
+let state;
+try { state = { ...DEFAULT, ...JSON.parse(store(true, STATE_KEY)) }; } catch { state = { ...DEFAULT }; }
+if (!Array.isArray(state.roles)) state.roles = DEFAULT.roles.map(r => ({ ...r }));
+
+const save = () => store(false, STATE_KEY, JSON.stringify(state));
+
+const PARAM_IDS = ["encargos", "beneficios", "admissao", "adicionalHE", "produtividade", "mixHE", "diasFunc", "horasDia", "postos", "equipeAtual"];
+
+function bindParams() {
+  PARAM_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    el.value = state[id];
+    el.addEventListener("input", () => {
+      state[id] = parseFloat(el.value) || 0;
+      if (id === "encargos") { state.regime = "custom"; document.getElementById("regime").value = "custom"; }
+      update();
+    });
+  });
+  const regime = document.getElementById("regime");
+  regime.value = state.regime;
+  regime.addEventListener("change", () => {
+    state.regime = regime.value;
+    if (regime.value !== "custom") {
+      state.encargos = parseFloat(regime.value);
+      document.getElementById("encargos").value = state.encargos;
+    }
+    update();
+  });
+}
+
+function renderRoles() {
+  document.getElementById("roles").innerHTML = state.roles.map((r, i) => `
+    <tr>
+      <td><input type="text" data-i="${i}" data-k="nome" value="${esc(r.nome)}" aria-label="Cargo"></td>
+      <td class="num"><input type="number" data-i="${i}" data-k="qtd" value="${r.qtd}" min="0" step="1" aria-label="Empregados"></td>
+      <td class="num"><input type="number" data-i="${i}" data-k="salario" value="${r.salario}" min="0" step="50" aria-label="Salário"></td>
+      <td class="num"><input type="number" data-i="${i}" data-k="jornada" value="${r.jornada}" min="1" max="44" step="1" aria-label="Jornada atual"></td>
+      <td><div class="chk"><input type="checkbox" data-i="${i}" data-k="excluido" ${r.excluido ? "checked" : ""} aria-label="Excluído das novas regras"></div></td>
+      <td><button class="icon-btn" data-del="${i}" aria-label="Remover cargo">✕</button></td>
+    </tr>`).join("");
+}
+
+document.getElementById("roles").addEventListener("input", e => {
+  const { i, k } = e.target.dataset;
+  if (i === undefined) return;
+  const r = state.roles[i];
+  if (k === "nome") r.nome = e.target.value;
+  else if (k === "excluido") r.excluido = e.target.checked;
+  else r[k] = parseFloat(e.target.value) || 0;
+  update();
+});
+document.getElementById("roles").addEventListener("click", e => {
+  const del = e.target.dataset.del;
+  if (del === undefined) return;
+  state.roles.splice(+del, 1);
+  renderRoles(); update();
+});
+document.getElementById("add-role").onclick = () => {
+  state.roles.push({ nome: "Novo cargo", qtd: 1, salario: 2000, jornada: 44, excluido: false });
+  renderRoles(); update();
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CÁLCULO
+═══════════════════════════════════════════════════════════════════════════ */
+const SEMANAS_MES = 5; // aproximação que já embute o reflexo no DSR (divisor CLT = jornada × 5)
+
+// Calcula uma etapa para um cargo. `fracHE` = parcela reposta por HE (0..1);
+// `produtividade` = parcela das horas que não precisa ser reposta (0..1).
+function calcCargo(r, etapa, fracHE, produtividade) {
+  const enc = 1 + state.encargos / 100;
+  const limite = r.excluido ? r.jornada : Math.min(r.jornada, etapa.limite);
+  const custoBase = r.qtd * r.salario * enc;
+  const valorHora = r.jornada > 0 ? r.salario / (limite * 5) : 0;
+  const horasPerdidas = r.qtd * Math.max(0, r.jornada - limite);
+  const horasRepor = horasPerdidas * (1 - produtividade);
+  const horasHE = horasRepor * fracHE;
+  const horasContratar = horasRepor - horasHE;
+  const contratacoes = horasContratar > 0 ? Math.ceil(horasContratar / limite - 1e-9) : 0;
+  const custoHE = horasHE * SEMANAS_MES * valorHora * (1 + state.adicionalHE / 100) * enc;
+  const custoContr = contratacoes * (r.salario * enc + state.beneficios);
+  return {
+    custoBase, valorHora, horasRepor, contratacoes,
+    hePorEmpregado: r.qtd > 0 ? horasHE / r.qtd : 0,
+    custoHE, custoContr,
+    admissao: contratacoes * state.admissao,
+    extra: custoHE + custoContr,
+  };
+}
+
+function calcEtapa(etapa, fracHE, produtividade) {
+  const linhas = state.roles.map(r => ({ r, ...calcCargo(r, etapa, fracHE, produtividade) }));
+  const sum = k => linhas.reduce((s, l) => s + l[k], 0);
+  return { linhas, base: sum("custoBase"), extra: sum("extra"), admissao: sum("admissao"), contratacoes: sum("contratacoes"), horasRepor: sum("horasRepor") };
+}
+
+const ESTRATEGIAS = [
+  { id: "he",   nome: "Só horas extras",  fracHE: () => 1, prod: () => 0 },
+  { id: "contr",nome: "Só contratações",  fracHE: () => 0, prod: () => 0 },
+  { id: "mix",  nome: "Sua estratégia",   fracHE: () => state.mixHE / 100, prod: () => state.produtividade / 100 },
+];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RENDERIZAÇÃO DOS RESULTADOS
+═══════════════════════════════════════════════════════════════════════════ */
+function update() {
+  save();
+  document.getElementById("produtividade-out").textContent = state.produtividade + "%";
+  document.getElementById("mixHE-out").textContent = state.mixHE + "%";
+
+  const mix = ESTRATEGIAS[2];
+  const res = ETAPAS.map(e => calcEtapa(e, mix.fracHE(), mix.prod()));
+  const [r0, r1, r2] = res;
+  const afetados = state.roles.filter(r => !r.excluido && r.jornada > 40).reduce((s, r) => s + r.qtd, 0);
+
+  document.getElementById("kpis").innerHTML = `
+    <div class="kpi"><div class="lbl">Folha afetada hoje</div><div class="val">${brl(r0.base)}</div><div class="note">por mês, com encargos · ${afetados} empregado(s) acima de 40h</div></div>
+    <div class="kpi f1"><div class="lbl">Custo extra · etapa 1 (42h)</div><div class="val">+${brl(r1.extra)}</div><div class="note">por mês (+${pct(r0.base ? r1.extra / r0.base : 0)}) · ${r1.contratacoes} contratação(ões)</div></div>
+    <div class="kpi f2"><div class="lbl">Custo extra · etapa 2 (40h)</div><div class="val">+${brl(r2.extra)}</div><div class="note">por mês (+${pct(r0.base ? r2.extra / r0.base : 0)}) · ${r2.contratacoes} contratação(ões)</div></div>
+    <div class="kpi"><div class="lbl">Impacto no 1º ano da etapa 2</div><div class="val">${brl(r2.extra * 12 + r2.admissao)}</div><div class="note">12 meses de custo extra (13º e férias já nos encargos) + admissões</div></div>`;
+
+  // Barras
+  const todos = ESTRATEGIAS.map(s => ETAPAS.map(e => calcEtapa(e, s.fracHE(), s.prod())));
+  const max = Math.max(...todos.flat().map(x => x.base + x.extra), 1);
+  document.getElementById("bars").innerHTML = ESTRATEGIAS.map((s, si) => `
+    <div class="bar-group">
+      <h4>${s.nome}</h4>
+      ${ETAPAS.map((e, ei) => {
+        const t = todos[si][ei].base + todos[si][ei].extra;
+        return `<div class="bar-row"><span>${e.nome} · ${e.limite}h</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${(t / max * 100).toFixed(1)}%;background:${e.cor}"></div></div>
+          <span class="v">${brl(t)}</span></div>`;
+      }).join("")}
+    </div>`).join("");
+
+  // Detalhamento
+  document.getElementById("detail").innerHTML = state.roles.map((r, i) =>
+    ETAPAS.slice(1).map((e, ei) => {
+      const l = res[ei + 1].linhas[i];
+      const heTag = l.hePorEmpregado > 10 ? "bad" : l.hePorEmpregado > 0 ? "warn" : "";
+      return `<tr>
+        ${ei === 0 ? `<td rowspan="2"><b>${esc(r.nome)}</b><br><span class="small muted">${r.qtd} × ${brl2(r.salario)} · ${r.jornada}h${r.excluido ? " · excluído" : ""}</span></td>` : ""}
+        <td><span class="tag" style="color:${e.cor}">${e.limite}h</span></td>
+        <td class="num">${brl2(l.valorHora)}</td>
+        <td class="num">${num1(l.horasRepor)} h</td>
+        <td class="num">${heTag ? `<span class="tag ${heTag}">${num1(l.hePorEmpregado)} h</span>` : "—"}</td>
+        <td class="num">${l.contratacoes || "—"}</td>
+        <td class="num">${l.extra ? "+" + brl(l.extra) : "—"}</td>
+      </tr>`;
+    }).join("")).join("");
+
+  // Alertas
+  const avisos = [];
+  const heMax = Math.max(0, ...res.slice(1).flatMap(x => x.linhas.map(l => l.hePorEmpregado)));
+  if (heMax > 10) avisos.push(`<div class="alert warn">⚠ Algum cargo precisaria de ${num1(heMax)}h extras por empregado na semana. A CLT limita as horas extras a 2h por dia (10h numa semana de 5 dias). Aumente as contratações ou o ganho de produtividade.</div>`);
+  if (state.mixHE > 50 && heMax > 0) avisos.push(`<div class="alert warn">⚠ Usar horas extras de forma habitual para repor a redução gera passivo trabalhista (integração ao salário, reflexos em férias, 13º e FGTS) e esvazia o objetivo da emenda. Use como solução temporária.</div>`);
+  if (state.roles.some(r => r.jornada > 44)) avisos.push(`<div class="alert warn">⚠ Há cargo com jornada acima de 44h, o que já ultrapassava o limite anterior.</div>`);
+  if (state.roles.some(r => r.excluido && r.salario < 21188)) avisos.push(`<div class="alert warn">⚠ Há cargo marcado como excluído com salário abaixo de R$ 21.188,00. A exclusão exige diploma de nível superior e salário a partir desse valor.</div>`);
+  avisos.push(`<div class="alert">💡 Admissões pontuais: ${brl(r1.admissao)} até a etapa 1 e mais ${brl(Math.max(0, r2.admissao - r1.admissao))} até a etapa 2. Contratar com antecedência permite treinar a equipe antes da troca de escala.</div>`);
+  document.getElementById("warnings").innerHTML = avisos.join("");
+
+  renderDimens();
+}
+
+function renderDimens() {
+  const horasPosto = state.diasFunc * state.horasDia * state.postos;
+  document.getElementById("dimens").innerHTML = ETAPAS.map(e => {
+    const minimo = Math.ceil(horasPosto / e.limite - 1e-9);
+    const diff = minimo - state.equipeAtual;
+    const sit = diff > 0 ? `<span class="tag bad">Faltam ${diff}</span>` : `<span class="tag ok">Equipe suficiente</span>`;
+    return `<tr><td><span class="tag" style="color:${e.cor}">${e.nome} · ${e.limite}h</span></td>
+      <td class="num">${num1(horasPosto)} h</td><td class="num">${e.limite} h</td>
+      <td class="num"><b>${minimo}</b></td><td class="num">${diff > 0 ? "+" + diff : diff}</td><td>${sit}</td></tr>`;
+  }).join("");
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CHECKLIST
+═══════════════════════════════════════════════════════════════════════════ */
+const CHECK_KEY = "sim6x1_check";
+const CHECKLIST = {
+  f1: [
+    "Mapear todos os empregados com jornada acima de 42h e acima de 40h",
+    "Ler a convenção/acordo coletivo vigente e identificar cláusulas de jornada e escala incompatíveis",
+    "Abrir negociação com o sindicato para escalas alternativas (5x2, 4x3, 12x36) e banco de horas",
+    "Redesenhar as escalas garantindo dois dias de descanso, um preferencialmente no domingo",
+    "Atualizar contratos ou termos aditivos de jornada, sem reduzir o salário",
+    "Reconfigurar o sistema de ponto e os limites de horas extras",
+    "Ajustar o divisor do valor-hora na folha (210 para 42h) e os eventos no eSocial",
+    "Comunicar a equipe sobre a nova escala com antecedência",
+  ],
+  f2: [
+    "Revisar o dimensionamento da equipe para 40h e iniciar contratações com antecedência",
+    "Reavaliar o uso de horas extras habituais e o saldo do banco de horas",
+    "Ajustar o divisor do valor-hora (200 para 40h) e revisar adicionais calculados por hora",
+    "Rever o orçamento e a precificação com o custo da etapa 2",
+    "Avaliar automação e ganhos de processo nos setores com maior impacto",
+    "Conferir se há lei complementar ou regulamentação nova com regras específicas para o seu porte",
+  ],
+};
+
+function renderChecklist() {
+  let done;
+  try { done = JSON.parse(store(true, CHECK_KEY)) || {}; } catch { done = {}; }
+  document.querySelectorAll("ul.check").forEach(ul => {
+    const lista = ul.dataset.list;
+    ul.innerHTML = CHECKLIST[lista].map((t, i) => {
+      const k = lista + i;
+      return `<li><input type="checkbox" id="c-${k}" data-k="${k}" ${done[k] ? "checked" : ""}><label for="c-${k}">${t}</label></li>`;
+    }).join("");
+    ul.addEventListener("change", e => {
+      done[e.target.dataset.k] = e.target.checked;
+      store(false, CHECK_KEY, JSON.stringify(done));
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EXPORTAÇÃO
+═══════════════════════════════════════════════════════════════════════════ */
+document.getElementById("print-btn").onclick = () => window.print();
+
+document.getElementById("csv-btn").onclick = () => {
+  const mix = ESTRATEGIAS[2];
+  const linhas = [["Cargo", "Empregados", "Salario", "Jornada atual", "Excluido", "Etapa", "Limite (h)", "Valor-hora", "Horas a repor/sem", "HE por empregado/sem", "Contratacoes", "Custo extra/mes", "Admissoes (pontual)"]];
+  ETAPAS.slice(1).forEach(e => {
+    calcEtapa(e, mix.fracHE(), mix.prod()).linhas.forEach(l => {
+      linhas.push([l.r.nome, l.r.qtd, l.r.salario, l.r.jornada, l.r.excluido ? "sim" : "nao", e.nome, e.limite,
+        l.valorHora.toFixed(2), l.horasRepor.toFixed(1), l.hePorEmpregado.toFixed(1), l.contratacoes, l.extra.toFixed(2), l.admissao.toFixed(2)]);
+    });
+  });
+  const csv = "﻿" + linhas.map(l => l.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = "simulacao-fim-6x1.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INÍCIO
+═══════════════════════════════════════════════════════════════════════════ */
+renderTimeline();
+bindParams();
+renderRoles();
+renderChecklist();
+update();
+</script>
+</body>
+</html>
