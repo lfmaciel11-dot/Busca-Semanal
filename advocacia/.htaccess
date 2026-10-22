@@ -1,0 +1,14 @@
+# Força HTTPS e o endereço sem "www" (https://advocaciamaciel.com)
+RewriteEngine On
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} ^www\. [NC]
+RewriteCond %{HTTP_HOST} ^(?:www\.)?(.+)$ [NC]
+RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+DirectoryIndex index.html
+
+# Cache de imagens por 30 dias
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/png "access plus 30 days"
+</IfModule>
