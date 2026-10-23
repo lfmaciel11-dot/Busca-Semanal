@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Simulador para empresas do impacto do fim da escala 6x1 (EC 141/2026): jornada de 44h → 42h → 40h sem redução salarial.">
 <title>Simulador Fim da 6x1</title>
+<script src="municipios-ibge.js"></script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>">
 <style>
   /* Mesmo sistema de cores do Painel de Monitoramento Jurídico */
@@ -176,6 +177,22 @@
   #diag td:nth-child(2),#diag td:nth-child(3){white-space:nowrap}
   input[type=date]{color-scheme:dark}
   [data-theme="light"] input[type=date]{color-scheme:light}
+  .cidade-msg.ok{color:var(--ok)} .cidade-msg.bad{color:var(--bad)} .cidade-msg.warn{color:var(--warn)}
+  input.valid{border-color:var(--ok)} input.invalid{border-color:var(--bad)}
+  .cidade-msg button{background:none;border:none;color:var(--accent2);text-decoration:underline;cursor:pointer;padding:0 2px;font:inherit}
+  .dropzone{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;border:2px dashed var(--border);border-radius:10px;padding:22px 14px;cursor:pointer;background:var(--panel2);font-size:14px;transition:.15s}
+  .dropzone:hover,.dropzone.over{border-color:var(--accent);background:var(--panel)}
+  .dropzone input{position:absolute;width:1px;height:1px;opacity:0}
+  .dz-icon{font-size:26px}
+  .doc{border:1px solid var(--border);border-radius:8px;margin-top:12px;overflow:hidden}
+  .doc-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--panel2)}
+  .doc-head b{font-size:14px;word-break:break-all}
+  .doc-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .doc table td:first-child{white-space:nowrap;font-weight:600}
+  .doc .trecho{font-size:12px;color:var(--muted);font-style:italic;display:block;margin-top:3px}
+  .doc .doc-msg{padding:10px 12px;font-size:13.5px}
+  .btn-primary{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+  .btn-primary:hover{filter:brightness(1.1)}
   footer{max-width:1180px;margin:0 auto;padding:18px 24px 40px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--border)}
 
   @media (max-width:760px){
@@ -243,9 +260,13 @@
       <label class="field">Ramo de atividade
         <select id="ramo"></select>
       </label>
-      <label class="field">Município / UF do estabelecimento
-        <input type="text" id="local" placeholder="Ex.: São Paulo/SP">
-        <small>Usado para montar as buscas da convenção da sua base territorial.</small>
+      <label class="field">UF do estabelecimento
+        <select id="uf"><option value="">Selecione…</option></select>
+      </label>
+      <label class="field">Município do estabelecimento
+        <input type="text" id="cidade" list="cidades-list" autocomplete="off" placeholder="Digite e escolha na lista">
+        <datalist id="cidades-list"></datalist>
+        <small id="cidade-msg" class="cidade-msg" aria-live="polite">Validado pela lista oficial de municípios do IBGE.</small>
       </label>
     </div>
     <div id="ramo-info" style="margin-top:16px"></div>
@@ -260,6 +281,18 @@
       <li>Verifique no site do sindicato se já foi assinado <b>termo aditivo</b> para a EC 141. Ele também precisa ser registrado no Mediador.</li>
     </ol>
     <div class="link-row" id="search-links"></div>
+  </div>
+
+  <div class="card">
+    <h3>Envie a convenção, o acordo ou o aditivo</h3>
+    <p class="small muted" style="margin:-4px 0 12px">PDF, DOCX, TXT ou HTML (como os gerados pelo Sistema Mediador). O arquivo é lido <b>apenas no seu navegador</b>: nada é enviado para servidores. A página procura as cláusulas de jornada, escala, domingos, banco de horas, vigência e abrangência e confere se o documento cobre o município informado.</p>
+    <label class="dropzone" id="dropzone">
+      <input type="file" id="doc-input" multiple accept=".pdf,.docx,.txt,.htm,.html,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/html">
+      <span class="dz-icon" aria-hidden="true">📄</span>
+      <span><b>Clique para escolher</b> ou arraste os arquivos aqui</span>
+      <span class="small muted">Convenção coletiva · acordo coletivo · termo aditivo · regulamento interno · contrato · até 20 MB cada</span>
+    </label>
+    <div id="docs"></div>
   </div>
 
   <div class="card">
@@ -587,7 +620,7 @@ const DEFAULT = {
   regime: "68", encargos: 68, beneficios: 750, admissao: 1500, adicionalHE: 50,
   produtividade: 20, mixHE: 30,
   diasFunc: 7, horasDia: 13, postos: 11, equipeAtual: 23,
-  ramo: "comercio", local: "",
+  ramo: "comercio", uf: "", cidade: "",
   cct: { tipo: "cct", jornada: 44, diaria: 8, escala: "6x1", dias: 6, domingo: "rodizio", banco: "coletivo", vigencia: "", aditivo: "nao" },
 };
 
@@ -1138,7 +1171,7 @@ function renderRamo() {
 
 function renderLinks() {
   const r = ramoAtual();
-  const local = (state.local || "").trim();
+  const local = localTexto();
   const g = q => "https://www.google.com/search?q=" + encodeURIComponent(q);
   document.getElementById("search-links").innerHTML = [
     ["🏛 Sistema Mediador (MTE)", "https://www3.mte.gov.br/sistemas/mediador/ConsultarInstColetivo"],
@@ -1158,9 +1191,6 @@ function bindRamo() {
   sel.innerHTML = RAMOS.map(r => `<option value="${r.id}">${r.nome}</option>`).join("");
   sel.value = ramoAtual().id;
   sel.addEventListener("change", () => { state.ramo = sel.value; renderRamo(); update(); });
-  const local = document.getElementById("local");
-  local.value = state.local || "";
-  local.addEventListener("input", () => { state.local = local.value; renderLinks(); save(); });
   fillCct();
   CCT_IDS.forEach(k => {
     const el = document.getElementById("cct-" + k);
@@ -1262,12 +1292,351 @@ function renderDiag() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   VALIDADOR DE MUNICÍPIO (lista do IBGE em municipios-ibge.js)
+═══════════════════════════════════════════════════════════════════════════ */
+const UF_NOMES = { AC: "Acre", AL: "Alagoas", AP: "Amapá", AM: "Amazonas", BA: "Bahia", CE: "Ceará", DF: "Distrito Federal", ES: "Espírito Santo", GO: "Goiás", MA: "Maranhão", MT: "Mato Grosso", MS: "Mato Grosso do Sul", MG: "Minas Gerais", PA: "Pará", PB: "Paraíba", PR: "Paraná", PE: "Pernambuco", PI: "Piauí", RJ: "Rio de Janeiro", RN: "Rio Grande do Norte", RS: "Rio Grande do Sul", RO: "Rondônia", RR: "Roraima", SC: "Santa Catarina", SP: "São Paulo", SE: "Sergipe", TO: "Tocantins" };
+const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+const MUN = {};
+Object.entries(window.MUNICIPIOS_IBGE || {}).forEach(([uf, lista]) => {
+  MUN[uf] = lista.split("|").map(item => { const [nome, cod] = item.split(":"); return { nome, cod, n: norm(nome) }; });
+});
+
+function levenshtein(a, b) {
+  const d = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = d[0]; d[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = d[j];
+      d[j] = Math.min(d[j] + 1, d[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = tmp;
+    }
+  }
+  return d[b.length];
+}
+
+// Retorna { ok, municipio, sugestoes, outrasUfs }
+function validarCidade(uf, texto) {
+  const n = norm(texto);
+  if (!uf || !n || !MUN[uf]) return { ok: false };
+  const achado = MUN[uf].find(m => m.n === n);
+  if (achado) return { ok: true, municipio: achado };
+  const sugestoes = MUN[uf]
+    .map(m => ({ m, d: m.n.startsWith(n) ? 0 : levenshtein(n, m.n) }))
+    .filter(x => x.d <= Math.max(2, Math.floor(n.length / 4)))
+    .sort((a, b) => a.d - b.d).slice(0, 3).map(x => x.m.nome);
+  const outrasUfs = Object.keys(MUN).filter(u => u !== uf && MUN[u].some(m => m.n === n));
+  return { ok: false, sugestoes, outrasUfs };
+}
+
+function localTexto() {
+  return state.cidadeOk ? `${state.cidade}/${state.uf}` : "";
+}
+
+function renderCidade() {
+  const input = document.getElementById("cidade");
+  const msg = document.getElementById("cidade-msg");
+  const r = validarCidade(state.uf, state.cidade);
+  input.classList.toggle("valid", !!r.ok);
+  input.classList.toggle("invalid", !r.ok && !!state.cidade && !!state.uf);
+  state.cidadeOk = !!r.ok;
+  state.ibge = r.ok ? r.municipio.cod : "";
+  if (!state.uf) { msg.className = "cidade-msg"; msg.textContent = "Escolha primeiro a UF."; }
+  else if (!state.cidade) { msg.className = "cidade-msg"; msg.textContent = `${MUN[state.uf].length} municípios em ${UF_NOMES[state.uf]}. Digite e escolha na lista.`; }
+  else if (r.ok) {
+    msg.className = "cidade-msg ok";
+    msg.textContent = `✔ ${r.municipio.nome}/${state.uf} · código IBGE ${r.municipio.cod}`;
+  } else {
+    msg.className = "cidade-msg bad";
+    let html = `✖ Município não encontrado em ${UF_NOMES[state.uf]}.`;
+    if (r.sugestoes.length) html += " Você quis dizer " + r.sugestoes.map(s => `<button type="button" data-sug="${esc(s)}">${esc(s)}</button>`).join(", ") + "?";
+    if (r.outrasUfs.length) html += ` Existe em: ${r.outrasUfs.map(u => `<button type="button" data-uf="${u}">${u}</button>`).join(", ")}.`;
+    msg.innerHTML = html;
+  }
+  renderLinks();
+  renderDocs();
+}
+
+function fillCidades() {
+  document.getElementById("cidades-list").innerHTML = (MUN[state.uf] || []).map(m => `<option value="${esc(m.nome)}">`).join("");
+}
+
+function bindCidade() {
+  const uf = document.getElementById("uf");
+  uf.innerHTML += Object.keys(UF_NOMES).sort().map(u => `<option value="${u}">${u} — ${UF_NOMES[u]}</option>`).join("");
+  uf.value = state.uf || "";
+  const input = document.getElementById("cidade");
+  input.value = state.cidade || "";
+  fillCidades();
+  uf.addEventListener("change", () => { state.uf = uf.value; fillCidades(); renderCidade(); save(); });
+  input.addEventListener("input", () => { state.cidade = input.value; renderCidade(); save(); });
+  input.addEventListener("blur", () => {
+    // Corrige maiúsculas e acentos quando o nome bate com a lista
+    const r = validarCidade(state.uf, input.value);
+    if (r.ok && input.value !== r.municipio.nome) { input.value = state.cidade = r.municipio.nome; renderCidade(); save(); }
+  });
+  document.getElementById("cidade-msg").addEventListener("click", e => {
+    const { sug, uf: outra } = e.target.dataset;
+    if (sug) { input.value = state.cidade = sug; }
+    if (outra) { uf.value = state.uf = outra; fillCidades(); }
+    if (sug || outra) { renderCidade(); save(); }
+  });
+  renderCidade();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEITURA DE DOCUMENTOS (no navegador)
+   PDF via pdf.js e DOCX via mammoth, carregados só quando necessários.
+═══════════════════════════════════════════════════════════════════════════ */
+const LIBS = {
+  pdf: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+  pdfWorker: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
+  mammoth: "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js",
+};
+const carregadas = {};
+function carregarScript(url) {
+  return carregadas[url] ||= new Promise((ok, erro) => {
+    const s = document.createElement("script");
+    s.src = url; s.onload = ok; s.onerror = () => erro(new Error("Não foi possível carregar o leitor de arquivos. Verifique a conexão."));
+    document.head.appendChild(s);
+  });
+}
+
+async function extrairTexto(file) {
+  const nome = file.name.toLowerCase();
+  if (nome.endsWith(".pdf") || file.type === "application/pdf") {
+    await carregarScript(LIBS.pdf);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = LIBS.pdfWorker;
+    const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+    const paginas = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const c = await (await pdf.getPage(i)).getTextContent();
+      paginas.push(c.items.map(it => it.str).join(" "));
+    }
+    return { texto: paginas.join("\n"), paginas: pdf.numPages };
+  }
+  if (nome.endsWith(".docx")) {
+    await carregarScript(LIBS.mammoth);
+    const r = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+    return { texto: r.value };
+  }
+  if (nome.endsWith(".doc")) throw new Error("Formato .doc antigo não suportado. Salve como PDF ou DOCX e envie de novo.");
+  const bruto = await file.text();
+  if (/\.html?$/.test(nome) || /<html|<body|<p[ >]/i.test(bruto.slice(0, 2000))) {
+    return { texto: new DOMParser().parseFromString(bruto, "text/html").body.textContent || "" };
+  }
+  return { texto: bruto };
+}
+
+const MESES = ["janeiro", "fevereiro", "marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+const RE_MES = MESES.join("|");
+const NUM_EXTENSO = { "trinta": 30, "trinta e seis": 36, "quarenta": 40, "quarenta e dois": 42, "quarenta e quatro": 44, "trinta e duas": 32, "trinta e quatro": 34 };
+
+// Trecho original ao redor de uma posição no texto normalizado (mesmo comprimento, ver normalizarIdx)
+function trecho(orig, idx, len = 0) {
+  const ini = Math.max(0, idx - 60), fim = Math.min(orig.length, idx + Math.min(len, 200) + 60);
+  return (ini > 0 ? "…" : "") + orig.slice(ini, fim).replace(/\s+/g, " ").trim() + (fim < orig.length ? "…" : "");
+}
+
+// Normaliza mantendo o mesmo comprimento do texto, para que os índices batam com o original
+function normalizarIdx(t) {
+  return Array.from(t).map(ch => {
+    const b = ch.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    return b.length === 1 ? b : (b[0] || " ");
+  }).join("");
+}
+
+function analisarDocumento(textoBruto) {
+  const orig = textoBruto.replace(/ /g, " ");
+  const t = normalizarIdx(orig);
+  const achados = {};
+  const set = (k, valor, label, m) => { achados[k] = { valor, label, trecho: m ? trecho(orig, m.index, m[0].length) : "" }; };
+
+  // Tipo de instrumento
+  const mAditivo = /termo aditivo/.exec(t);
+  const mAcordo = /acordo coletivo de trabalho|acordo coletivo/.exec(t);
+  const mConv = /convencao coletiva de trabalho|convencao coletiva/.exec(t);
+  if (mAcordo && (!mConv || mAcordo.index < mConv.index)) set("tipo", "act", "Acordo coletivo", mAcordo);
+  else if (mConv) set("tipo", "cct", "Convenção coletiva", mConv);
+  if (mAditivo) achados.ehAditivo = { valor: true, label: "Sim, é termo aditivo", trecho: trecho(orig, mAditivo.index, 13) };
+
+  // Vigência: "período de 01º de maio de 2025 a 30 de abril de 2026" ou "01/05/2025 a 30/04/2026"
+  const reExt = new RegExp(`vigencia[\\s\\S]{0,300}?(\\d{1,2})\\s*[o°º]?\\s*(?:de\\s+)?(${RE_MES})\\s+de\\s+(\\d{4})\\s*(?:a|ate|e)\\s*(\\d{1,2})\\s*[o°º]?\\s*(?:de\\s+)?(${RE_MES})\\s+de\\s+(\\d{4})`);
+  const reNum = /vigencia[\s\S]{0,300}?(\d{1,2})[\/.](\d{1,2})[\/.](\d{4})\s*(?:a|ate|e|-)\s*(\d{1,2})[\/.](\d{1,2})[\/.](\d{4})/;
+  let m = reExt.exec(t), ini, fim;
+  if (m) { ini = new Date(+m[3], MESES.indexOf(m[2]), +m[1]); fim = new Date(+m[6], MESES.indexOf(m[5]), +m[4]); }
+  else if ((m = reNum.exec(t))) { ini = new Date(+m[3], +m[2] - 1, +m[1]); fim = new Date(+m[6], +m[5] - 1, +m[4]); }
+  if (fim && !isNaN(fim)) {
+    const iso = `${fim.getFullYear()}-${String(fim.getMonth() + 1).padStart(2, "0")}-${String(fim.getDate()).padStart(2, "0")}`;
+    set("vigencia", iso, `${fmtData(ini)} a ${fmtData(fim)}`, m);
+  }
+
+  // Data-base
+  m = new RegExp(`data[\\s-]*base[\\s\\S]{0,80}?(\\d{1,2})\\s*[o°º]?\\s*(?:de\\s+)?(${RE_MES})`).exec(t) || new RegExp(`data[\\s-]*base[\\s\\S]{0,40}?(${RE_MES})`).exec(t);
+  if (m) set("database", null, m[2] ? `${m[1]} de ${m[2]}` : m[1], m);
+
+  // Jornada semanal: "44 (quarenta e quatro) horas semanais", "jornada semanal de 44 horas"
+  const semanais = [];
+  const reSem = /(\d{2})\s*(?:\([a-z\s]+\))?\s*(?:horas|h)\s*(?:semanais|por semana|na semana)|jornada (?:de trabalho )?semanal[^.]{0,40}?(\d{2})\s*(?:\([a-z\s]+\))?\s*(?:horas|h)\b/g;
+  while ((m = reSem.exec(t))) { const v = +(m[1] || m[2]); if (v >= 20 && v <= 60) semanais.push({ v, m: { index: m.index, 0: m[0] } }); }
+  const reSemExt = new RegExp(`(${Object.keys(NUM_EXTENSO).sort((a, b) => b.length - a.length).join("|")}) horas semanais`, "g");
+  while ((m = reSemExt.exec(t))) semanais.push({ v: NUM_EXTENSO[m[1]], m: { index: m.index, 0: m[0] } });
+  if (semanais.length) {
+    const maior = semanais.reduce((a, b) => (b.v > a.v ? b : a));
+    set("jornada", maior.v, `${maior.v}h semanais${semanais.length > 1 ? ` (valores citados: ${[...new Set(semanais.map(s => s.v))].join(", ")}h)` : ""}`, maior.m);
+  }
+
+  // Jornada diária: "8h48min", "8 horas e 48 minutos", "8 (oito) horas diárias"
+  m = /(\d{1,2})\s*(?:h|horas?)\s*(?:e\s*)?(\d{1,2})\s*(?:min|minutos)/.exec(t);
+  if (m && +m[1] >= 4 && +m[1] <= 12) set("diaria", +(+m[1] + +m[2] / 60).toFixed(2), `${m[1]}h${m[2].padStart(2, "0")}`, m);
+  else if ((m = /(\d{1,2})\s*(?:\([a-z\s]+\))?\s*horas\s*(?:diarias|por dia)/.exec(t)) && +m[1] >= 4 && +m[1] <= 12) set("diaria", +m[1], `${m[1]}h por dia`, m);
+
+  // Escala
+  const escalas = [
+    ["12x36", /12\s*[x×]\s*36|doze (?:horas )?por trinta e seis/],
+    ["turnos", /turnos? ininterruptos? de revezamento/],
+    ["6x1", /6\s*[x×]\s*1\b|seis (?:dias )?por um|seis dias de trabalho/],
+    ["sabado", /compensa\w*[\s\S]{0,120}?sabado|sabado[\s\S]{0,80}?compensa\w*/],
+    ["4x3", /4\s*[x×]\s*3\b/],
+    ["5x2", /5\s*[x×]\s*2\b|cinco por dois/],
+  ];
+  const escalasAchadas = escalas.map(([k, re]) => [k, re.exec(t)]).filter(([, mm]) => mm);
+  if (escalasAchadas.length) {
+    const nomes = { "12x36": "12x36", turnos: "Turnos de revezamento", "6x1": "6x1", sabado: "Compensação do sábado", "4x3": "4x3", "5x2": "5x2" };
+    const [k, mm] = escalasAchadas[0];
+    set("escala", k, nomes[k] + (escalasAchadas.length > 1 ? ` (também cita: ${escalasAchadas.slice(1).map(([x]) => nomes[x]).join(", ")})` : ""), mm);
+    const dias = { "6x1": 6, "12x36": 3.5, sabado: 5, "5x2": 5, "4x3": 4, turnos: null }[k];
+    if (dias) achados.dias = { valor: dias, label: `${String(dias).replace(".", ",")} dias por semana (pela escala)`, trecho: "" };
+  }
+
+  // Domingos e feriados
+  const mDom = /(?:trabalho|labor)\w*[\s\S]{0,60}?domingos?|domingos?[\s\S]{0,60}?(?:trabalh|labor)/.exec(t);
+  if (mDom) {
+    const rod = /(?:revezamento|rodizio|escala)[\s\S]{0,120}?domingo|domingo[\s\S]{0,120}?(?:revezamento|rodizio|tres semanas|3 semanas)/.exec(t);
+    set("domingo", rod ? "rodizio" : "sem-regra", rod ? "Trabalho aos domingos com rodízio de folga" : "Trabalho aos domingos (rodízio não identificado)", rod || mDom);
+  }
+
+  // Banco de horas
+  if ((m = /banco de horas/.exec(t))) set("banco", "coletivo", "Banco de horas previsto", m);
+
+  // Menção à EC 141
+  const mEc = /emenda constitucional\s*(?:n\s*[o°º.]?\s*)?141|ec\s*(?:n\s*[o°º.]?\s*)?141/.exec(t);
+  if (mEc) {
+    const cita40 = /40\s*(?:\([a-z\s]+\))?\s*horas/.test(t), cita42 = /42\s*(?:\([a-z\s]+\))?\s*horas/.test(t);
+    set("aditivo", cita40 && cita42 ? "f2" : cita42 ? "f1" : "negociando",
+      cita40 && cita42 ? "Cita a EC 141 e as etapas de 42h e 40h" : cita42 ? "Cita a EC 141 e a etapa de 42h" : "Cita a EC 141", mEc);
+  }
+
+  // Abrangência territorial
+  const mAbr = /abrangencia/.exec(t);
+  const bloco = mAbr ? t.slice(mAbr.index, mAbr.index + 4000) : "";
+  achados.abrangencia = { bloco, idx: mAbr ? mAbr.index : -1 };
+
+  achados.caracteres = orig.trim().length;
+  achados._orig = orig;
+  return achados;
+}
+
+// Confere se o documento cobre o município escolhido
+function checarAbrangencia(a) {
+  if (!state.cidadeOk) return { nivel: "atencao", label: "Informe e valide o município acima para conferir a abrangência.", trecho: "" };
+  const cidade = normalizarIdx(state.cidade), uf = state.uf.toLowerCase(), estado = normalizarIdx(UF_NOMES[state.uf]);
+  const { bloco, idx } = a.abrangencia;
+  const todo = a._orig ? normalizarIdx(a._orig) : "";
+  const reCidade = new RegExp(`(^|[^a-z])${cidade.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*(?:/|-|\\(|,)?\\s*(?:${uf}\\b)?`);
+  const onde = bloco || todo;
+  const base = bloco ? idx : 0;
+  let m = reCidade.exec(onde);
+  if (m) return { nivel: "ok", label: `${state.cidade}/${state.uf} consta na cláusula de abrangência`, trecho: trecho(a._orig, base + m.index, m[0].length) };
+  m = new RegExp(`(?:todo o|em todo|no) estado d[aeo] ${estado}|todos os municipios d[aeo] (?:estado d[aeo] )?${estado}|abrangencia (?:territorial )?(?:estadual|em ${estado})`).exec(onde);
+  if (m) return { nivel: "ok", label: `Abrangência estadual (${UF_NOMES[state.uf]})`, trecho: trecho(a._orig, base + m.index, m[0].length) };
+  if (bloco) return { nivel: "ajustar", label: `${state.cidade}/${state.uf} não aparece na cláusula de abrangência. Confirme se este é o instrumento da sua base territorial.`, trecho: trecho(a._orig, idx, 300) };
+  return { nivel: "atencao", label: "Cláusula de abrangência não identificada no texto.", trecho: "" };
+}
+
+const DOCS = []; // { id, nome, tamanho, status, erro, analise }
+const CAMPOS_DOC = [
+  ["tipo", "Tipo de instrumento"], ["ehAditivo", "Termo aditivo"], ["vigencia", "Vigência"], ["database", "Data-base"],
+  ["jornada", "Jornada semanal"], ["diaria", "Jornada diária"], ["escala", "Escala"], ["dias", "Dias trabalhados"],
+  ["domingo", "Domingos e feriados"], ["banco", "Banco de horas"], ["aditivo", "Adequação à EC 141"],
+];
+
+function renderDocs() {
+  const box = document.getElementById("docs");
+  if (!box) return;
+  box.innerHTML = DOCS.map(d => {
+    const head = `<div class="doc-head"><b>📄 ${esc(d.nome)}</b><span class="small muted">${(d.tamanho / 1024).toFixed(0)} KB${d.paginas ? ` · ${d.paginas} pág.` : ""}</span>
+      <div class="doc-actions">${d.status === "ok" ? `<button class="btn-primary" data-aplicar="${d.id}">Aplicar ao diagnóstico</button>` : ""}<button class="icon-btn" data-remover="${d.id}" aria-label="Remover arquivo">✕</button></div></div>`;
+    if (d.status === "lendo") return `<div class="doc">${head}<div class="doc-msg muted">⏳ Lendo o arquivo…</div></div>`;
+    if (d.status === "erro") return `<div class="doc">${head}<div class="doc-msg" style="color:var(--bad)">✖ ${esc(d.erro)}</div></div>`;
+    const a = d.analise;
+    if (a.caracteres < 200) return `<div class="doc">${head}<div class="doc-msg" style="color:var(--warn)">⚠ Quase nenhum texto foi extraído. O arquivo parece ser uma imagem escaneada: gere o PDF pelo Sistema Mediador ou passe por um OCR e envie de novo.</div></div>`;
+    const abr = checarAbrangencia(a);
+    const [cls, txt] = { ok: ["ok", "✔ Cobre"], atencao: ["warn", "● Verificar"], ajustar: ["bad", "✖ Não cobre"] }[abr.nivel];
+    const linhas = CAMPOS_DOC.map(([k, label]) => {
+      const f = a[k];
+      return `<tr><td>${label}</td><td>${f ? esc(f.label) + (f.trecho ? `<span class="trecho">“${esc(f.trecho)}”</span>` : "") : `<span class="muted">Não identificado</span>`}</td></tr>`;
+    }).join("");
+    return `<div class="doc">${head}<div class="table-scroll"><table><tbody>
+      <tr><td>Abrangência</td><td><span class="tag ${cls}">${txt}</span> ${esc(abr.label)}${abr.trecho ? `<span class="trecho">“${esc(abr.trecho)}”</span>` : ""}</td></tr>
+      ${linhas}</tbody></table></div>
+      <div class="doc-msg small muted">Leitura automática por palavras-chave: confira os trechos antes de aplicar. Cláusulas redigidas de forma incomum podem não ser identificadas.</div></div>`;
+  }).join("");
+}
+
+async function adicionarArquivos(files) {
+  for (const file of files) {
+    const d = { id: Math.random().toString(36).slice(2), nome: file.name, tamanho: file.size, status: "lendo" };
+    DOCS.push(d); renderDocs();
+    try {
+      if (file.size > 20 * 1024 * 1024) throw new Error("Arquivo maior que 20 MB.");
+      const { texto, paginas } = await extrairTexto(file);
+      d.paginas = paginas;
+      d.analise = analisarDocumento(texto);
+      d.status = "ok";
+    } catch (e) {
+      d.status = "erro"; d.erro = e.message || "Não foi possível ler o arquivo.";
+    }
+    renderDocs();
+  }
+}
+
+function aplicarDoc(id) {
+  const d = DOCS.find(x => x.id === id);
+  if (!d || !d.analise) return;
+  const a = d.analise, aplicados = [];
+  ["tipo", "jornada", "diaria", "escala", "dias", "domingo", "banco", "vigencia", "aditivo"].forEach(k => {
+    if (a[k] && a[k].valor != null) { state.cct[k] = a[k].valor; aplicados.push(k); }
+  });
+  fillCct(); update();
+  document.getElementById("diag").closest(".card").scrollIntoView({ behavior: "smooth", block: "start" });
+  const n = document.getElementById("diag-summary");
+  n.insertAdjacentHTML("beforeend", `<span class="tag">Aplicado de “${esc(d.nome)}”: ${aplicados.length} campo(s)</span>`);
+}
+
+function bindDocs() {
+  const input = document.getElementById("doc-input");
+  const dz = document.getElementById("dropzone");
+  input.addEventListener("change", () => { adicionarArquivos([...input.files]); input.value = ""; });
+  ["dragenter", "dragover"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add("over"); }));
+  ["dragleave", "drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("over"); }));
+  dz.addEventListener("drop", e => adicionarArquivos([...e.dataTransfer.files]));
+  document.getElementById("docs").addEventListener("click", e => {
+    const { aplicar, remover } = e.target.dataset;
+    if (aplicar) aplicarDoc(aplicar);
+    if (remover) { DOCS.splice(DOCS.findIndex(x => x.id === remover), 1); renderDocs(); }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    INÍCIO
 ═══════════════════════════════════════════════════════════════════════════ */
 renderTimeline();
 bindParams();
 renderRoles();
 bindRamo();
+bindCidade();
+bindDocs();
 renderChecklist();
 update();
 </script>
