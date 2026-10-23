@@ -214,6 +214,18 @@ window.MUNICIPIOS_IBGE = {"AC":"Acrelândia:1200013|Assis Brasil:1200054|Brasil�
   .prog-fill.ok{background:var(--ok)}
   .tl-prog{margin:10px 0 0}
   .tl-prog .prog-top{font-size:12px}
+  .origem{display:inline-block;font-size:12.5px;color:var(--muted);background:var(--panel2);border-radius:12px;padding:3px 10px;margin-bottom:12px}
+  .quiz{display:flex;flex-direction:column;gap:16px}
+  .q-title{font-size:14px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .q-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px}
+  .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+  .chip{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;background:var(--panel2);border:1px solid var(--border);color:var(--ink);border-radius:8px;padding:9px 12px;cursor:pointer;font-family:inherit;font-size:13.5px;position:relative;padding-right:28px;transition:.15s}
+  .chip small{color:var(--muted);font-size:11.5px}
+  .chip:hover{border-color:var(--accent)}
+  .chip[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel));box-shadow:inset 0 0 0 1px var(--accent)}
+  .chip[aria-pressed="true"]::after{content:"✓";position:absolute;top:8px;right:10px;color:var(--accent);font-weight:700}
+  .detalhes{margin-top:18px;border-top:1px solid var(--border);padding-top:12px}
+  .detalhes summary{cursor:pointer;font-size:13.5px;color:var(--accent2)}
   footer{max-width:1180px;margin:0 auto;padding:18px 24px 40px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--border)}
 
   @media (max-width:760px){
@@ -319,8 +331,28 @@ window.MUNICIPIOS_IBGE = {"AC":"Acrelândia:1200013|Assis Brasil:1200054|Brasil�
   </div>
 
   <div class="card">
-    <h3>O que diz o seu instrumento coletivo</h3>
-    <p class="small muted" style="margin:-4px 0 14px">Preencha com base na convenção ou no acordo vigente. Se a empresa não tem instrumento coletivo, deixe a escala e a jornada como são praticadas hoje.</p>
+    <h3>Como a sua empresa trabalha hoje</h3>
+    <p class="small muted" style="margin:-4px 0 10px">Três cliques. As respostas já vêm marcadas com o padrão do ramo escolhido: só mude o que for diferente. Se você enviou o documento acima, use “Aplicar ao diagnóstico” e tudo é preenchido sozinho.</p>
+    <div class="origem" id="cct-origem"></div>
+
+    <div class="quiz">
+      <div class="q">
+        <div class="q-title"><span class="q-num">1</span> Qual é a escala da equipe?</div>
+        <div class="chips" data-q="escala"></div>
+      </div>
+      <div class="q">
+        <div class="q-title"><span class="q-num">2</span> A equipe trabalha aos domingos ou feriados?</div>
+        <div class="chips" data-q="domingo"></div>
+      </div>
+      <div class="q">
+        <div class="q-title"><span class="q-num">3</span> Como está a situação com o sindicato?</div>
+        <div class="chips" data-q="sindicato"></div>
+      </div>
+    </div>
+
+    <details class="detalhes">
+      <summary>Ajustar detalhes (opcional): jornada exata, banco de horas e vigência</summary>
+      <p class="small muted" style="margin:10px 0 14px">Valores preenchidos pelas respostas acima. Altere só se o seu instrumento for diferente.</p>
     <div class="grid-params">
       <label class="field">Tipo de instrumento
         <select id="cct-tipo">
@@ -378,6 +410,7 @@ window.MUNICIPIOS_IBGE = {"AC":"Acrelândia:1200013|Assis Brasil:1200054|Brasil�
         </select>
       </label>
     </div>
+    </details>
   </div>
 
   <div class="card">
@@ -649,7 +682,7 @@ const DEFAULT = {
   produtividade: 20, repoHE: 25,
   diasFunc: 7, horasDia: 13, postos: 11, equipeAtual: 23,
   ramo: "comercio", uf: "", cidade: "",
-  cct: { tipo: "cct", jornada: 44, diaria: 8, escala: "6x1", dias: 6, domingo: "rodizio", banco: "coletivo", vigencia: "", aditivo: "nao" },
+  cct: { tipo: "cct", jornada: 44, diaria: 7.33, escala: "6x1", dias: 6, domingo: "rodizio", banco: "coletivo", vigencia: "", aditivo: "nao", origem: "ramo" },
 };
 
 let state;
@@ -835,6 +868,7 @@ function update() {
 
   renderDimens();
   renderDiag();
+  renderPerguntas();
 }
 
 function renderDimens() {
@@ -1232,7 +1266,7 @@ function renderRamo() {
     if (!confirm("Substituir os cargos, o dimensionamento e os dados do instrumento coletivo pelo exemplo de “" + r.nome + "”?")) return;
     state.roles = r.roles.map(x => ({ ...x }));
     Object.assign(state, r.dimens);
-    state.cct = { ...state.cct, ...r.cct };
+    state.cct = { ...state.cct, ...r.cct, origem: "ramo" };
     ["diasFunc", "horasDia", "postos", "equipeAtual"].forEach(id => document.getElementById(id).value = state[id]);
     fillCct();
     renderRoles(); update();
@@ -1261,16 +1295,91 @@ function bindRamo() {
   const sel = document.getElementById("ramo");
   sel.innerHTML = RAMOS.map(r => `<option value="${r.id}">${r.nome}</option>`).join("");
   sel.value = ramoAtual().id;
-  sel.addEventListener("change", () => { state.ramo = sel.value; renderRamo(); update(); });
+  sel.addEventListener("change", () => {
+    state.ramo = sel.value;
+    if (!state.cct.origem || state.cct.origem === "ramo") { Object.assign(state.cct, ramoAtual().cct, { origem: "ramo" }); fillCct(); }
+    renderRamo(); update();
+  });
   fillCct();
   CCT_IDS.forEach(k => {
     const el = document.getElementById("cct-" + k);
     el.addEventListener("input", () => {
       state.cct[k] = el.type === "number" ? parseFloat(el.value) || 0 : el.value;
+      state.cct.origem = "manual";
       update();
     });
   });
   renderRamo();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PERGUNTAS RÁPIDAS (preenchem os campos detalhados do instrumento coletivo)
+═══════════════════════════════════════════════════════════════════════════ */
+const PERGUNTAS = {
+  escala: [
+    { id: "6x1",      t: "6 dias e 1 folga",          d: "6x1, até 44h",                  v: { escala: "6x1", jornada: 44, diaria: 7.33, dias: 6 } },
+    { id: "sabado",   t: "Seg. a sex., sábado compensado", d: "8h48 por dia, 44h",       v: { escala: "sabado", jornada: 44, diaria: 8.8, dias: 5 } },
+    { id: "meio",     t: "Seg. a sex. + meio sábado",  d: "8h + 4h no sábado, 44h",        v: { escala: "outra", jornada: 44, diaria: 8, dias: 5.5 } },
+    { id: "5x2",      t: "Seg. a sex. até 8h",         d: "5x2, 40h",                      v: { escala: "5x2", jornada: 40, diaria: 8, dias: 5 } },
+    { id: "12x36",    t: "12x36",                      d: "Plantões, média de 42h",        v: { escala: "12x36", jornada: 42, diaria: 12, dias: 3.5 } },
+    { id: "turnos",   t: "Turnos de revezamento",      d: "6h por turno, 36h",             v: { escala: "turnos", jornada: 36, diaria: 6, dias: 6 } },
+    { id: "especial", t: "Jornada reduzida",           d: "Bancário, teleatendimento (6h)", v: { escala: "especial", jornada: 30, diaria: 6, dias: 5 } },
+  ],
+  domingo: [
+    { id: "rodizio",   t: "Sim, com rodízio de folga", d: "Folga no domingo de tempos em tempos", v: { domingo: "rodizio" } },
+    { id: "sem-regra", t: "Sim, sem regra de rodízio", d: "",                                     v: { domingo: "sem-regra" } },
+    { id: "nao",       t: "Não",                       d: "Não abre aos domingos",                v: { domingo: "nao" } },
+  ],
+  sindicato: [
+    { id: "nao",        t: "Nada negociado ainda",       d: "Convenção atual, sem aditivo",  v: { aditivo: "nao" } },
+    { id: "negociando", t: "Em negociação",              d: "Sindicato já está conversando", v: { aditivo: "negociando" } },
+    { id: "f1",         t: "Aditivo assinado para 42h",  d: "Falta a etapa de 40h",          v: { aditivo: "f1" } },
+    { id: "f2",         t: "Aditivo para 42h e 40h",     d: "Cobre as duas etapas",          v: { aditivo: "f2" } },
+    { id: "nenhum",     t: "Não temos convenção/acordo", d: "Ou não sei qual é",             v: { tipo: "nenhum" } },
+  ],
+};
+
+// Qual opção de cada pergunta corresponde aos valores atuais
+function opcaoAtual(q) {
+  const c = state.cct;
+  if (q === "escala") {
+    if (c.escala === "outra") return c.dias === 5.5 ? "meio" : null;
+    return c.escala;
+  }
+  if (q === "domingo") return c.domingo;
+  return c.tipo === "nenhum" ? "nenhum" : c.aditivo;
+}
+
+function renderOrigem() {
+  const o = state.cct.origem || "ramo";
+  const txt = o === "ramo" ? `Respostas com o padrão de “${ramoAtual().nome}”. Confira e ajuste.`
+    : o.startsWith("doc:") ? `✓ Preenchido a partir do documento “${o.slice(4)}”. Confira os trechos acima.`
+    : "✓ Respostas suas.";
+  document.getElementById("cct-origem").textContent = txt;
+}
+
+function renderPerguntas() {
+  document.querySelectorAll(".chips[data-q]").forEach(box => {
+    const q = box.dataset.q, atual = opcaoAtual(q);
+    box.innerHTML = PERGUNTAS[q].map(op =>
+      `<button type="button" class="chip" data-op="${op.id}" aria-pressed="${op.id === atual}">${op.t}${op.d ? `<small>${op.d}</small>` : ""}</button>`).join("");
+  });
+  renderOrigem();
+}
+
+function bindPerguntas() {
+  document.querySelectorAll(".chips[data-q]").forEach(box => {
+    box.addEventListener("click", e => {
+      const btn = e.target.closest("[data-op]");
+      if (!btn) return;
+      const q = box.dataset.q;
+      const op = PERGUNTAS[q].find(x => x.id === btn.dataset.op);
+      Object.assign(state.cct, op.v);
+      if (q === "sindicato" && op.id !== "nenhum" && state.cct.tipo === "nenhum") state.cct.tipo = "cct";
+      state.cct.origem = "manual";
+      fillCct(); update();
+    });
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1764,6 +1873,7 @@ function aplicarDoc(id) {
   ["tipo", "jornada", "diaria", "escala", "dias", "domingo", "banco", "vigencia", "aditivo"].forEach(k => {
     if (a[k] && a[k].valor != null) { state.cct[k] = a[k].valor; aplicados.push(k); }
   });
+  state.cct.origem = "doc:" + d.nome;
   fillCct(); update();
   document.getElementById("diag").closest(".card").scrollIntoView({ behavior: "smooth", block: "start" });
   const n = document.getElementById("diag-summary");
@@ -1791,6 +1901,7 @@ renderTimeline();
 bindParams();
 renderRoles();
 bindRamo();
+bindPerguntas();
 bindCidade();
 bindDocs();
 renderChecklist();
