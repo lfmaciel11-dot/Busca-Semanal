@@ -238,6 +238,17 @@ window.MUNICIPIOS_IBGE = {"AC":"Acrelândia:1200013|Assis Brasil:1200054|Brasil�
     .roles-table td.del-cell::before{content:"\00a0"}
     .roles-table input,.roles-table select{min-width:0!important}
   }
+  .mix-leg{display:inline-flex;align-items:center;gap:5px;margin-right:12px;color:var(--ink)}
+  .mix-leg i{width:10px;height:10px;border-radius:2px;display:inline-block}
+  .he-resumo{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .he-resumo .tag{font-size:12.5px;padding:3px 10px;color:var(--ink)}
+  .timeline-chart{display:flex;align-items:flex-end;gap:3px;height:190px;padding-top:6px}
+  .tc-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;min-width:0}
+  .tc-bar{position:relative;flex:1;width:100%}
+  .tc-range{position:absolute;bottom:0;left:0;right:0;background:var(--panel2);border:1px dashed var(--border);border-bottom:none;border-radius:3px 3px 0 0}
+  .tc-val{position:absolute;bottom:0;left:0;right:0;border-radius:3px 3px 0 0;transition:height .3s}
+  .tc-lbl{font-size:10.5px;color:var(--muted);height:16px;margin-top:4px;white-space:nowrap}
+  tr.row-sel td{background:color-mix(in srgb,var(--accent) 8%,transparent)}
   footer{max-width:1180px;margin:0 auto;padding:18px 24px 40px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--border)}
 
   @media (max-width:760px){
@@ -452,7 +463,9 @@ window.MUNICIPIOS_IBGE = {"AC":"Acrelândia:1200013|Assis Brasil:1200054|Brasil�
             <th>Cargo / função</th>
             <th class="num">Empregados</th>
             <th class="num" title="Quanto cada empregado custa por mês para a empresa: salário + encargos + benefícios">Custo total por empregado (R$/mês)</th>
+            <th class="num" title="Usado no cálculo da hora extra. Se ficar em branco, é estimado a partir do custo total">Salário (opcional)</th>
             <th>Jornada atual</th>
+            <th title="Cargos que precisam manter o horário coberto (caixa, vigilância, atendimento) não podem compensar a redução com reorganização">Cobre horário fixo?</th>
             <th></th>
           </tr>
         </thead>
@@ -460,35 +473,60 @@ window.MUNICIPIOS_IBGE = {"AC":"Acrelândia:1200013|Assis Brasil:1200054|Brasil�
       </table>
     </div>
     <button class="add-btn" id="add-role">+ Adicionar cargo</button>
-    <p class="small muted" style="margin:10px 0 0"><b>Custo total</b> é quanto cada empregado custa por mês para a empresa, com salário, encargos e benefícios (VT, VR, plano de saúde). Use o valor médio do cargo. Não inclua quem tem diploma de nível superior e salário a partir de R$ 21.188, que fica fora das novas regras.</p>
-    <details class="detalhes">
-      <summary>Só sabe o salário? Estime o custo total</summary>
-      <div class="grid-params" style="margin-top:12px">
-        <label class="field">Salário mensal (R$)
-          <input type="number" id="calc-salario" min="0" step="50" placeholder="Ex.: 2000">
-        </label>
-        <div class="calc-resultado" id="calc-resultado" aria-live="polite"></div>
-      </div>
-    </details>
+    <p class="small muted" style="margin:10px 0 0"><b>Custo total</b> é quanto cada empregado custa por mês para a empresa, com salário, encargos e benefícios (VT, VR, plano de saúde). Use o valor médio do cargo. O <b>salário</b> é opcional: ele torna o cálculo da hora extra exato; em branco, é estimado. <b>Cobre horário fixo</b>: “Sim” para quem precisa manter um horário coberto (caixa, vigilância, atendimento); “Não” para quem entrega tarefas e pode ganhar produtividade. Não inclua quem tem diploma de nível superior e salário a partir de R$ 21.188, que fica fora das novas regras.</p>
   </div>
 
   <div class="card">
     <h3>Como a empresa pretende cobrir as horas que deixam de ser trabalhadas?</h3>
     <div class="chips" id="estrategias"></div>
-    <div class="mix-bar" id="mix-bar" aria-label="Divisão das horas perdidas"></div>
+    <div class="mix-bar" id="mix-bar" aria-label="Divisão das horas perdidas no cenário provável"></div>
+    <p class="small muted" style="margin:6px 0 0" id="mix-legenda"></p>
     <details class="detalhes">
       <summary>Ajustar a divisão (opcional)</summary>
       <div class="grid-params" style="margin-top:12px">
-        <label class="field">Reorganização / produtividade
-          <div class="range-row"><input type="range" id="produtividade" min="0" max="100" step="5"><output id="produtividade-out"></output></div>
-          <small>Horas que deixam de precisar de reposição (processos, tecnologia, escala melhor distribuída). <b id="produtividade-max"></b></small>
-        </label>
         <label class="field">Horas extras
           <div class="range-row"><input type="range" id="repoHE" min="0" max="100" step="5"><output id="repoHE-out"></output></div>
-          <small>Horas cobertas com horas extras da equipe atual. <b id="repoHE-max"></b></small>
+          <small>Parte das horas a repor coberta com horas extras da equipe atual, até o limite legal de 2h por dia. O restante vira contratação.</small>
+        </label>
+        <label class="field">Reorganização no cenário provável
+          <div class="range-row"><input type="range" id="produtividade" min="0" max="100" step="5"><output id="produtividade-out"></output></div>
+          <small>Só para cargos que não cobrem horário fixo. O cenário pessimista usa 0% e o otimista, o dobro deste valor.</small>
         </label>
       </div>
-      <p class="small muted" style="margin:6px 0 0">As partes somam 100% das horas perdidas. O restante é coberto com novas contratações.</p>
+    </details>
+  </div>
+
+  <div class="card">
+    <h3>Hora extra pela CLT e pela norma coletiva</h3>
+    <div class="he-resumo" id="he-resumo"></div>
+    <details class="detalhes" id="he-detalhes">
+      <summary>Ajustar conforme a sua convenção ou acordo coletivo</summary>
+      <p class="small muted" style="margin:10px 0 14px">Os valores padrão seguem a CLT. Se a sua convenção prevê adicional maior, informe aqui ou envie o documento na seção 1 e use “Aplicar ao diagnóstico”: o adicional é lido automaticamente.</p>
+      <div class="grid-params">
+        <label class="field">Adicional de hora extra (%)
+          <input type="number" id="he-adicional" min="50" max="300" step="5">
+          <small>Mínimo de 50% (CF, art. 7º, XVI; CLT, art. 59, § 1º). Muitas convenções preveem 60%, 70% ou 100%.</small>
+        </label>
+        <label class="field">Adicional escalonado: acima de quantas horas extras no mês?
+          <input type="number" id="he-faixa" min="0" max="200" step="1" placeholder="Em branco = sem escalonamento">
+          <small>Algumas convenções pagam um adicional maior a partir de certa quantidade de horas no mês.</small>
+        </label>
+        <label class="field">Adicional acima dessa faixa (%)
+          <input type="number" id="he-adicional2" min="50" max="300" step="5">
+        </label>
+        <label class="field">Adicionais fixos que entram na base (%)
+          <input type="number" id="he-base" min="0" max="100" step="1">
+          <small>Periculosidade (30%), insalubridade, adicional noturno habitual: integram o valor da hora (Súmula 264 TST).</small>
+        </label>
+      </div>
+      <div class="q" style="margin-top:16px">
+        <div class="q-title">Reflexo no repouso semanal remunerado (DSR)</div>
+        <div class="chips" data-he="dsr"></div>
+      </div>
+      <div class="q" style="margin-top:16px">
+        <div class="q-title">Regime tributário (define os encargos sobre a hora extra)</div>
+        <div class="chips" data-he="regime"></div>
+      </div>
     </details>
   </div>
 </section>
@@ -496,18 +534,36 @@ window.MUNICIPIOS_IBGE = {"AC":"Acrelândia:1200013|Assis Brasil:1200054|Brasil�
 <!-- RESULTADOS -->
 <section>
   <h2 class="section-title">3. Impacto <span>financeiro</span></h2>
-  <p class="sub">Custo mensal da mão de obra afetada em cada etapa, com salários preservados.</p>
+  <p class="sub">O salário mensal não muda, então a equipe atual não fica mais cara: o custo extra é o de repor as horas que a operação precisa. Valores do cenário provável, com a faixa entre o otimista e o pessimista.</p>
+  <div class="grid-params" style="margin-bottom:14px">
+    <label class="field">Faturamento mensal da empresa (opcional)
+      <input type="number" id="faturamento" min="0" step="1000" placeholder="Ex.: 500000">
+      <small>Mostra quanto o custo extra pesa no faturamento e quanto o preço teria de subir para repassá-lo.</small>
+    </label>
+  </div>
   <div class="kpis" id="kpis"></div>
 
   <div class="card">
-    <h3>Custo mensal por estratégia</h3>
+    <h3>Custo extra mês a mês</h3>
     <div class="legend">
-      <span><i style="background:var(--s-atual)"></i>Hoje (até 44h)</span>
       <span><i style="background:var(--s-f1)"></i>Etapa 1 · 42h</span>
       <span><i style="background:var(--s-f2)"></i>Etapa 2 · 40h</span>
+      <span><i style="background:var(--panel2);border:1px dashed var(--muted)"></i>Até o cenário pessimista</span>
     </div>
-    <div class="bars" id="bars"></div>
-    <p class="small muted" style="margin:12px 0 0">“Só horas extras” e “só contratações” mostram os extremos. “Sua estratégia” usa a divisão escolhida acima.</p>
+    <div class="timeline-chart" id="serie"></div>
+    <p class="small muted" style="margin:10px 0 0" id="serie-nota"></p>
+  </div>
+
+  <div class="card">
+    <h3>Comparação entre as formas de repor as horas</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Forma</th><th class="num">Etapa 1 · por mês</th><th class="num">Etapa 2 · por mês</th><th class="num">Total em 24 meses</th><th class="num">Contratações (40h)</th></tr>
+        </thead>
+        <tbody id="comparacao"></tbody>
+      </table>
+    </div>
   </div>
 
   <div class="card">
@@ -518,10 +574,10 @@ window.MUNICIPIOS_IBGE = {"AC":"Acrelândia:1200013|Assis Brasil:1200054|Brasil�
           <tr>
             <th>Cargo</th>
             <th>Etapa</th>
-            <th class="num">Custo-hora</th>
             <th class="num">Horas a repor/sem</th>
             <th class="num">HE por empregado/sem</th>
-            <th class="num" title="Pessoas equivalentes a tempo integral">Contratações (eq.)</th>
+            <th class="num" title="Com adicional, reflexo no DSR e encargos">Custo de 1h extra</th>
+            <th class="num" title="Arredondado para meio período">Contratações</th>
             <th class="num">Custo extra/mês</th>
           </tr>
         </thead>
@@ -530,38 +586,54 @@ window.MUNICIPIOS_IBGE = {"AC":"Acrelândia:1200013|Assis Brasil:1200054|Brasil�
     </div>
   </div>
 
+  <div class="card">
+    <h3>Memória de cálculo da hora extra</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Cargo</th><th class="num">Salário</th><th class="num">Base da hora</th><th class="num">Divisor</th><th class="num">Hora normal</th><th class="num">Hora extra</th><th class="num">+ DSR</th><th class="num">+ Encargos</th></tr>
+        </thead>
+        <tbody id="memoria"></tbody>
+      </table>
+    </div>
+    <ul class="rules small" style="margin-top:12px" id="memoria-regras"></ul>
+  </div>
+
   <div id="warnings"></div>
 </section>
 
 <!-- DIMENSIONAMENTO -->
 <section>
-  <h2 class="section-title">4. Dimensionamento da <span>escala</span></h2>
-  <p class="sub">Quantas pessoas são necessárias para manter o mesmo horário de funcionamento, agora com dois dias de folga por semana.</p>
+  <h2 class="section-title">4. Dimensionamento da <span>escala</span> <span class="tag">opcional</span></h2>
+  <p class="sub">O impacto financeiro considera que a equipe atual cobre bem a operação. Se quiser conferir isso pelo horário de funcionamento, preencha abaixo.</p>
   <div class="card">
-    <div class="grid-params">
-      <label class="field">Dias de funcionamento por semana
-        <input type="number" id="diasFunc" min="1" max="7" step="1">
-      </label>
-      <label class="field">Horas de funcionamento por dia
-        <input type="number" id="horasDia" min="1" max="24" step="0.5">
-      </label>
-      <label class="field">Postos ocupados ao mesmo tempo
-        <input type="number" id="postos" min="1" step="1">
-        <small>Ex.: 3 caixas abertos o dia todo = 3.</small>
-      </label>
-      <label class="field">Pessoas na equipe hoje
-        <input type="number" id="equipeAtual" min="0" step="1">
-      </label>
-    </div>
-    <div class="table-scroll" style="margin-top:16px">
-      <table>
-        <thead>
-          <tr><th>Cenário</th><th class="num">Horas-posto/sem</th><th class="num">Capacidade por pessoa</th><th class="num">Equipe mínima</th><th class="num">Diferença</th><th>Situação</th></tr>
-        </thead>
-        <tbody id="dimens"></tbody>
-      </table>
-    </div>
-    <p class="small muted" style="margin:12px 0 0">Equipe mínima teórica, sem folga para férias, faltas e afastamentos (some 8% a 12% para cobrir o absenteísmo). Escalas como 5x2 com rodízio de folgas, 4x3 ou 12x36 continuam possíveis, desde que respeitem o novo limite semanal e sejam previstas em acordo ou convenção coletiva quando a lei exigir.</p>
+    <details class="detalhes" style="margin-top:0;border-top:none;padding-top:0">
+      <summary>Conferir pelo horário de funcionamento</summary>
+      <div class="grid-params" style="margin-top:12px">
+        <label class="field">Dias de funcionamento por semana
+          <input type="number" id="diasFunc" min="1" max="7" step="1">
+        </label>
+        <label class="field">Horas de funcionamento por dia
+          <input type="number" id="horasDia" min="1" max="24" step="0.5">
+        </label>
+        <label class="field">Postos ocupados ao mesmo tempo
+          <input type="number" id="postos" min="1" step="1">
+          <small>Ex.: 3 caixas abertos o dia todo = 3.</small>
+        </label>
+        <label class="field">Pessoas na equipe hoje
+          <input type="number" id="equipeAtual" min="0" step="1">
+        </label>
+      </div>
+      <div class="table-scroll" style="margin-top:16px">
+        <table>
+          <thead>
+            <tr><th>Cenário</th><th class="num">Horas-posto/sem</th><th class="num">Capacidade por pessoa</th><th class="num">Equipe mínima</th><th class="num">Diferença</th><th>Situação</th></tr>
+          </thead>
+          <tbody id="dimens"></tbody>
+        </table>
+      </div>
+      <p class="small muted" style="margin:12px 0 0">Equipe mínima teórica, sem folga para férias, faltas e afastamentos (some 8% a 12% para cobrir o absenteísmo). Escalas como 5x2 com rodízio de folgas, 4x3 ou 12x36 continuam possíveis, desde que respeitem o novo limite semanal e sejam previstas em acordo ou convenção coletiva quando a lei exigir.</p>
+    </details>
   </div>
 </section>
 
@@ -586,10 +658,11 @@ window.MUNICIPIOS_IBGE = {"AC":"Acrelândia:1200013|Assis Brasil:1200054|Brasil�
 <section id="no-print">
   <div class="card small muted">
     <b style="color:var(--ink)">Como o cálculo funciona.</b>
-    Custo-hora = custo total ÷ (jornada semanal × 5), mesmo critério do divisor da CLT (220 para 44h, 210 para 42h, 200 para 40h). Como o salário não pode ser reduzido, o custo-hora sobe quando a jornada cai.
-    Horas a repor = empregados × (jornada atual − novo limite), quando a jornada atual passa do limite, descontada a parte coberta por reorganização.
-    Horas extras/mês = horas semanais × 5 (aproximação que inclui o reflexo no DSR) × custo-hora × 1,5 (adicional mínimo de 50%).
-    Contratações = horas a repor ÷ novo limite semanal, em pessoas equivalentes a tempo integral (frações viram contratos em tempo parcial, CLT art. 58-A), pelo mesmo custo total do cargo. Recrutamento e treinamento não estão incluídos.
+    O salário mensal não pode ser reduzido, então a equipe atual não fica mais cara: o custo extra é só o de repor as horas que a operação precisa.
+    Horas a repor = empregados × (jornada atual − novo limite). Em cargos de tarefas, parte delas pode ser absorvida por reorganização (0% no cenário pessimista, o valor escolhido no provável e o dobro no otimista); cargos que cobrem horário fixo não têm esse desconto.
+    Horas extras: salário + adicionais salariais ÷ divisor (jornada × 5), com o adicional da CLT ou da norma coletiva, reflexo no DSR e encargos do regime tributário, até o limite de 2h por dia. A memória de cálculo mostra cada passo.
+    Contratações: horas restantes ÷ novo limite semanal, arredondadas para meio período por cargo (CLT, art. 58-A), pelo custo total do cargo, mais um custo de entrada de meio custo mensal por pessoa (recrutamento, exames e treinamento).
+    A linha do tempo distribui os custos de 16/12/2026 a 15/12/2028.
     É uma estimativa para planejamento e não substitui o cálculo da folha nem uma orientação jurídica.
   </div>
 </section>
@@ -672,7 +745,8 @@ const DEFAULT = {
     { nome: "Fiscal de loja",       qtd: 3,  custo: 5100, jornada: 44 },
     { nome: "Administrativo",       qtd: 4,  custo: 6150, jornada: 40 },
   ],
-  produtividade: 20, repoHE: 25,
+  produtividade: 25, repoHE: 30, faturamento: 0,
+  he: { adicional: 50, faixa: 0, adicional2: 100, base: 0, dsr: "2", regime: "nao-sei", origem: "clt" },
   diasFunc: 7, horasDia: 13, postos: 11, equipeAtual: 23,
   ramo: "comercio", uf: "", cidade: "",
   cct: { tipo: "cct", jornada: 44, diaria: 7.33, escala: "6x1", dias: 6, domingo: "rodizio", banco: "coletivo", vigencia: "", aditivo: "nao", origem: "ramo" },
@@ -684,10 +758,11 @@ if (!Array.isArray(state.roles)) state.roles = DEFAULT.roles.map(r => ({ ...r })
 // Versões anteriores guardavam salário-base + encargos: converte para custo total
 state.roles.forEach(r => {
   if (r.custo == null && r.salario != null) r.custo = Math.round((r.salario * (1 + (state.encargos ?? 68) / 100) + (state.beneficios ?? 750)) / 50) * 50;
-  delete r.salario; delete r.excluido;
+  delete r.excluido;
 });
 ["regime", "encargos", "beneficios", "admissao", "adicionalHE"].forEach(k => delete state[k]);
 state.cct = { ...DEFAULT.cct, ...(state.cct || {}) };
+state.he = { ...DEFAULT.he, ...(state.he || {}) };
 if (state.mixHE != null) {
   state.repoHE = Math.round(state.mixHE * (100 - state.produtividade) / 100 / 5) * 5;
   delete state.mixHE;
@@ -701,59 +776,83 @@ function bindParams() {
   PARAM_IDS.forEach(id => {
     const el = document.getElementById(id);
     el.value = state[id];
-    el.addEventListener("input", () => {
-      state[id] = parseFloat(el.value) || 0;
-      // Produtividade + horas extras não podem passar de 100%
-      const par = { produtividade: "repoHE", repoHE: "produtividade" }[id];
-      if (par && state[id] + state[par] > 100) { state[id] = 100 - state[par]; el.value = state[id]; }
-      update();
-    });
+    el.addEventListener("input", () => { state[id] = parseFloat(el.value) || 0; update(); });
   });
+  const fat = document.getElementById("faturamento");
+  fat.value = state.faturamento || "";
+  fat.addEventListener("input", () => { state.faturamento = parseFloat(fat.value) || 0; update(); });
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   HORA EXTRA: REGRAS DA CLT E DA NORMA COLETIVA
+═══════════════════════════════════════════════════════════════════════════ */
+const BENEFICIOS_TIPICOS = 750;   // VT, VR/VA, plano — só para estimar o salário a partir do custo total
+const SEMANAS_MES = 52 / 12;      // semanas por mês, em média
+const LIMITE_HE_DIA = 2;          // CLT, art. 59, caput
+const DIAS_TRABALHO = 5;          // com dois repousos semanais (EC 141)
+const FERIADOS_ANO = 10;          // feriados nacionais, em média
+
+// Encargos sobre a hora extra habitual: INSS patronal + RAT + terceiros, FGTS e os
+// reflexos em 13º (1/12) e férias + 1/3 (1/12 × 4/3), que também sofrem INSS e FGTS.
+const REFLEXOS_13_FERIAS = 1 / 12 + (1 / 12) * (4 / 3);
+const fatorEncargos = (inss, fgts) => 1 + inss + fgts + REFLEXOS_13_FERIAS * (1 + inss + fgts);
+const REGIMES = {
+  simples:   { t: "Simples Nacional",        d: "Anexos I, II, III ou V: INSS patronal no DAS", f: fatorEncargos(0, 0.08) },
+  simples4:  { t: "Simples · Anexo IV",      d: "Construção, vigilância, limpeza: INSS 20% + RAT", f: fatorEncargos(0.22, 0.08) },
+  presumido: { t: "Lucro Presumido ou Real", d: "INSS 20% + RAT 2% + terceiros 5,8%", f: fatorEncargos(0.278, 0.08) },
+  domestico: { t: "Empregador doméstico",    d: "INSS 8% + seguro 0,8% + FGTS 8% + 3,2%", f: fatorEncargos(0.088, 0.112) },
+  "nao-sei": { t: "Não sei",                 d: "Usa Lucro Presumido/Real, o mais conservador", f: fatorEncargos(0.278, 0.08) },
+};
+
+// Reflexo das horas extras habituais no DSR (Lei 605/1949, art. 7º; Súmula 172 TST):
+// valor das HE ÷ dias úteis do mês × dias de repouso remunerado (domingos, feriados e,
+// com a EC 141, o segundo dia de repouso).
+const DIAS_MES = 365 / 12, FER_MES = FERIADOS_ANO / 12;
+const DSR = {
+  "2": { t: "2 dias de repouso (EC 141)", d: "Os dois dias passam a ser repouso remunerado. Leitura literal da emenda, ainda sem jurisprudência.",
+         r: (2 * SEMANAS_MES + FER_MES * 5 / 7) / (DIAS_MES - 2 * SEMANAS_MES - FER_MES * 5 / 7) },
+  "1": { t: "1 dia: domingos e feriados", d: "Entendimento tradicional, anterior à emenda.",
+         r: (SEMANAS_MES + FER_MES) / (DIAS_MES - SEMANAS_MES - FER_MES) },
+};
+
+const regimeAtual = () => REGIMES[state.he.regime] || REGIMES["nao-sei"];
+const salarioEstimado = custo => Math.max(0, custo - BENEFICIOS_TIPICOS) / regimeAtual().f;
+const salarioDe = r => (r.salario > 0 ? r.salario : salarioEstimado(r.custo));
+
+// Valor de uma hora extra para o cargo, no limite semanal da etapa
+function horaExtra(r, limite) {
+  const salario = salarioDe(r);
+  const base = salario * (1 + (state.he.base || 0) / 100);   // Súmula 264 TST
+  const divisor = limite * 5;                                // Súmula 431 TST: 40h → 200
+  const normal = divisor ? base / divisor : 0;
+  return { salario, base, divisor, normal };
+}
+
+// Custo mensal de `horasSemana` horas extras repartidas entre `qtd` empregados
+function custoHorasExtras(r, limite, horasSemana) {
+  if (!horasSemana || !r.qtd) return { valor: 0, dsr: 0, total: 0, porHora: 0 };
+  const h = horaExtra(r, limite);
+  const porEmpMes = horasSemana / r.qtd * SEMANAS_MES;
+  const faixa = state.he.faixa > 0 ? state.he.faixa : Infinity;
+  const h1 = Math.min(porEmpMes, faixa), h2 = porEmpMes - h1;
+  const valor = r.qtd * h.normal * (h1 * (1 + state.he.adicional / 100) + h2 * (1 + state.he.adicional2 / 100));
+  const dsr = valor * (DSR[state.he.dsr] || DSR["2"]).r;
+  const total = (valor + dsr) * regimeAtual().f;
+  return { valor, dsr, total, porHora: total / (r.qtd * porEmpMes) };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARGOS
+═══════════════════════════════════════════════════════════════════════════ */
 const JORNADAS = [[44, "44h"], [42, "42h (ex.: 12x36)"], [40, "40h"], [36, "36h"], [30, "30h"]];
 function jornadaOpcoes(v) {
   const lista = JORNADAS.some(([h]) => h === v) ? JORNADAS : [...JORNADAS, [v, v + "h"]];
   return lista.map(([h, t]) => `<option value="${h}" ${h === v ? "selected" : ""}>${t}</option>`).join("");
 }
 
-// Estratégias prontas de reposição (produtividade %, horas extras %); o resto vira contratação
-const ESTRATEGIAS_PRONTAS = [
-  { id: "contratar",   t: "Contratar pessoas",        d: "Toda a diferença com novas contratações", prod: 0, he: 0 },
-  { id: "equilibrado", t: "Equilibrado",              d: "Um pouco de reorganização, horas extras e contratações", prod: 20, he: 25 },
-  { id: "reorganizar", t: "Reorganizar e contratar",  d: "Ajustar processos e escalas antes de contratar", prod: 40, he: 0 },
-  { id: "he",          t: "Horas extras temporárias", d: "Mais horas extras enquanto contrata", prod: 0, he: 60 },
-];
-
-function renderEstrategias() {
-  const box = document.getElementById("estrategias");
-  const atual = ESTRATEGIAS_PRONTAS.find(x => x.prod === state.produtividade && x.he === state.repoHE);
-  box.innerHTML = ESTRATEGIAS_PRONTAS.map(x =>
-    `<button type="button" class="chip" data-est="${x.id}" aria-pressed="${atual === x}">${x.t}<small>${x.d}</small></button>`).join("")
-    + (atual ? "" : `<button type="button" class="chip" aria-pressed="true" disabled>Personalizado<small>Ajustado nos controles abaixo</small></button>`);
-}
-
-function bindEstrategias() {
-  document.getElementById("estrategias").addEventListener("click", e => {
-    const btn = e.target.closest("[data-est]");
-    if (!btn) return;
-    const x = ESTRATEGIAS_PRONTAS.find(y => y.id === btn.dataset.est);
-    state.produtividade = x.prod; state.repoHE = x.he;
-    document.getElementById("produtividade").value = x.prod;
-    document.getElementById("repoHE").value = x.he;
-    update();
-  });
-  // Estimativa de custo total a partir do salário (encargos médios + benefícios típicos)
-  const sal = document.getElementById("calc-salario");
-  const out = document.getElementById("calc-resultado");
-  sal.addEventListener("input", () => {
-    const v = parseFloat(sal.value) || 0;
-    out.innerHTML = v ? `<span class="small muted">Custo total estimado por mês</span>
-      <span><b>${brl(v * 1.37 + 750)}</b> <span class="small muted">no Simples Nacional</span></span>
-      <span><b>${brl(v * 1.68 + 750)}</b> <span class="small muted">no Lucro Presumido ou Real</span></span>
-      <span class="small muted">Inclui encargos, 13º, férias e cerca de R$ 750 de benefícios.</span>` : "";
-  });
-}
+// Cargos de tarefas (sem horário fixo a cobrir), usados quando o exemplo não diz
+const CARGO_TAREFAS = /administrativ|analista|almoxarif|mecanic|assistente|pedreir|servente|encarregad|trabalhador.*rural|tratorista|escriturari|gerente|repositor|domestic/;
+const cobreHorario = r => (r.horario != null ? !!r.horario : !CARGO_TAREFAS.test(norm(r.nome)));
 
 function renderRoles() {
   document.getElementById("roles").innerHTML = state.roles.map((r, i) => `
@@ -761,9 +860,21 @@ function renderRoles() {
       <td data-label="Cargo / função"><input type="text" data-i="${i}" data-k="nome" value="${esc(r.nome)}" aria-label="Cargo"></td>
       <td class="num" data-label="Empregados"><input type="number" data-i="${i}" data-k="qtd" value="${r.qtd}" min="0" step="1" aria-label="Empregados"></td>
       <td class="num" data-label="Custo total (R$/mês)"><input type="number" data-i="${i}" data-k="custo" value="${r.custo}" min="0" step="50" aria-label="Custo total por empregado"></td>
+      <td class="num" data-label="Salário (opcional)"><input type="number" data-i="${i}" data-k="salario" value="${r.salario || ""}" min="0" step="50" aria-label="Salário"></td>
       <td data-label="Jornada atual"><select data-i="${i}" data-k="jornada" aria-label="Jornada atual">${jornadaOpcoes(r.jornada)}</select></td>
+      <td data-label="Cobre horário fixo?"><select data-i="${i}" data-k="horario" aria-label="Cobre horário fixo">
+        <option value="1" ${cobreHorario(r) ? "selected" : ""}>Sim</option><option value="0" ${cobreHorario(r) ? "" : "selected"}>Não, tarefas</option></select></td>
       <td class="del-cell"><button class="icon-btn" data-del="${i}" aria-label="Remover cargo">✕</button></td>
     </tr>`).join("");
+  atualizarEstimativas();
+}
+
+// Mostra o salário estimado como dica quando o campo está em branco
+function atualizarEstimativas() {
+  document.querySelectorAll('#roles input[data-k="salario"]').forEach(el => {
+    const r = state.roles[el.dataset.i];
+    if (r) el.placeholder = "≈ " + brl(salarioEstimado(r.custo));
+  });
 }
 
 document.getElementById("roles").addEventListener("input", e => {
@@ -781,117 +892,253 @@ document.getElementById("roles").addEventListener("click", e => {
   renderRoles(); update();
 });
 document.getElementById("add-role").onclick = () => {
-  state.roles.push({ nome: "Novo cargo", qtd: 1, custo: 4100, jornada: 44 });
+  state.roles.push({ nome: "Novo cargo", qtd: 1, custo: 4100, jornada: 44, horario: 1 });
   renderRoles(); update();
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CÁLCULO
 ═══════════════════════════════════════════════════════════════════════════ */
-const SEMANAS_MES = 5; // aproximação que já embute o reflexo no DSR (divisor CLT = jornada × 5)
-const ADICIONAL_HE = 1.5; // adicional mínimo constitucional de 50%
+const CUSTO_ENTRADA = 0.5; // recrutamento, exames e treinamento: meio custo mensal por contratado
 
-// Calcula uma etapa para um cargo. `fracHE` = parcela reposta por HE (0..1);
-// `produtividade` = parcela das horas que não precisa ser reposta (0..1).
-function calcCargo(r, etapa, fracHE, produtividade) {
+// Uma etapa para um cargo. `reorg` = parte das horas perdidas absorvida por reorganização
+// (só em cargos de tarefas); `parteHE` = parte das horas a repor coberta com hora extra.
+function calcCargo(r, etapa, reorg, parteHE) {
   const limite = Math.min(r.jornada, etapa.limite);
-  const custoBase = r.qtd * r.custo;
-  const valorHora = limite > 0 ? r.custo / (limite * 5) : 0;
   const horasPerdidas = r.qtd * Math.max(0, r.jornada - limite);
-  const horasRepor = horasPerdidas * (1 - produtividade);
-  const horasHE = horasRepor * fracHE;
+  const horasReorg = cobreHorario(r) ? 0 : horasPerdidas * reorg;
+  const horasRepor = horasPerdidas - horasReorg;
+  const heDesejado = horasRepor * parteHE;
+  const heMax = r.qtd * LIMITE_HE_DIA * DIAS_TRABALHO;
+  const horasHE = Math.min(heDesejado, heMax);
   const horasContratar = horasRepor - horasHE;
-  const contratacoes = horasContratar > 0 ? horasContratar / limite : 0; // equivalente a tempo integral
-  const custoHE = horasHE * SEMANAS_MES * valorHora * ADICIONAL_HE;
+  // Contratações em meio período ou período integral (CLT, art. 58-A)
+  const contratacoes = horasContratar > 0 ? Math.ceil((horasContratar / limite) * 2 - 1e-9) / 2 : 0;
+  const pessoas = Math.ceil(contratacoes - 1e-9);
+  const he = custoHorasExtras(r, limite, horasHE);
   const custoContr = contratacoes * r.custo;
   return {
-    custoBase, valorHora, horasRepor, contratacoes,
+    limite, horasPerdidas, horasReorg, horasRepor, horasHE, horasContratar, excessoHE: heDesejado - horasHE,
+    contratacoes, pessoas, he, custoHE: he.total, custoContr,
     hePorEmpregado: r.qtd > 0 ? horasHE / r.qtd : 0,
-    custoHE, custoContr,
-    extra: custoHE + custoContr,
+    custoBase: r.qtd * r.custo,
+    extra: he.total + custoContr,
   };
 }
 
-function calcEtapa(etapa, fracHE, produtividade) {
-  const linhas = state.roles.map(r => ({ r, ...calcCargo(r, etapa, fracHE, produtividade) }));
+function calcEtapa(etapa, reorg, parteHE) {
+  const linhas = state.roles.map(r => ({ r, ...calcCargo(r, etapa, reorg, parteHE) }));
   const sum = k => linhas.reduce((s, l) => s + l[k], 0);
-  return { linhas, base: sum("custoBase"), extra: sum("extra"), contratacoes: sum("contratacoes"), horasRepor: sum("horasRepor") };
+  return {
+    linhas, base: sum("custoBase"), extra: sum("extra"), contratacoes: sum("contratacoes"), pessoas: sum("pessoas"),
+    horasPerdidas: sum("horasPerdidas"), horasReorg: sum("horasReorg"), horasHE: sum("horasHE"),
+    horasContratar: sum("horasContratar"), excessoHE: sum("excessoHE"),
+  };
 }
 
-const ESTRATEGIAS = [
-  { id: "he",   nome: "Só horas extras",  fracHE: () => 1, prod: () => 0 },
-  { id: "contr",nome: "Só contratações",  fracHE: () => 0, prod: () => 0 },
-  { id: "mix",  nome: "Sua estratégia",   fracHE: () => (state.produtividade < 100 ? state.repoHE / (100 - state.produtividade) : 0), prod: () => state.produtividade / 100 },
+// Cenários de reorganização: pessimista (nenhuma), provável (escolhida) e otimista (o dobro)
+const cenarios = () => {
+  const p = state.produtividade / 100;
+  return [{ id: "otim", nome: "Otimista", reorg: Math.min(1, 2 * p) }, { id: "prov", nome: "Provável", reorg: p }, { id: "pess", nome: "Pessimista", reorg: 0 }];
+};
+
+// Custo extra mês a mês de dez/2026 a dez/2028 (24 meses a partir da etapa 1)
+function serieMensal(reorg, parteHE) {
+  const e1 = calcEtapa(ETAPAS[1], reorg, parteHE), e2 = calcEtapa(ETAPAS[2], reorg, parteHE);
+  const entrada1 = e1.linhas.reduce((s, l) => s + l.pessoas * l.r.custo * CUSTO_ENTRADA, 0);
+  const entrada2 = e2.linhas.reduce((s, l, i) => s + Math.max(0, l.pessoas - e1.linhas[i].pessoas) * l.r.custo * CUSTO_ENTRADA, 0);
+  const ini1 = ETAPAS[1].inicio, ini2 = ETAPAS[2].inicio;
+  const fim = new Date(ini1.getFullYear() + 2, ini1.getMonth(), ini1.getDate());
+  const dias = (a, b) => Math.max(0, (b - a) / 864e5);
+  const meses = [];
+  for (let d = new Date(ini1.getFullYear(), ini1.getMonth(), 1); d < fim; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) {
+    const prox = new Date(d.getFullYear(), d.getMonth() + 1, 1), total = dias(d, prox);
+    const f1 = dias(new Date(Math.max(d, ini1)), new Date(Math.min(prox, ini2))) / total;
+    const f2 = dias(new Date(Math.max(d, ini2)), new Date(Math.min(prox, fim))) / total;
+    let valor = e1.extra * f1 + e2.extra * f2;
+    if (ini1 >= d && ini1 < prox) valor += entrada1;
+    if (ini2 >= d && ini2 < prox) valor += entrada2;
+    meses.push({ d, valor, etapa: f2 > f1 ? 2 : 1 });
+  }
+  return { meses, e1, e2, entrada1, entrada2, total: meses.reduce((s, m) => s + m.valor, 0) };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FORMAS DE REPOR AS HORAS
+═══════════════════════════════════════════════════════════════════════════ */
+const METODOS = [
+  { id: "contratar", t: "Contratar pessoas",        d: "Toda a diferença com novas contratações", he: 0 },
+  { id: "misto",     t: "Misto",                    d: "30% com horas extras, o resto com contratações", he: 30 },
+  { id: "he",        t: "Máximo de horas extras",   d: "Até o limite legal de 2h por dia; o que passar vira contratação", he: 100 },
 ];
 
-// Barra com a divisão das horas perdidas e o limite disponível de cada controle
-function renderMix() {
-  const prod = state.produtividade, he = state.repoHE, contr = Math.max(0, 100 - prod - he);
-  document.getElementById("produtividade-max").textContent = `Máximo disponível: ${100 - he}%.`;
-  document.getElementById("repoHE-max").textContent = `Máximo disponível: ${100 - prod}%.`;
-  const parte = (v, cor, txt) => v > 0 ? `<div style="width:${v}%;background:${cor}" title="${txt}: ${v}%">${v >= 12 ? `${txt} ${v}%` : v + "%"}</div>` : "";
-  document.getElementById("mix-bar").innerHTML =
-    parte(prod, "var(--ok)", "Produtividade") + parte(he, "var(--s-f1)", "Horas extras") + parte(contr, "var(--accent2)", "Contratações");
+function renderEstrategias() {
+  const atual = METODOS.find(x => x.he === state.repoHE);
+  document.getElementById("estrategias").innerHTML = METODOS.map(x =>
+    `<button type="button" class="chip" data-est="${x.id}" aria-pressed="${atual === x}">${x.t}<small>${x.d}</small></button>`).join("")
+    + (atual ? "" : `<button type="button" class="chip" aria-pressed="true" disabled>Personalizado<small>${state.repoHE}% com horas extras</small></button>`);
+}
+
+function renderHeOpcoes() {
+  const h = state.he;
+  [["he-adicional", "adicional"], ["he-adicional2", "adicional2"], ["he-base", "base"]].forEach(([id, k]) => { document.getElementById(id).value = h[k]; });
+  document.getElementById("he-faixa").value = h.faixa || "";
+  document.querySelector('[data-he="dsr"]').innerHTML = Object.entries(DSR).map(([k, v]) =>
+    `<button type="button" class="chip" data-v="${k}" aria-pressed="${h.dsr === k}">${v.t}<small>Reflexo de ${pct(v.r)} · ${v.d}</small></button>`).join("");
+  document.querySelector('[data-he="regime"]').innerHTML = Object.entries(REGIMES).map(([k, v]) =>
+    `<button type="button" class="chip" data-v="${k}" aria-pressed="${h.regime === k}">${v.t}<small>${v.d}</small></button>`).join("");
+  const fonte = h.origem && h.origem.startsWith("doc:") ? `lido de “${esc(h.origem.slice(4))}”` : h.origem === "manual" ? "ajustado por você" : "padrão da CLT";
+  document.getElementById("he-resumo").innerHTML = `
+    <span class="tag">Adicional de ${h.adicional}%${h.faixa > 0 ? ` até ${h.faixa}h/mês e ${h.adicional2}% acima` : ""}</span>
+    <span class="tag">Divisor 210 (42h) e 200 (40h)</span>
+    <span class="tag">Reflexo no DSR: ${(DSR[h.dsr] || DSR["2"]).t}</span>
+    <span class="tag">Encargos: ${regimeAtual().t}</span>
+    <span class="small muted">${fonte}</span>`;
+}
+
+function bindEstrategias() {
+  document.getElementById("estrategias").addEventListener("click", e => {
+    const btn = e.target.closest("[data-est]");
+    if (!btn) return;
+    state.repoHE = METODOS.find(y => y.id === btn.dataset.est).he;
+    document.getElementById("repoHE").value = state.repoHE;
+    update();
+  });
+  [["he-adicional", "adicional"], ["he-adicional2", "adicional2"], ["he-base", "base"], ["he-faixa", "faixa"]].forEach(([id, k]) => {
+    document.getElementById(id).addEventListener("input", e => {
+      state.he[k] = parseFloat(e.target.value) || 0;
+      if ((k === "adicional" || k === "adicional2") && state.he[k] < 50) return; // aguarda digitar
+      state.he.origem = "manual";
+      update();
+    });
+    document.getElementById(id).addEventListener("change", e => {
+      if ((k === "adicional" || k === "adicional2") && state.he[k] < 50) { state.he[k] = 50; e.target.value = 50; update(); }
+    });
+  });
+  document.querySelectorAll("[data-he]").forEach(box => box.addEventListener("click", e => {
+    const btn = e.target.closest("[data-v]");
+    if (!btn) return;
+    state.he[box.dataset.he] = btn.dataset.v;
+    state.he.origem = "manual";
+    update();
+  }));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    RENDERIZAÇÃO DOS RESULTADOS
 ═══════════════════════════════════════════════════════════════════════════ */
+function renderMix(e2) {
+  const tot = e2.horasPerdidas || 1;
+  const p = v => Math.round(v / tot * 100);
+  const reorg = p(e2.horasReorg), he = p(e2.horasHE), contr = Math.max(0, 100 - reorg - he);
+  const parte = (v, cor, txt) => v > 0 ? `<div style="width:${v}%;background:${cor}" title="${txt}: ${v}%">${v >= 14 ? `${txt} ${v}%` : v + "%"}</div>` : "";
+  document.getElementById("mix-bar").innerHTML = e2.horasPerdidas
+    ? parte(reorg, "var(--ok)", "Reorganização") + parte(he, "var(--s-f1)", "Horas extras") + parte(contr, "var(--accent2)", "Contratações")
+    : `<div style="width:100%;background:var(--panel2);color:var(--muted)">Nenhuma hora a repor</div>`;
+  const cor = (c, t, v) => `<span class="mix-leg"><i style="background:${c}"></i>${t} ${v}%</span>`;
+  document.getElementById("mix-legenda").innerHTML = e2.horasPerdidas
+    ? `${cor("var(--ok)", "Reorganização", reorg)} ${cor("var(--s-f1)", "Horas extras", he)} ${cor("var(--accent2)", "Contratações", contr)}<br>Na etapa de 40h, ${num1(e2.horasPerdidas)} horas por semana deixam de ser trabalhadas. Divisão no cenário provável; as partes somam 100%.`
+    : "";
+  document.getElementById("repoHE-out").textContent = state.repoHE + "%";
+  document.getElementById("produtividade-out").textContent = state.produtividade + "%";
+}
+
 function update() {
   save();
-  document.getElementById("produtividade-out").textContent = state.produtividade + "%";
-  document.getElementById("repoHE-out").textContent = state.repoHE + "%";
-  renderMix();
-  renderEstrategias();
-
-  const mix = ESTRATEGIAS[2];
-  const res = ETAPAS.map(e => calcEtapa(e, mix.fracHE(), mix.prod()));
-  const [r0, r1, r2] = res;
+  const parteHE = state.repoHE / 100;
+  const cen = cenarios();
+  const series = Object.fromEntries(cen.map(c => [c.id, serieMensal(c.reorg, parteHE)]));
+  const prov = series.prov, otim = series.otim, pess = series.pess;
+  const base = calcEtapa(ETAPAS[0], 0, parteHE).base;
   const afetados = state.roles.filter(r => r.jornada > 40).reduce((s, r) => s + r.qtd, 0);
+  const faixa = (a, b) => (Math.round(a) === Math.round(b) ? "" : `faixa de ${brl(a)} a ${brl(b)}`);
 
+  renderEstrategias();
+  renderHeOpcoes();
+  renderMix(prov.e2);
+  atualizarEstimativas();
+
+  // KPIs
+  const fat = state.faturamento || 0;
   document.getElementById("kpis").innerHTML = `
-    <div class="kpi"><div class="lbl">Custo da equipe hoje</div><div class="val">${brl(r0.base)}</div><div class="note">por mês · ${afetados} empregado(s) acima de 40h</div></div>
-    <div class="kpi f1"><div class="lbl">Custo extra · etapa 1 (42h)</div><div class="val">+${brl(r1.extra)}</div><div class="note">por mês (+${pct(r0.base ? r1.extra / r0.base : 0)}) · ${num1(r1.contratacoes)} contratação(ões) equivalente(s)</div></div>
-    <div class="kpi f2"><div class="lbl">Custo extra · etapa 2 (40h)</div><div class="val">+${brl(r2.extra)}</div><div class="note">por mês (+${pct(r0.base ? r2.extra / r0.base : 0)}) · ${num1(r2.contratacoes)} contratação(ões) equivalente(s)</div></div>
-    <div class="kpi"><div class="lbl">Custo extra por ano (40h)</div><div class="val">${brl(r2.extra * 12)}</div><div class="note">12 meses a partir de 16/12/2027</div></div>`;
+    <div class="kpi"><div class="lbl">Custo da equipe hoje</div><div class="val">${brl(base)}</div><div class="note">por mês · ${afetados} empregado(s) acima de 40h</div></div>
+    <div class="kpi f1"><div class="lbl">Custo extra · etapa 1 (42h)</div><div class="val">+${brl(prov.e1.extra)}</div><div class="note">por mês (+${pct(base ? prov.e1.extra / base : 0)}) · ${num1(prov.e1.contratacoes)} contratação(ões)<br>${faixa(otim.e1.extra, pess.e1.extra)}</div></div>
+    <div class="kpi f2"><div class="lbl">Custo extra · etapa 2 (40h)</div><div class="val">+${brl(prov.e2.extra)}</div><div class="note">por mês (+${pct(base ? prov.e2.extra / base : 0)}) · ${num1(prov.e2.contratacoes)} contratação(ões)<br>${faixa(otim.e2.extra, pess.e2.extra)}</div></div>
+    <div class="kpi"><div class="lbl">Total em 24 meses</div><div class="val">${brl(prov.total)}</div><div class="note">de 16/12/2026 a 15/12/2028, com custos de contratação<br>${faixa(otim.total, pess.total)}</div></div>
+    ${fat ? `<div class="kpi"><div class="lbl">Peso no faturamento (40h)</div><div class="val">${pct(prov.e2.extra / fat)}</div><div class="note">Para repassar tudo ao preço, aumento de cerca de ${pct(prov.e2.extra / fat)}, mantido o volume de vendas</div></div>` : ""}`;
 
-  // Barras
-  const todos = ESTRATEGIAS.map(s => ETAPAS.map(e => calcEtapa(e, s.fracHE(), s.prod())));
-  const max = Math.max(...todos.flat().map(x => x.base + x.extra), 1);
-  document.getElementById("bars").innerHTML = ESTRATEGIAS.map((s, si) => `
-    <div class="bar-group">
-      <h4>${s.nome}</h4>
-      ${ETAPAS.map((e, ei) => {
-        const t = todos[si][ei].base + todos[si][ei].extra;
-        return `<div class="bar-row"><span>${e.nome} · ${e.limite}h</span>
-          <div class="bar-track"><div class="bar-fill" style="width:${(t / max * 100).toFixed(1)}%;background:${e.cor}"></div></div>
-          <span class="v">${brl(t)}</span></div>`;
-      }).join("")}
-    </div>`).join("");
+  // Série mensal
+  const max = Math.max(...pess.meses.map(m => m.valor), ...prov.meses.map(m => m.valor), 1);
+  const fmtMes = d => d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }).replace(". de ", "/").replace(" de ", "/");
+  document.getElementById("serie").innerHTML = prov.meses.map((m, i) => {
+    const pv = pess.meses[i].valor, ot = otim.meses[i].valor;
+    return `<div class="tc-col" title="${fmtMes(m.d)}: ${brl(m.valor)} (faixa ${brl(ot)} a ${brl(pv)})">
+      <div class="tc-bar"><div class="tc-range" style="height:${(pv / max * 100).toFixed(1)}%"></div><div class="tc-val" style="height:${(m.valor / max * 100).toFixed(1)}%;background:${m.etapa === 1 ? "var(--s-f1)" : "var(--s-f2)"}"></div></div>
+      <span class="tc-lbl">${i % 3 === 0 ? fmtMes(m.d) : ""}</span></div>`;
+  }).join("");
+  const entradas = [[prov.entrada1, "dez/2026"], [prov.entrada2, "dez/2027"]].filter(([v]) => v > 0);
+  document.getElementById("serie-nota").textContent =
+    `Etapa 1: ${brl(prov.e1.extra)} por mês; etapa 2: ${brl(prov.e2.extra)} por mês. Os meses de transição são proporcionais aos dias em cada etapa.`
+    + (entradas.length ? ` Inclui o custo de entrada das contratações (recrutamento, exames e treinamento, estimado em meio custo mensal por pessoa): ${entradas.map(([v, m]) => `${brl(v)} em ${m}`).join(" e ")}.` : "");
+
+  // Comparação entre formas de repor
+  document.getElementById("comparacao").innerHTML = METODOS.map(x => {
+    const s = serieMensal(cen[1].reorg, x.he / 100);
+    const sel = x.he === state.repoHE;
+    return `<tr${sel ? ' class="row-sel"' : ""}><td><b>${x.t}</b>${sel ? ' <span class="tag ok">escolhida</span>' : ""}</td>
+      <td class="num">${brl(s.e1.extra)}</td><td class="num">${brl(s.e2.extra)}</td><td class="num">${brl(s.total)}</td><td class="num">${num1(s.e2.contratacoes)}</td></tr>`;
+  }).join("");
 
   // Detalhamento
+  const res = [null, prov.e1, prov.e2];
   document.getElementById("detail").innerHTML = state.roles.map((r, i) =>
     ETAPAS.slice(1).map((e, ei) => {
       const l = res[ei + 1].linhas[i];
-      const heTag = l.hePorEmpregado > 10 ? "bad" : l.hePorEmpregado > 0 ? "warn" : "";
       return `<tr>
-        ${ei === 0 ? `<td rowspan="2"><b>${esc(r.nome)}</b><br><span class="small muted">${r.qtd} × ${brl2(r.custo)} · ${r.jornada}h</span></td>` : ""}
+        ${ei === 0 ? `<td rowspan="2"><b>${esc(r.nome)}</b><br><span class="small muted">${r.qtd} × ${brl2(r.custo)} · ${r.jornada}h · ${cobreHorario(r) ? "cobre horário" : "tarefas"}</span></td>` : ""}
         <td><span class="tag" style="color:${e.cor}">${e.limite}h</span></td>
-        <td class="num">${brl2(l.valorHora)}</td>
-        <td class="num">${num1(l.horasRepor)} h</td>
-        <td class="num">${heTag ? `<span class="tag ${heTag}">${num1(l.hePorEmpregado)} h</span>` : "—"}</td>
+        <td class="num">${num1(l.horasRepor)} h${l.horasReorg ? `<br><span class="small muted">${num1(l.horasReorg)} h reorganizadas</span>` : ""}</td>
+        <td class="num">${l.horasHE ? `<span class="tag ${l.hePorEmpregado >= LIMITE_HE_DIA * DIAS_TRABALHO ? "bad" : "warn"}">${num1(l.hePorEmpregado)} h</span>` : "—"}</td>
+        <td class="num">${l.horasHE ? brl2(l.he.porHora) : "—"}</td>
         <td class="num">${l.contratacoes ? num1(l.contratacoes) : "—"}</td>
         <td class="num">${l.extra ? "+" + brl(l.extra) : "—"}</td>
       </tr>`;
     }).join("")).join("");
 
+  // Memória de cálculo da hora extra (etapa 2)
+  const reg = regimeAtual(), dsr = DSR[state.he.dsr] || DSR["2"];
+  const afetadosHE = state.roles.filter(r => r.jornada > 40);
+  document.getElementById("memoria").innerHTML = !afetadosHE.length
+    ? `<tr><td colspan="8" class="muted">Nenhum cargo acima de 40h: não há horas a repor.</td></tr>`
+    : afetadosHE.map(r => {
+    const limite = Math.min(r.jornada, 40);
+    const h = horaExtra(r, limite);
+    const comAdic = h.normal * (1 + state.he.adicional / 100);
+    const comDsr = comAdic * (1 + dsr.r);
+    return `<tr><td><b>${esc(r.nome)}</b></td>
+      <td class="num">${brl2(h.salario)}${r.salario > 0 ? "" : '<br><span class="small muted">estimado</span>'}</td>
+      <td class="num">${brl2(h.base)}</td><td class="num">${h.divisor}</td><td class="num">${brl2(h.normal)}</td>
+      <td class="num">${brl2(comAdic)}<br><span class="small muted">+${state.he.adicional}%</span></td>
+      <td class="num">${brl2(comDsr)}<br><span class="small muted">+${pct(dsr.r)}</span></td>
+      <td class="num"><b>${brl2(comDsr * reg.f)}</b><br><span class="small muted">× ${reg.f.toFixed(2).replace(".", ",")}</span></td></tr>`;
+  }).join("");
+  document.getElementById("memoria-regras").innerHTML = [
+    `<b>Base da hora</b>: salário + adicionais de natureza salarial (${state.he.base || 0}% informados), conforme a Súmula 264 do TST.`,
+    `<b>Divisor</b>: jornada semanal × 5, como na Súmula 431 do TST (40h → 200). Na etapa de 42h, 210. Com o salário mantido, a hora normal fica mais cara.`,
+    `<b>Adicional</b>: ${state.he.adicional}%${state.he.faixa > 0 ? ` até ${state.he.faixa} horas no mês e ${state.he.adicional2}% acima` : ""}. O mínimo é 50% (CF, art. 7º, XVI; CLT, art. 59, § 1º); vale o percentual maior da convenção ou do acordo coletivo.`,
+    `<b>Limite</b>: até 2 horas extras por dia (CLT, art. 59). O que passaria disso é calculado como contratação.`,
+    `<b>Reflexo no DSR</b>: ${pct(dsr.r)} sobre o valor das horas extras habituais (Lei 605/1949, art. 7º; Súmula 172 do TST), considerando ${dsr.t.toLowerCase()}.`,
+    `<b>Encargos e reflexos</b>: × ${reg.f.toFixed(3).replace(".", ",")} (${reg.t}): ${reg.d}, FGTS e reflexos em 13º (Súmula 45 do TST) e férias + 1/3 (CLT, art. 142, § 5º).`,
+    `Horas extras em domingos ou feriados sem folga compensatória são pagas em dobro (Lei 605/1949, art. 9º; Súmula 146 do TST) e não estão incluídas.`,
+  ].map(t => `<li>${t}</li>`).join("");
+
   // Alertas
   const avisos = [];
-  const heMax = Math.max(0, ...res.slice(1).flatMap(x => x.linhas.map(l => l.hePorEmpregado)));
-  if (heMax > 10) avisos.push(`<div class="alert warn">⚠ Algum cargo precisaria de ${num1(heMax)}h extras por empregado na semana. A CLT limita as horas extras a 2h por dia (10h numa semana de 5 dias). Escolha uma opção com mais contratações ou reorganização.</div>`);
-  if (state.repoHE > 40 && heMax > 0) avisos.push(`<div class="alert warn">⚠ Usar horas extras de forma habitual para repor a redução gera passivo trabalhista (integração ao salário, reflexos em férias, 13º e FGTS) e esvazia o objetivo da emenda. Use como solução temporária.</div>`);
+  const excesso = Math.max(prov.e1.excessoHE, prov.e2.excessoHE);
+  if (excesso > 0.05) avisos.push(`<div class="alert warn">⚠ ${num1(excesso)} horas por semana passariam do limite de 2 horas extras por dia (CLT, art. 59) e foram calculadas como contratação.</div>`);
+  if (prov.e2.horasHE > 0) avisos.push(`<div class="alert warn">⚠ Hora extra usada de forma habitual integra a remuneração (reflexos em DSR, férias, 13º e FGTS) e, se suprimida depois de um ano ou mais, gera indenização (Súmula 291 do TST). Use como solução temporária.</div>`);
+  if (state.roles.some(r => !(r.salario > 0)) && prov.e2.horasHE > 0) avisos.push(`<div class="alert">💡 Para alguns cargos, o salário foi estimado a partir do custo total. Informe o salário na tabela de cargos para a hora extra ficar exata.</div>`);
   if (state.roles.some(r => r.jornada > 44)) avisos.push(`<div class="alert warn">⚠ Há cargo com jornada acima de 44h, o que já ultrapassava o limite anterior.</div>`);
-  if (r2.contratacoes > 0) avisos.push(`<div class="alert">💡 Contratar com antecedência permite recrutar e treinar a equipe antes da troca de escala. Recrutamento, exames e treinamento não estão no cálculo.</div>`);
   document.getElementById("warnings").innerHTML = avisos.join("");
 
   renderDimens();
@@ -984,14 +1231,18 @@ function renderChecklist() {
 document.getElementById("print-btn").onclick = () => window.print();
 
 document.getElementById("csv-btn").onclick = () => {
-  const mix = ESTRATEGIAS[2];
-  const linhas = [["Cargo", "Empregados", "Custo total por empregado", "Jornada atual", "Etapa", "Limite (h)", "Custo-hora", "Horas a repor/sem", "HE por empregado/sem", "Contratacoes (eq.)", "Custo extra/mes"]];
+  const reorg = state.produtividade / 100, parteHE = state.repoHE / 100;
+  const linhas = [["Cargo", "Empregados", "Custo total por empregado", "Salario", "Jornada atual", "Cobre horario", "Etapa", "Limite (h)", "Horas a repor/sem", "HE por empregado/sem", "Custo de 1h extra", "Contratacoes", "Custo HE/mes", "Custo contratacoes/mes", "Custo extra/mes"]];
   ETAPAS.slice(1).forEach(e => {
-    calcEtapa(e, mix.fracHE(), mix.prod()).linhas.forEach(l => {
-      linhas.push([l.r.nome, l.r.qtd, l.r.custo, l.r.jornada, e.nome, e.limite,
-        l.valorHora.toFixed(2), l.horasRepor.toFixed(1), l.hePorEmpregado.toFixed(1), l.contratacoes.toFixed(2), l.extra.toFixed(2)]);
+    calcEtapa(e, reorg, parteHE).linhas.forEach(l => {
+      linhas.push([l.r.nome, l.r.qtd, l.r.custo, salarioDe(l.r).toFixed(2), l.r.jornada, cobreHorario(l.r) ? "sim" : "nao", e.nome, e.limite,
+        l.horasRepor.toFixed(1), l.hePorEmpregado.toFixed(1), l.he.porHora.toFixed(2), l.contratacoes.toFixed(1), l.custoHE.toFixed(2), l.custoContr.toFixed(2), l.extra.toFixed(2)]);
     });
   });
+  const serie = serieMensal(reorg, parteHE);
+  linhas.push([]);
+  linhas.push(["Mes", "Custo extra (cenario provavel)"]);
+  serie.meses.forEach(m => linhas.push([`${String(m.d.getMonth() + 1).padStart(2, "0")}/${m.d.getFullYear()}`, m.valor.toFixed(2)]));
   const csv = "﻿" + linhas.map(l => l.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -1597,6 +1848,8 @@ function abrirCombo() {
     combo.itens = filtrarCidades(filtro).slice(0, MAX_OPCOES);
     const total = filtrarCidades(filtro).length;
     if (combo.ativo >= combo.itens.length) combo.ativo = -1;
+    // Sem resultados, fecha a lista para não cobrir as sugestões abaixo do campo
+    if (!combo.itens.length) { fecharCombo(); return; }
     pop.innerHTML = combo.itens.length
       ? combo.itens.map((m, i) => `<li role="option" id="op-${i}" data-i="${i}" aria-selected="${i === combo.ativo}">${destacar(m.nome, filtro)}</li>`).join("")
         + (total > MAX_OPCOES ? `<li class="info">Mostrando ${MAX_OPCOES} de ${total}. Digite para filtrar.</li>` : "")
@@ -1812,6 +2065,20 @@ function analisarDocumento(textoBruto) {
   // Banco de horas
   if ((m = /banco de horas/.exec(t))) set("banco", "coletivo", "Banco de horas previsto", m);
 
+  // Adicional de horas extras: "horas extras ... adicional de 60%"; escalonado: "até 40 horas ... 60% ... excedentes ... 100%"
+  const reHE = /(?:horas? extras?|horas? extraordinarias?|servicos? extraordinarios?|sobrejornada)[\s\S]{0,300}?(\d{2,3})\s*%/;
+  if ((m = reHE.exec(t))) {
+    const v = +m[1];
+    if (v >= 50 && v <= 300) {
+      const trecho2 = t.slice(m.index, m.index + 600);
+      const esc2 = /(?:primeiras|ate)\s*(\d{1,3})\s*(?:\([a-z\s]+\)\s*)?horas?[\s\S]{0,160}?(\d{2,3})\s*%[\s\S]{0,200}?(?:demais|excedentes?|acima|superiores?)[\s\S]{0,120}?(\d{2,3})\s*%/.exec(trecho2);
+      if (esc2) set("heAdicional", { adicional: +esc2[2], faixa: +esc2[1], adicional2: +esc2[3] }, `${esc2[2]}% até ${esc2[1]}h no mês e ${esc2[3]}% acima`, { index: m.index, 0: m[0] });
+      else set("heAdicional", { adicional: v }, `${v}% sobre a hora normal`, m);
+      const dom = /(?:domingos?|feriados?)[\s\S]{0,120}?(\d{2,3})\s*%/.exec(trecho2);
+      if (dom) achados.heAdicional.label += ` · domingos e feriados: ${dom[1]}%`;
+    }
+  }
+
   // Menção à EC 141
   const mEc = /emenda constitucional\s*(?:n\s*[o°º.]?\s*)?141|ec\s*(?:n\s*[o°º.]?\s*)?141/.exec(t);
   if (mEc) {
@@ -1851,7 +2118,7 @@ const DOCS = []; // { id, nome, tamanho, status, erro, analise }
 const CAMPOS_DOC = [
   ["tipo", "Tipo de instrumento"], ["ehAditivo", "Termo aditivo"], ["vigencia", "Vigência"], ["database", "Data-base"],
   ["jornada", "Jornada semanal"], ["diaria", "Jornada diária"], ["escala", "Escala"], ["dias", "Dias trabalhados"],
-  ["domingo", "Domingos e feriados"], ["banco", "Banco de horas"], ["aditivo", "Adequação à EC 141"],
+  ["domingo", "Domingos e feriados"], ["banco", "Banco de horas"], ["heAdicional", "Adicional de horas extras"], ["aditivo", "Adequação à EC 141"],
 ];
 
 function renderDocs() {
@@ -1902,6 +2169,10 @@ function aplicarDoc(id) {
     if (a[k] && a[k].valor != null) { state.cct[k] = a[k].valor; aplicados.push(k); }
   });
   state.cct.origem = "doc:" + d.nome;
+  if (a.heAdicional) {
+    Object.assign(state.he, { faixa: 0 }, a.heAdicional.valor, { origem: "doc:" + d.nome });
+    aplicados.push("heAdicional");
+  }
   fillCct(); update();
   document.getElementById("diag").closest(".card").scrollIntoView({ behavior: "smooth", block: "start" });
   const n = document.getElementById("diag-summary");
