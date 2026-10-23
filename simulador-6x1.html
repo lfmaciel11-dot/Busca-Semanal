@@ -157,6 +157,25 @@
   .muted{color:var(--muted)}
   .small{font-size:12.5px}
 
+  ul.rules{margin:0;padding-left:18px;font-size:13.5px}
+  ul.rules li{margin-bottom:6px}
+  ol.steps-mini{margin:0 0 12px;padding-left:20px;font-size:13.5px}
+  ol.steps-mini li{margin-bottom:6px}
+  .link-row{display:flex;gap:8px;flex-wrap:wrap}
+  .link-row a{font-size:13px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--panel2);color:var(--ink);text-decoration:none}
+  .link-row a:hover{border-color:var(--accent)}
+  .ramo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .ramo-box{background:var(--panel2);border-radius:8px;padding:12px 14px;font-size:13.5px}
+  .ramo-box h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:var(--area-trabalho)}
+  .ramo-box ul{margin:0;padding-left:18px}
+  .ramo-box li{margin-bottom:5px}
+  .ramo-box .src{font-size:11.5px;color:var(--muted)}
+  .ramo-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;font-size:13.5px}
+  .diag-summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .diag-summary .tag{font-size:13px;padding:4px 12px}
+  #diag td:nth-child(2),#diag td:nth-child(3){white-space:nowrap}
+  input[type=date]{color-scheme:dark}
+  [data-theme="light"] input[type=date]{color-scheme:light}
   footer{max-width:1180px;margin:0 auto;padding:18px 24px 40px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--border)}
 
   @media (max-width:760px){
@@ -165,7 +184,7 @@
     .bar-row{grid-template-columns:80px 1fr 100px}
   }
   @media print{
-    .header-actions,.add-btn,.icon-btn,#no-print{display:none!important}
+    .link-row,.header-actions,.add-btn,.icon-btn,#no-print{display:none!important}
     body{background:#fff;color:#000}
     .card,.kpi,.tl-item{box-shadow:none;break-inside:avoid}
   }
@@ -198,15 +217,130 @@
   <h2 class="section-title">O que foi <span>aprovado</span></h2>
   <p class="sub">PEC 221/2019 aprovada na Câmara (27/05/2026) e no Senado (14/10/2026); promulgada como Emenda Constitucional 141 em 16/10/2026.</p>
   <div class="timeline" id="timeline"></div>
+  <div class="card" style="margin-top:14px">
+    <h3>Pontos centrais do texto</h3>
+    <ul class="rules">
+      <li><b>Art. 7º, XIII</b> — jornada normal de até 8h diárias e 40h semanais, com compensação de horários e redução por acordo ou convenção coletiva.</li>
+      <li><b>Art. 7º, XV</b> — dois dias de repouso semanal remunerado, um deles preferencialmente aos domingos.</li>
+      <li><b>Art. 7º, § 2º</b> — excepcionalmente, acordo ou convenção coletiva pode criar regime de compensação que garanta, <i>na média do mês-calendário</i>, dois dias de repouso por semana.</li>
+      <li><b>Transição</b> — 42h dois meses após a publicação e 40h um ano depois. Na fase de 42h, acordo ou convenção coletiva pode ampliar a jornada diária (ex.: 8h24 em 5 dias), mantidos os dois repousos.</li>
+      <li><b>Art. 3º</b> — decorridos dois meses da publicação, <b>ficam sem efeito as cláusulas de convenções e acordos coletivos sobre duração do trabalho e repouso semanal remunerado incompatíveis com a emenda</b>.</li>
+      <li><b>Salário</b> — a redução da jornada não pode reduzir salário nem piso.</li>
+    </ul>
+  </div>
   <div class="alert warn" style="margin-top:14px">
-    ⚠ As datas das etapas são estimadas a partir da publicação (60 dias para 42h; mais 12 meses para 40h). As notícias divergem sobre a contagem do segundo prazo. <b>Confirme no texto da EC 141/2026 publicado no DOU</b> e na convenção coletiva da categoria antes de decidir.
+    ⚠ O noticiário diverge em um dia na contagem dos prazos (15 ou 16/12). Este simulador usa 16/12/2026 e 16/12/2027. O governo anunciou decreto sobre negociação coletiva e projeto de lei complementar para escalas diferenciadas, ainda não publicados. <b>Confirme no <a href="https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc141.htm" target="_blank" rel="noopener">texto oficial da EC 141/2026</a></b> e na convenção coletiva da categoria antes de decidir.
+  </div>
+</section>
+
+<!-- RAMO E INSTRUMENTO COLETIVO -->
+<section>
+  <h2 class="section-title">1. Ramo de atividade e <span>instrumento coletivo</span></h2>
+  <p class="sub">Escolha o ramo da empresa para ver a situação das negociações conhecidas até agora e preencha o que diz a sua convenção ou acordo coletivo para receber o diagnóstico do que precisa mudar.</p>
+
+  <div class="card">
+    <div class="grid-params">
+      <label class="field">Ramo de atividade
+        <select id="ramo"></select>
+      </label>
+      <label class="field">Município / UF do estabelecimento
+        <input type="text" id="local" placeholder="Ex.: São Paulo/SP">
+        <small>Usado para montar as buscas da convenção da sua base territorial.</small>
+      </label>
+    </div>
+    <div id="ramo-info" style="margin-top:16px"></div>
+  </div>
+
+  <div class="card">
+    <h3>Onde encontrar a convenção ou o acordo coletivo</h3>
+    <ol class="steps-mini">
+      <li>No cartão CNPJ da empresa, anote o <b>CNAE principal</b> e o município. O CNAE indica a categoria econômica e, com ela, o sindicato patronal e o sindicato dos empregados.</li>
+      <li>Todas as convenções e acordos coletivos são registrados no <b>Sistema Mediador</b> do Ministério do Trabalho, com consulta aberta a qualquer pessoa: filtre por UF, município, tipo de instrumento e vigência.</li>
+      <li>Leia a cláusula de abrangência (quais cidades e categorias a convenção cobre) e as cláusulas de <b>jornada, escala, compensação, banco de horas, domingos e feriados</b>.</li>
+      <li>Verifique no site do sindicato se já foi assinado <b>termo aditivo</b> para a EC 141. Ele também precisa ser registrado no Mediador.</li>
+    </ol>
+    <div class="link-row" id="search-links"></div>
+  </div>
+
+  <div class="card">
+    <h3>O que diz o seu instrumento coletivo</h3>
+    <p class="small muted" style="margin:-4px 0 14px">Preencha com base na convenção ou no acordo vigente. Se a empresa não tem instrumento coletivo, deixe a escala e a jornada como são praticadas hoje.</p>
+    <div class="grid-params">
+      <label class="field">Tipo de instrumento
+        <select id="cct-tipo">
+          <option value="cct">Convenção coletiva (CCT)</option>
+          <option value="act">Acordo coletivo (ACT)</option>
+          <option value="nenhum">Não há / não sei</option>
+        </select>
+      </label>
+      <label class="field">Jornada semanal prevista (h)
+        <input type="number" id="cct-jornada" min="1" max="60" step="0.5">
+      </label>
+      <label class="field">Jornada diária prevista (h)
+        <input type="number" id="cct-diaria" min="1" max="12" step="0.1">
+        <small>Ex.: 8,8 = 8h48 (compensação do sábado).</small>
+      </label>
+      <label class="field">Escala prevista
+        <select id="cct-escala">
+          <option value="6x1">6x1</option>
+          <option value="sabado">5x2 com compensação do sábado</option>
+          <option value="5x2">5x2 (até 8h por dia)</option>
+          <option value="12x36">12x36</option>
+          <option value="4x3">4x3 ou semana reduzida</option>
+          <option value="turnos">Turnos ininterruptos de revezamento (6h)</option>
+          <option value="especial">Jornada especial (bancário, teleatendimento etc.)</option>
+          <option value="outra">Outra</option>
+        </select>
+      </label>
+      <label class="field">Dias trabalhados por semana
+        <input type="number" id="cct-dias" min="1" max="7" step="0.5">
+        <small>Para 12x36, use 3,5 (média).</small>
+      </label>
+      <label class="field">Trabalho aos domingos e feriados
+        <select id="cct-domingo">
+          <option value="nao">Não há</option>
+          <option value="rodizio">Sim, com rodízio de folga dominical</option>
+          <option value="sem-regra">Sim, sem regra de rodízio</option>
+        </select>
+      </label>
+      <label class="field">Banco de horas
+        <select id="cct-banco">
+          <option value="nao">Não há</option>
+          <option value="coletivo">Sim, previsto no instrumento coletivo</option>
+          <option value="individual">Sim, por acordo individual (até 6 meses)</option>
+        </select>
+      </label>
+      <label class="field">Vigência termina em
+        <input type="date" id="cct-vigencia">
+      </label>
+      <label class="field">Termo aditivo sobre a EC 141
+        <select id="cct-aditivo">
+          <option value="nao">Não foi assinado</option>
+          <option value="negociando">Em negociação</option>
+          <option value="f1">Assinado, cobre só a etapa de 42h</option>
+          <option value="f2">Assinado, cobre as duas etapas</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Diagnóstico: o que precisa mudar</h3>
+    <div class="diag-summary" id="diag-summary"></div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Ponto</th><th>Situação</th><th>Prazo</th><th>O que fazer</th></tr></thead>
+        <tbody id="diag"></tbody>
+      </table>
+    </div>
+    <p class="small muted" style="margin:12px 0 0">Diagnóstico automático com base no texto da EC 141/2026 e na CLT. Não substitui a leitura da cláusula pelo jurídico, nem eventual regulamentação posterior.</p>
   </div>
 </section>
 
 <!-- PARÂMETROS -->
 <section>
-  <h2 class="section-title">1. Dados da <span>empresa</span></h2>
-  <p class="sub">Os valores vêm preenchidos com um exemplo de varejo. Troque pelos números reais; tudo fica salvo neste navegador.</p>
+  <h2 class="section-title">2. Dados da <span>empresa</span></h2>
+  <p class="sub">Os valores vêm preenchidos com um exemplo do ramo escolhido. Troque pelos números reais; tudo fica salvo neste navegador.</p>
 
   <div class="card">
     <h3>Cargos afetados</h3>
@@ -276,7 +410,7 @@
 
 <!-- RESULTADOS -->
 <section>
-  <h2 class="section-title">2. Impacto <span>financeiro</span></h2>
+  <h2 class="section-title">3. Impacto <span>financeiro</span></h2>
   <p class="sub">Custo mensal da mão de obra afetada em cada etapa, com salários preservados.</p>
   <div class="kpis" id="kpis"></div>
 
@@ -302,7 +436,7 @@
             <th class="num">Valor-hora</th>
             <th class="num">Horas a repor/sem</th>
             <th class="num">HE por empregado/sem</th>
-            <th class="num">Contratações</th>
+            <th class="num" title="Pessoas equivalentes a tempo integral">Contratações (eq.)</th>
             <th class="num">Custo extra/mês</th>
           </tr>
         </thead>
@@ -316,7 +450,7 @@
 
 <!-- DIMENSIONAMENTO -->
 <section>
-  <h2 class="section-title">3. Dimensionamento da <span>escala</span></h2>
+  <h2 class="section-title">4. Dimensionamento da <span>escala</span></h2>
   <p class="sub">Quantas pessoas são necessárias para manter o mesmo horário de funcionamento, agora com dois dias de folga por semana.</p>
   <div class="card">
     <div class="grid-params">
@@ -348,7 +482,7 @@
 
 <!-- CHECKLIST -->
 <section>
-  <h2 class="section-title">4. Checklist de <span>adequação</span></h2>
+  <h2 class="section-title">5. Checklist de <span>adequação</span></h2>
   <p class="sub">Itens para revisar com o RH, o contador e o jurídico antes de cada etapa.</p>
   <div class="two-col">
     <div class="card">
@@ -368,7 +502,7 @@
     Valor-hora = salário ÷ (jornada semanal × 5), mesmo critério do divisor da CLT (220 para 44h, 210 para 42h, 200 para 40h). Como o salário não pode ser reduzido, o valor-hora sobe quando a jornada cai.
     Horas a repor = empregados × (jornada atual − novo limite), quando a jornada atual passa do limite, descontado o ganho de produtividade.
     Horas extras/mês = horas semanais × 5 (aproximação que inclui o reflexo no DSR), pagas com o adicional informado e com encargos.
-    Contratações = horas a repor ÷ novo limite semanal, arredondado para cima por cargo, com salário, encargos e benefícios; o custo de admissão é pontual e aparece separado.
+    Contratações = horas a repor ÷ novo limite semanal, em pessoas equivalentes a tempo integral (frações viram contratos em tempo parcial, CLT art. 58-A), com salário, encargos e benefícios proporcionais; o custo de admissão é pontual, por pessoa contratada, e aparece separado.
     É uma estimativa para planejamento e não substitui o cálculo da folha nem uma orientação jurídica.
   </div>
 </section>
@@ -376,7 +510,7 @@
 </main>
 
 <footer>
-  Simulador de referência · Fontes: Agência Senado e Agência Brasil (out/2026) sobre a EC 141/2026 · Verifique sempre o texto oficial publicado e a convenção coletiva aplicável.
+  Simulador de referência · Fontes: texto da EC 141/2026 (Planalto), Agência Senado, Agência Brasil e entidades sindicais e patronais citadas em cada ramo (out/2026) · A situação das negociações muda rápido: verifique sempre o texto oficial, o Sistema Mediador e o site do sindicato.
 </footer>
 
 <script>
@@ -412,8 +546,8 @@ applyTheme(store(true, THEME_KEY) || "dark");
 const PUBLICACAO = new Date(2026, 9, 16);
 const ETAPAS = [
   { id: "atual", nome: "Hoje",    limite: 44, inicio: null,                     cor: "var(--s-atual)" },
-  { id: "f1",    nome: "Etapa 1", limite: 42, inicio: new Date(2026, 11, 15),   cor: "var(--s-f1)" },
-  { id: "f2",    nome: "Etapa 2", limite: 40, inicio: new Date(2027, 11, 15),   cor: "var(--s-f2)" },
+  { id: "f1",    nome: "Etapa 1", limite: 42, inicio: new Date(2026, 11, 16),   cor: "var(--s-f1)" },
+  { id: "f2",    nome: "Etapa 2", limite: 40, inicio: new Date(2027, 11, 16),   cor: "var(--s-f2)" },
 ];
 
 const fmtData = d => d.toLocaleDateString("pt-BR");
@@ -427,9 +561,9 @@ function renderTimeline() {
   const hoje = new Date();
   const atualIdx = ETAPAS.reduce((acc, e, i) => (e.inicio && hoje >= e.inicio ? i : acc), 0);
   const itens = [
-    { b: "44h", date: "Até " + fmtData(new Date(2026, 11, 14)), p: "Regra anterior: até 44h semanais e 8h diárias; escala 6x1 permitida.", c: "var(--s-atual)" },
-    { b: "42h", date: "A partir de ~" + fmtData(ETAPAS[1].inicio), p: "60 dias após a publicação (" + fmtData(PUBLICACAO) + "). Cláusulas coletivas incompatíveis perdem validade.", c: "var(--s-f1)" },
-    { b: "40h", date: "A partir de ~" + fmtData(ETAPAS[2].inicio), p: "12 meses após a etapa 1. Até 8h por dia e dois dias de descanso, um deles preferencialmente aos domingos.", c: "var(--s-f2)" },
+    { b: "44h", date: "Até " + fmtData(new Date(2026, 11, 15)), p: "Regra anterior: até 44h semanais e 8h diárias; escala 6x1 permitida.", c: "var(--s-atual)" },
+    { b: "42h", date: "A partir de ~" + fmtData(ETAPAS[1].inicio), p: "Dois meses após a publicação (" + fmtData(PUBLICACAO) + "). Começam os dois dias de repouso e cláusulas coletivas incompatíveis ficam sem efeito.", c: "var(--s-f1)" },
+    { b: "40h", date: "A partir de ~" + fmtData(ETAPAS[2].inicio), p: "Um ano após a etapa 1. Até 8h por dia e dois dias de descanso, um deles preferencialmente aos domingos.", c: "var(--s-f2)" },
   ];
   document.getElementById("timeline").innerHTML = itens.map((it, i) => `
     <div class="tl-item" style="--c:${it.c}">
@@ -453,11 +587,14 @@ const DEFAULT = {
   regime: "68", encargos: 68, beneficios: 750, admissao: 1500, adicionalHE: 50,
   produtividade: 20, mixHE: 30,
   diasFunc: 7, horasDia: 13, postos: 11, equipeAtual: 23,
+  ramo: "comercio", local: "",
+  cct: { tipo: "cct", jornada: 44, diaria: 8, escala: "6x1", dias: 6, domingo: "rodizio", banco: "coletivo", vigencia: "", aditivo: "nao" },
 };
 
 let state;
 try { state = { ...DEFAULT, ...JSON.parse(store(true, STATE_KEY)) }; } catch { state = { ...DEFAULT }; }
 if (!Array.isArray(state.roles)) state.roles = DEFAULT.roles.map(r => ({ ...r }));
+state.cct = { ...DEFAULT.cct, ...(state.cct || {}) };
 
 const save = () => store(false, STATE_KEY, JSON.stringify(state));
 
@@ -533,14 +670,15 @@ function calcCargo(r, etapa, fracHE, produtividade) {
   const horasRepor = horasPerdidas * (1 - produtividade);
   const horasHE = horasRepor * fracHE;
   const horasContratar = horasRepor - horasHE;
-  const contratacoes = horasContratar > 0 ? Math.ceil(horasContratar / limite - 1e-9) : 0;
+  const contratacoes = horasContratar > 0 ? horasContratar / limite : 0; // equivalente a tempo integral
+  const pessoas = Math.ceil(contratacoes - 1e-9);
   const custoHE = horasHE * SEMANAS_MES * valorHora * (1 + state.adicionalHE / 100) * enc;
   const custoContr = contratacoes * (r.salario * enc + state.beneficios);
   return {
     custoBase, valorHora, horasRepor, contratacoes,
     hePorEmpregado: r.qtd > 0 ? horasHE / r.qtd : 0,
     custoHE, custoContr,
-    admissao: contratacoes * state.admissao,
+    admissao: pessoas * state.admissao,
     extra: custoHE + custoContr,
   };
 }
@@ -572,8 +710,8 @@ function update() {
 
   document.getElementById("kpis").innerHTML = `
     <div class="kpi"><div class="lbl">Folha afetada hoje</div><div class="val">${brl(r0.base)}</div><div class="note">por mês, com encargos · ${afetados} empregado(s) acima de 40h</div></div>
-    <div class="kpi f1"><div class="lbl">Custo extra · etapa 1 (42h)</div><div class="val">+${brl(r1.extra)}</div><div class="note">por mês (+${pct(r0.base ? r1.extra / r0.base : 0)}) · ${r1.contratacoes} contratação(ões)</div></div>
-    <div class="kpi f2"><div class="lbl">Custo extra · etapa 2 (40h)</div><div class="val">+${brl(r2.extra)}</div><div class="note">por mês (+${pct(r0.base ? r2.extra / r0.base : 0)}) · ${r2.contratacoes} contratação(ões)</div></div>
+    <div class="kpi f1"><div class="lbl">Custo extra · etapa 1 (42h)</div><div class="val">+${brl(r1.extra)}</div><div class="note">por mês (+${pct(r0.base ? r1.extra / r0.base : 0)}) · ${num1(r1.contratacoes)} contratação(ões) equivalente(s)</div></div>
+    <div class="kpi f2"><div class="lbl">Custo extra · etapa 2 (40h)</div><div class="val">+${brl(r2.extra)}</div><div class="note">por mês (+${pct(r0.base ? r2.extra / r0.base : 0)}) · ${num1(r2.contratacoes)} contratação(ões) equivalente(s)</div></div>
     <div class="kpi"><div class="lbl">Impacto no 1º ano da etapa 2</div><div class="val">${brl(r2.extra * 12 + r2.admissao)}</div><div class="note">12 meses de custo extra (13º e férias já nos encargos) + admissões</div></div>`;
 
   // Barras
@@ -601,7 +739,7 @@ function update() {
         <td class="num">${brl2(l.valorHora)}</td>
         <td class="num">${num1(l.horasRepor)} h</td>
         <td class="num">${heTag ? `<span class="tag ${heTag}">${num1(l.hePorEmpregado)} h</span>` : "—"}</td>
-        <td class="num">${l.contratacoes || "—"}</td>
+        <td class="num">${l.contratacoes ? num1(l.contratacoes) : "—"}</td>
         <td class="num">${l.extra ? "+" + brl(l.extra) : "—"}</td>
       </tr>`;
     }).join("")).join("");
@@ -617,6 +755,7 @@ function update() {
   document.getElementById("warnings").innerHTML = avisos.join("");
 
   renderDimens();
+  renderDiag();
 }
 
 function renderDimens() {
@@ -638,7 +777,8 @@ const CHECK_KEY = "sim6x1_check";
 const CHECKLIST = {
   f1: [
     "Mapear todos os empregados com jornada acima de 42h e acima de 40h",
-    "Ler a convenção/acordo coletivo vigente e identificar cláusulas de jornada e escala incompatíveis",
+    "Localizar a convenção/acordo coletivo vigente no Sistema Mediador e identificar cláusulas de jornada e escala incompatíveis",
+    "Assinar e registrar termo aditivo com o sindicato antes de 16/12/2026",
     "Abrir negociação com o sindicato para escalas alternativas (5x2, 4x3, 12x36) e banco de horas",
     "Redesenhar as escalas garantindo dois dias de descanso, um preferencialmente no domingo",
     "Atualizar contratos ou termos aditivos de jornada, sem reduzir o salário",
@@ -683,7 +823,7 @@ document.getElementById("csv-btn").onclick = () => {
   ETAPAS.slice(1).forEach(e => {
     calcEtapa(e, mix.fracHE(), mix.prod()).linhas.forEach(l => {
       linhas.push([l.r.nome, l.r.qtd, l.r.salario, l.r.jornada, l.r.excluido ? "sim" : "nao", e.nome, e.limite,
-        l.valorHora.toFixed(2), l.horasRepor.toFixed(1), l.hePorEmpregado.toFixed(1), l.contratacoes, l.extra.toFixed(2), l.admissao.toFixed(2)]);
+        l.valorHora.toFixed(2), l.horasRepor.toFixed(1), l.hePorEmpregado.toFixed(1), l.contratacoes.toFixed(2), l.extra.toFixed(2), l.admissao.toFixed(2)]);
     });
   });
   const csv = "﻿" + linhas.map(l => l.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
@@ -695,11 +835,439 @@ document.getElementById("csv-btn").onclick = () => {
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   RAMOS DE ATIVIDADE
+   Situação das negociações levantada em notícias, sindicatos e entidades
+   patronais até 23/10/2026. Atualize `status` conforme novos aditivos.
+═══════════════════════════════════════════════════════════════════════════ */
+const RAMOS = [
+  {
+    id: "comercio", nome: "Comércio varejista e supermercados", escala: "6x1 · 44h · domingos e feriados",
+    sindicatos: "Sindicato dos Comerciários (empregados) × Sindicato do Comércio Varejista / Fecomércio (empresas)",
+    busca: "comerciários",
+    status: [
+      { t: "O Sindicato dos Comerciários de São Paulo negocia novas convenções com as entidades patronais, com a meta de adequar as regras antes do Natal. A proposta laboral é a escala 5x2 com duas folgas semanais para todos; o lado patronal quer reorganizar horários de atendimento para conter custos.", src: "ES Hoje", url: "https://eshoje.com.br/brasil/2026/10/escala-6x1-comercio-natal/" },
+      { t: "Convenções 2025/2026 ainda em vigor no comércio preveem 44h semanais e cláusula específica de escala 6x1. Na parte incompatível com a emenda, essas cláusulas ficam sem efeito em 16/12/2026.", src: "CCT 2025/2026 (Sindcomércio)", url: "https://www.sindcomercio.com.br/images/upload/files/25.26.CONVEN%C3%87%C3%83O_COLETIVA_DE_TRABALHO_-_ASSINADA(1).pdf" },
+      { t: "Redes já testam a 5x2: uma loja-piloto foi aberta em Indaiatuba (SP) com essa escala em dezembro de 2025.", src: "O Antagonista", url: "https://oantagonista.com.br/ladooa/entretenimento/fim-da-escala-6x1-como-o-comercio-esta-testando-a-nova-jornada-e-o-que-muda-para-voce/" },
+    ],
+    mudancas: [
+      "Trocar a 6x1 por 5x2 com rodízio de folgas (ou 4x3), cobrindo o horário da loja com sobreposição de turnos.",
+      "Domingos: manter o rodízio; folga no domingo ao menos uma vez a cada três semanas (Lei 10.101/2000, art. 6º). Feriados continuam dependendo de convenção coletiva (art. 6º-A).",
+      "Planejar o fim de ano: a etapa de 42h começa em 16/12, no pico de vendas.",
+    ],
+    cct: { tipo: "cct", jornada: 44, diaria: 8, escala: "6x1", dias: 6, domingo: "rodizio", banco: "coletivo" },
+    roles: [
+      { nome: "Operador(a) de caixa", qtd: 12, salario: 1950, jornada: 44, excluido: false },
+      { nome: "Repositor(a)",         qtd: 8,  salario: 1850, jornada: 44, excluido: false },
+      { nome: "Fiscal de loja",       qtd: 3,  salario: 2600, jornada: 44, excluido: false },
+      { nome: "Administrativo",       qtd: 4,  salario: 3200, jornada: 40, excluido: false },
+    ],
+    dimens: { diasFunc: 7, horasDia: 13, postos: 11, equipeAtual: 23 },
+  },
+  {
+    id: "alimentacao", nome: "Bares, restaurantes e hotelaria", escala: "6x1 · 44h · noites, fins de semana e feriados",
+    sindicatos: "Sindicato dos Trabalhadores em Hotéis, Bares e Restaurantes × SindRio, SHRBS, Abrasel/FBHA (empresas)",
+    busca: "hotéis bares restaurantes",
+    status: [
+      { t: "O SindRio (sindicato patronal de bares e restaurantes do Rio) publicou orientação às empresas sobre o que muda com a emenda.", src: "SindRio", url: "https://www.sindrio.com.br/2026/10/fim-da-escala-6x1-o-que-muda-para-bares-e-restaurantes/" },
+      { t: "A Abrasel estima alta de até 20% no custo de mão de obra. A FBHA defende que a redução venha com negociação coletiva, segurança jurídica e transição para pequenos negócios.", src: "Mercado & Eventos", url: "https://www.mercadoeeventos.com.br/noticias/politica/fim-da-escala-6x1-hoteis-bares-e-restaurantes-podem-ter-aumento-de-custos-alerta-fbha/" },
+      { t: "O sindicato patronal da Serra Gaúcha (SEGH) alerta para o impacto em pequenos estabelecimentos e pede desoneração da folha.", src: "Leouve", url: "https://leouve.com.br/negocios/fim-escala-6x1-elevar-custos-pressionar-precos-gastronomia-hotelaria-serra-gaucha/" },
+    ],
+    mudancas: [
+      "Redesenhar a escala por faixa de movimento (almoço, jantar, fim de semana), com folgas em rodízio.",
+      "Avaliar contratos em tempo parcial e intermitentes para os picos, respeitando a proporcionalidade salarial.",
+      "Revisar cláusulas de gorjeta e de adicional noturno calculados por hora (o valor-hora sobe).",
+    ],
+    cct: { tipo: "cct", jornada: 44, diaria: 8, escala: "6x1", dias: 6, domingo: "rodizio", banco: "coletivo" },
+    roles: [
+      { nome: "Garçom/garçonete", qtd: 10, salario: 1900, jornada: 44, excluido: false },
+      { nome: "Cozinheiro(a)",    qtd: 5,  salario: 2400, jornada: 44, excluido: false },
+      { nome: "Auxiliar de cozinha", qtd: 6, salario: 1700, jornada: 44, excluido: false },
+      { nome: "Recepção / caixa", qtd: 3,  salario: 1900, jornada: 44, excluido: false },
+    ],
+    dimens: { diasFunc: 7, horasDia: 12, postos: 12, equipeAtual: 24 },
+  },
+  {
+    id: "industria", nome: "Indústria (metalúrgica, química, alimentos, têxtil)", escala: "5x2 com compensação do sábado (8h48) ou turnos de revezamento",
+    sindicatos: "Sindicato dos Metalúrgicos / Químicos / da Alimentação × sindicatos patronais filiados às federações das indústrias",
+    busca: "metalúrgicos",
+    status: [
+      { t: "Não localizamos, até esta data, termo aditivo publicado nas grandes bases industriais. Os sindicatos de metalúrgicos acompanharam a tramitação e devem levar o tema às datas-base.", src: "Stime Chapecó", url: "https://www.stimechapeco.com/post/sindicato-dos-metal%C3%BArgicos-acompanha-aprova%C3%A7%C3%A3o-do-fim-da-escala-6x1-na-ccj-do-senado" },
+      { t: "A cláusula antiga de compensação do sábado perde a finalidade. Para trabalhar 8h24 por dia na fase de 42h, é preciso cláusula nova, adequada à emenda; não basta manter a antiga.", src: "Caltrab", url: "https://caltrab.com/acordo-compensacao-sabado-fim-6x1/" },
+      { t: "Na fase de 42h, acordo ou convenção pode distribuir a carga em cinco dias com jornadas acima de 8h (ex.: 8h24).", src: "Migalhas", url: "https://www.migalhas.com.br/depeso/466982/fim-da-escala-6x1-o-que-empregadores-e-trabalhadores-precisam-saber" },
+    ],
+    mudancas: [
+      "Compensação do sábado: até 16/12/2026, negociar cláusula nova (8h24 × 5); a partir de 16/12/2027, 8h × 5.",
+      "Turnos ininterruptos de revezamento: o limite de 6h (art. 7º, XIV) não mudou; turnos de 8h negociados precisam caber em 42h e depois 40h, com dois repousos.",
+      "Recalcular adicionais e horas extras pelo novo divisor (210 e depois 200).",
+    ],
+    cct: { tipo: "cct", jornada: 44, diaria: 8.8, escala: "sabado", dias: 5, domingo: "nao", banco: "coletivo" },
+    roles: [
+      { nome: "Operador(a) de produção", qtd: 40, salario: 2600, jornada: 44, excluido: false },
+      { nome: "Mecânico(a) de manutenção", qtd: 6, salario: 4200, jornada: 44, excluido: false },
+      { nome: "Almoxarife",                qtd: 4, salario: 2500, jornada: 44, excluido: false },
+      { nome: "Administrativo",            qtd: 8, salario: 3500, jornada: 44, excluido: false },
+    ],
+    dimens: { diasFunc: 5, horasDia: 17.6, postos: 25, equipeAtual: 58 },
+  },
+  {
+    id: "construcao", nome: "Construção civil", escala: "5x2 com compensação do sábado · 44h",
+    sindicatos: "Sindicato dos Trabalhadores da Construção Civil × Sinduscon (empresas)",
+    busca: "construção civil",
+    status: [
+      { t: "O sindicato dos trabalhadores da construção do Rio explica que a categoria já trabalha de segunda a sexta, compensando o sábado ao longo da semana, e que o fim da 6x1 encerra essa compensação. O texto é de julho, quando a PEC ainda tramitava.", src: "Sintraconst-Rio", url: "https://sintraconstrio.org.br/2026/07/fim-da-escala-6x1-e-o-fim-da-compensacao-dos-sabados-na-construcao-civil/" },
+    ],
+    mudancas: [
+      "Mesma lógica da indústria: cláusula nova para 8h24 na fase de 42h; 8h por dia a partir de 16/12/2027.",
+      "Rever cronogramas de obra e contratos com prazo fixo (a capacidade semanal cai cerca de 9%).",
+      "Atenção a terceirizadas e empreiteiras: o tomador responde subsidiariamente.",
+    ],
+    cct: { tipo: "cct", jornada: 44, diaria: 8.8, escala: "sabado", dias: 5, domingo: "nao", banco: "coletivo" },
+    roles: [
+      { nome: "Pedreiro(a)",  qtd: 15, salario: 2800, jornada: 44, excluido: false },
+      { nome: "Servente",     qtd: 20, salario: 2000, jornada: 44, excluido: false },
+      { nome: "Encarregado(a)", qtd: 3, salario: 4500, jornada: 44, excluido: false },
+    ],
+    dimens: { diasFunc: 5, horasDia: 8.8, postos: 38, equipeAtual: 38 },
+  },
+  {
+    id: "saude", nome: "Saúde (hospitais, clínicas, laboratórios)", escala: "12x36 e plantões · 6x1 no apoio",
+    sindicatos: "Sindicato dos Empregados em Estabelecimentos de Saúde / Enfermagem × Sindhosp e sindicatos patronais de saúde",
+    busca: "estabelecimentos de saúde",
+    status: [
+      { t: "A emenda não menciona a 12x36, que continua prevista no art. 59-A da CLT. A média de 42h cabe na etapa 1, mas excede o limite de 40h da etapa 2.", src: "Apogeu", url: "https://apogeu.tech/blog/escala-12x36-fim-da-escala-6x1" },
+      { t: "O governo anunciou projeto de lei complementar para escalas diferenciadas, ainda não apresentado. Não localizamos aditivo publicado no setor.", src: "Tribuna do Sertão", url: "https://www.tribunadosertao.com.br/financas/2026/10/22/1002835-fim-da-escala-6x1-governo-lula-adia-regulamentacao-para-apos-o-segundo-turno" },
+    ],
+    mudancas: [
+      "12x36: até 16/12/2027, reduzir a média para 40h (ex.: uma folga extra por quinzena ou 12x36 com plantão a menos no mês), sem reduzir a remuneração.",
+      "Equipes de apoio em 6x1 (recepção, higienização, cozinha): migrar para 5x2.",
+      "Piso da enfermagem: o valor mensal se mantém; revisar proporcionalidade em contratos parciais.",
+    ],
+    cct: { tipo: "cct", jornada: 42, diaria: 12, escala: "12x36", dias: 3.5, domingo: "rodizio", banco: "nao" },
+    roles: [
+      { nome: "Técnico(a) de enfermagem (12x36)", qtd: 30, salario: 2900, jornada: 42, excluido: false },
+      { nome: "Enfermeiro(a) (12x36)",            qtd: 10, salario: 5200, jornada: 42, excluido: false },
+      { nome: "Recepção / apoio (6x1)",           qtd: 8,  salario: 1900, jornada: 44, excluido: false },
+    ],
+    dimens: { diasFunc: 7, horasDia: 24, postos: 10, equipeAtual: 48 },
+  },
+  {
+    id: "vigilancia", nome: "Vigilância e segurança privada", escala: "12x36 · 6x1 de 8h em postos diurnos",
+    sindicatos: "Sindicato dos Vigilantes × Sindesp (empresas de segurança)",
+    busca: "vigilantes",
+    status: [
+      { t: "A 12x36, padrão do setor, não foi extinta. Pela conta das horas, ela é compatível com a etapa de 42h e precisa de ajuste até a de 40h.", src: "Você no QAP", url: "https://vocenoqap.com.br/artigos/fim-escala-6x1-escala-12x36-vigilante.html" },
+      { t: "Postos em 6x1 de 8h precisam passar a ter dois repousos a partir de 16/12/2026.", src: "Instrutor Bruno Moisés", url: "https://instrutorbrunomoises.com.br/noticias/escala-6x1-vigilante/" },
+    ],
+    mudancas: [
+      "Repactuar contratos com os tomadores: a mudança altera o número de vigilantes por posto.",
+      "12x36: ajustar a média para 40h até 16/12/2027.",
+      "Postos 6x1: migrar para 5x2 ou 12x36, com cobertura de folguistas.",
+    ],
+    cct: { tipo: "cct", jornada: 42, diaria: 12, escala: "12x36", dias: 3.5, domingo: "rodizio", banco: "nao" },
+    roles: [
+      { nome: "Vigilante (12x36)", qtd: 24, salario: 2500, jornada: 42, excluido: false },
+      { nome: "Vigilante (6x1 diurno)", qtd: 8, salario: 2500, jornada: 44, excluido: false },
+      { nome: "Supervisor(a)", qtd: 2, salario: 3800, jornada: 44, excluido: false },
+    ],
+    dimens: { diasFunc: 7, horasDia: 24, postos: 6, equipeAtual: 34 },
+  },
+  {
+    id: "servicos", nome: "Asseio, conservação, limpeza e terceirização", escala: "6x1 · 44h · 12x36 em postos contínuos",
+    sindicatos: "Siemaco e sindicatos de asseio e conservação × Seac (empresas)",
+    busca: "asseio e conservação",
+    status: [
+      { t: "Pelo texto aprovado na Câmara, terceirizados que prestam serviço à administração pública terão regra de transição diferenciada.", src: "Agência Brasil", url: "https://agenciabrasil.ebc.com.br/politica/noticia/2026-05/entenda-pec-que-acaba-com-escala-6x1-mais-tempo-livre-e-mesmo-salario" },
+      { t: "Não localizamos aditivo publicado no setor. A orientação recorrente é antecipar a revisão das convenções vigentes.", src: "Fenacon", url: "https://fenacon.org.br/atuacao-legislativa/fenacon-orienta-sindicatos-e-empresas-sobre-mudancas-na-jornada-de-trabalho-apos-fim-da-escala-6x1/" },
+    ],
+    mudancas: [
+      "Pedir reequilíbrio econômico-financeiro dos contratos com tomadores (públicos e privados).",
+      "Contratos públicos: acompanhar a regra de transição própria e a repactuação prevista em lei.",
+      "Postos 6x1: migrar para 5x2 com folguistas.",
+    ],
+    cct: { tipo: "cct", jornada: 44, diaria: 7.33, escala: "6x1", dias: 6, domingo: "rodizio", banco: "coletivo" },
+    roles: [
+      { nome: "Auxiliar de limpeza", qtd: 30, salario: 1700, jornada: 44, excluido: false },
+      { nome: "Porteiro(a)",         qtd: 10, salario: 1900, jornada: 44, excluido: false },
+      { nome: "Encarregado(a)",      qtd: 3,  salario: 2600, jornada: 44, excluido: false },
+    ],
+    dimens: { diasFunc: 6, horasDia: 10, postos: 32, equipeAtual: 43 },
+  },
+  {
+    id: "transporte", nome: "Transporte rodoviário (cargas e passageiros)", escala: "Jornada do motorista (Lei 13.103/2015) · 6x1 ou 12x36",
+    sindicatos: "Sindicato dos Rodoviários / Motoristas × sindicatos das empresas de transporte (Setcesp, NTC, empresas de ônibus)",
+    busca: "rodoviários motoristas",
+    status: [
+      { t: "A emenda alcança os motoristas empregados. A jornada de 8h com prorrogação de até 2h (ou 4h por convenção) da Lei 13.103 passa a conviver com o teto de 42h e 40h e os dois repousos.", src: "Blog do Amarildo", url: "https://blogdoamarildo.com.br/emenda-constitucional-no-141-2026-o-que-muda-na-jornada-de-trabalho-e-quais-sao-os-impactos-para-o-transporte-rodoviario-de-cargas/" },
+    ],
+    mudancas: [
+      "Revisar o controle de jornada, o tempo de espera e o repouso semanal das viagens longas (repouso acumulado só com previsão legal ou coletiva).",
+      "Transporte urbano: redimensionar tabelas de escala e folguistas.",
+      "Reavaliar o custo do frete e as cláusulas de reajuste dos contratos.",
+    ],
+    cct: { tipo: "cct", jornada: 44, diaria: 8, escala: "6x1", dias: 6, domingo: "rodizio", banco: "coletivo" },
+    roles: [
+      { nome: "Motorista", qtd: 20, salario: 3300, jornada: 44, excluido: false },
+      { nome: "Ajudante",  qtd: 10, salario: 1900, jornada: 44, excluido: false },
+      { nome: "Conferente", qtd: 4, salario: 2300, jornada: 44, excluido: false },
+    ],
+    dimens: { diasFunc: 6, horasDia: 16, postos: 18, equipeAtual: 34 },
+  },
+  {
+    id: "bancos", nome: "Bancos e financeiras", escala: "6h diárias · 30h semanais (art. 224 CLT), segunda a sexta",
+    sindicatos: "Sindicato dos Bancários × Fenaban",
+    busca: "bancários",
+    status: [
+      { t: "Para quem já cumpre 30h semanais de segunda a sexta, o novo teto de 40h não muda a carga da categoria. Cargos de confiança com 8h diárias ficam dentro de 40h.", src: "O Liberal", url: "https://www.oliberal.com/politica/veja-quais-categorias-terao-mudancas-e-quais-manterao-regras-especificas-1.1182915" },
+    ],
+    mudancas: [
+      "Em regra, nada muda na duração. Conferir apenas áreas com trabalho aos sábados (correspondentes, tecnologia, atendimento) e empresas financeiras fora da CCT bancária.",
+    ],
+    cct: { tipo: "cct", jornada: 30, diaria: 6, escala: "especial", dias: 5, domingo: "nao", banco: "coletivo" },
+    roles: [
+      { nome: "Escriturário(a) (6h)", qtd: 20, salario: 4000, jornada: 30, excluido: false },
+      { nome: "Gerente (8h)",         qtd: 6,  salario: 9000, jornada: 40, excluido: false },
+    ],
+    dimens: { diasFunc: 5, horasDia: 6, postos: 20, equipeAtual: 26 },
+  },
+  {
+    id: "tele", nome: "Teleatendimento e call center", escala: "6h diárias · 36h semanais (NR-17, Anexo II), muitas vezes em 6 dias",
+    sindicatos: "Sintratel e sindicatos de telemarketing × Sintelmark / associações de call center",
+    busca: "telemarketing teleatendimento",
+    status: [
+      { t: "A carga de 36h já fica abaixo de 40h, mas a categoria é citada entre as de jornada especial. Onde há trabalho em 6 dias, os dois repousos passam a ser exigidos.", src: "Jornal da Paraíba", url: "https://jornaldaparaiba.com.br/vamos-trabalhar/fim-da-escala-6x1-saiba-quais-profissoes-entram-e-quais-terao-regime-de-trabalho-diferenciado" },
+    ],
+    mudancas: [
+      "Escala 6x1 de 6h: com dois repousos e o limite diário de 6h, a carga cai para 30h semanais, sem redução salarial, salvo regime de compensação excepcional negociado (média mensal de dois repousos).",
+      "Redimensionar a operação de fim de semana com rodízio.",
+    ],
+    cct: { tipo: "cct", jornada: 36, diaria: 6, escala: "especial", dias: 6, domingo: "rodizio", banco: "nao" },
+    roles: [
+      { nome: "Operador(a) de teleatendimento", qtd: 60, salario: 1650, jornada: 36, excluido: false },
+      { nome: "Supervisor(a)", qtd: 5, salario: 3000, jornada: 44, excluido: false },
+    ],
+    dimens: { diasFunc: 7, horasDia: 14, postos: 30, equipeAtual: 65 },
+  },
+  {
+    id: "domestico", nome: "Emprego doméstico", escala: "44h (LC 150/2015) · muitas vezes de segunda a sábado",
+    sindicatos: "Sindicato das Trabalhadoras Domésticas × sindicato dos empregadores domésticos (onde houver)",
+    busca: "empregados domésticos",
+    status: [
+      { t: "A regra alcança empregadas domésticas, babás e cuidadores. A recomendação é fazer termo aditivo ao contrato com os novos horários e os dias de folga.", src: "InfoMoney", url: "https://www.infomoney.com.br/minhas-financas/com-fim-da-escala-6x1-empregador-domestico-tera-que-fazer-novo-contrato/" },
+      { t: "A LC 150/2015 ainda menciona 44h e deve ser lida de acordo com a Constituição.", src: "Legi Laboris", url: "https://www.legilaboris.com.br/post/fim-escala-6x1-empregador-domestico" },
+    ],
+    mudancas: [
+      "Assinar termo aditivo com horários, dias trabalhados e as duas folgas; atualizar o eSocial Doméstico.",
+      "Quem trabalha de segunda a sábado passa a ter sábado ou domingo livre adicional.",
+    ],
+    cct: { tipo: "nenhum", jornada: 44, diaria: 8, escala: "6x1", dias: 6, domingo: "nao", banco: "individual" },
+    roles: [{ nome: "Empregada doméstica", qtd: 1, salario: 1800, jornada: 44, excluido: false }],
+    dimens: { diasFunc: 6, horasDia: 8, postos: 1, equipeAtual: 1 },
+  },
+  {
+    id: "rural", nome: "Agronegócio e trabalho rural", escala: "44h · 6x1 em safra e pecuária",
+    sindicatos: "Sindicato dos Trabalhadores Rurais × Sindicato Rural (produtores)",
+    busca: "trabalhadores rurais",
+    status: [
+      { t: "Não localizamos, até esta data, notícia de aditivo ou orientação específica para o trabalho rural. A emenda vale para empregados rurais (art. 7º, caput).", src: "Agência Senado", url: "https://www12.senado.leg.br/noticias/materias/2026/10/16/congresso-promulga-o-fim-da-escala-6x1-e-aposentadoria-de-agentes-de-saude" },
+    ],
+    mudancas: [
+      "Planejar a safra com rodízio de folgas e contratos de safra (Lei 5.889/1973).",
+      "Pecuária e ordenha diária: escalas com folguistas ou compensação negociada coletivamente.",
+    ],
+    cct: { tipo: "cct", jornada: 44, diaria: 8, escala: "6x1", dias: 6, domingo: "rodizio", banco: "nao" },
+    roles: [
+      { nome: "Trabalhador(a) rural", qtd: 25, salario: 1800, jornada: 44, excluido: false },
+      { nome: "Tratorista", qtd: 5, salario: 2600, jornada: 44, excluido: false },
+    ],
+    dimens: { diasFunc: 6, horasDia: 9, postos: 28, equipeAtual: 30 },
+  },
+  {
+    id: "escritorio", nome: "Escritórios e serviços administrativos", escala: "40h a 44h · segunda a sexta, às vezes sábado de manhã",
+    sindicatos: "Sindicato dos Empregados em Empresas de Serviços / Escritórios × sindicatos patronais de serviços e contabilidade",
+    busca: "empregados em escritórios",
+    status: [
+      { t: "A Fenacon orienta sindicatos e empresas a antecipar a análise das convenções vigentes e identificar as cláusulas que precisam de adequação.", src: "Fenacon", url: "https://fenacon.org.br/atuacao-legislativa/fenacon-orienta-sindicatos-e-empresas-sobre-mudancas-na-jornada-de-trabalho-apos-fim-da-escala-6x1/" },
+    ],
+    mudancas: [
+      "Quem já trabalha 40h de segunda a sexta não precisa mudar a jornada.",
+      "Jornada de 44h com sábado de manhã: o sábado deixa de existir e a semana passa a 42h e depois 40h.",
+    ],
+    cct: { tipo: "cct", jornada: 44, diaria: 8, escala: "outra", dias: 5.5, domingo: "nao", banco: "individual" },
+    roles: [
+      { nome: "Assistente administrativo", qtd: 8, salario: 2600, jornada: 44, excluido: false },
+      { nome: "Analista", qtd: 5, salario: 5000, jornada: 40, excluido: false },
+    ],
+    dimens: { diasFunc: 5, horasDia: 9, postos: 12, equipeAtual: 13 },
+  },
+];
+
+const RAMO_GERAL = [
+  { t: "Cláusulas de jornada e repouso incompatíveis ficam sem efeito em 16/12/2026. Convenções e acordos seguem válidos no restante, e há dúvida sobre o banco de horas (posição da CNC).", src: "Estado de Minas", url: "https://www.em.com.br/mundo-corporativo/2026/10/7524748-fim-da-escala-6x1-como-ficam-acordos-coletivos-e-contratos.html" },
+  { t: "As entidades podem assinar aditivos aos instrumentos vigentes e deixar a negociação ampla para a data-base. O governo prepara decreto sobre negociação coletiva e lei complementar para escalas diferenciadas.", src: "Tribuna do Sertão", url: "https://www.tribunadosertao.com.br/financas/2026/10/22/1002835-fim-da-escala-6x1-governo-lula-adia-regulamentacao-para-apos-o-segundo-turno" },
+  { t: "A compensação de seis dias de trabalho com média mensal de dois repousos é excepcional: depende de acordo ou convenção e não pode ser decisão unilateral nem ajuste individual.", src: "Conjur", url: "https://conjur.com.br/2026-out-22/a-escala-6x1-acabou-mas-o-sexto-dia-de-trabalho-tambem/" },
+];
+
+const CCT_IDS = ["tipo", "jornada", "diaria", "escala", "dias", "domingo", "banco", "vigencia", "aditivo"];
+const ramoAtual = () => RAMOS.find(r => r.id === state.ramo) || RAMOS[0];
+const statusList = itens => `<ul>${itens.map(s => `<li>${s.t} <span class="src">— <a href="${s.url}" target="_blank" rel="noopener">${s.src}</a></span></li>`).join("")}</ul>`;
+
+function renderRamo() {
+  const r = ramoAtual();
+  document.getElementById("ramo-info").innerHTML = `
+    <div class="ramo-head">
+      <span class="tag">Escala típica: ${r.escala}</span>
+      <span class="tag">${r.sindicatos}</span>
+      <button class="add-btn" id="usar-ramo" style="margin:0">↺ Preencher simulação com o cenário típico do ramo</button>
+    </div>
+    <div class="ramo-grid">
+      <div class="ramo-box"><h4>Situação das negociações</h4>${statusList(r.status)}</div>
+      <div class="ramo-box"><h4>Mudanças típicas no ramo</h4><ul>${r.mudancas.map(m => `<li>${m}</li>`).join("")}</ul></div>
+      <div class="ramo-box"><h4>Vale para todos os ramos</h4>${statusList(RAMO_GERAL)}</div>
+    </div>`;
+  document.getElementById("usar-ramo").onclick = () => {
+    if (!confirm("Substituir os cargos, o dimensionamento e os dados do instrumento coletivo pelo exemplo de “" + r.nome + "”?")) return;
+    state.roles = r.roles.map(x => ({ ...x }));
+    Object.assign(state, r.dimens);
+    state.cct = { ...state.cct, ...r.cct };
+    ["diasFunc", "horasDia", "postos", "equipeAtual"].forEach(id => document.getElementById(id).value = state[id]);
+    fillCct();
+    renderRoles(); update();
+  };
+  renderLinks();
+}
+
+function renderLinks() {
+  const r = ramoAtual();
+  const local = (state.local || "").trim();
+  const g = q => "https://www.google.com/search?q=" + encodeURIComponent(q);
+  document.getElementById("search-links").innerHTML = [
+    ["🏛 Sistema Mediador (MTE)", "https://www3.mte.gov.br/sistemas/mediador/ConsultarInstColetivo"],
+    ["🪪 Cartão CNPJ (Receita)", "https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/Cnpjreva_Solicitacao.aspx"],
+    ["🔎 Convenção " + r.busca + (local ? " · " + local : ""), g(`convenção coletiva ${r.busca} ${local} 2026`)],
+    ["🔎 Aditivo EC 141" + (local ? " · " + local : ""), g(`termo aditivo convenção coletiva ${r.busca} ${local} escala 6x1 EC 141`)],
+    ["📜 Texto da EC 141/2026", "https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc141.htm"],
+  ].map(([t, u]) => `<a href="${u}" target="_blank" rel="noopener">${esc(t)}</a>`).join("");
+}
+
+function fillCct() {
+  CCT_IDS.forEach(k => { document.getElementById("cct-" + k).value = state.cct[k] ?? ""; });
+}
+
+function bindRamo() {
+  const sel = document.getElementById("ramo");
+  sel.innerHTML = RAMOS.map(r => `<option value="${r.id}">${r.nome}</option>`).join("");
+  sel.value = ramoAtual().id;
+  sel.addEventListener("change", () => { state.ramo = sel.value; renderRamo(); update(); });
+  const local = document.getElementById("local");
+  local.value = state.local || "";
+  local.addEventListener("input", () => { state.local = local.value; renderLinks(); save(); });
+  fillCct();
+  CCT_IDS.forEach(k => {
+    const el = document.getElementById("cct-" + k);
+    el.addEventListener("input", () => {
+      state.cct[k] = el.type === "number" ? parseFloat(el.value) || 0 : el.value;
+      update();
+    });
+  });
+  renderRamo();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DIAGNÓSTICO DO INSTRUMENTO COLETIVO
+   ok = compatível · atencao = revisar/condicionado · ajustar = precisa mudar
+═══════════════════════════════════════════════════════════════════════════ */
+const D1 = "16/12/2026", D2 = "16/12/2027";
+
+function diagnostico(c) {
+  const out = [];
+  const add = (ponto, nivel, prazo, acao) => out.push({ ponto, nivel, prazo, acao });
+  const semInstrumento = c.tipo === "nenhum";
+  const nomeInstr = c.tipo === "act" ? "acordo coletivo" : "convenção coletiva";
+
+  // Jornada semanal
+  if (c.jornada > 44) add("Jornada semanal", "ajustar", "Imediato", `${num1(c.jornada)}h já ultrapassava o limite anterior de 44h. Regularize já e programe a redução para 42h e 40h.`);
+  else if (c.jornada > 42) add("Jornada semanal", "ajustar", D1, `A cláusula de ${num1(c.jornada)}h fica sem efeito. Reduza para até 42h em ${D1} e para até 40h em ${D2}, sem reduzir salário ou piso.`);
+  else if (c.jornada > 40) add("Jornada semanal", "atencao", D2, `${num1(c.jornada)}h cabe na etapa de 42h, mas precisa cair para até 40h em ${D2}.`);
+  else add("Jornada semanal", "ok", "—", `${num1(c.jornada)}h já está dentro do limite final de 40h.`);
+
+  // Dois dias de repouso
+  if (c.escala === "12x36") add("Dois dias de repouso", "ok", "—", "A 12x36 garante em média 3,5 dias livres por semana. Confirme que a escala está prevista em acordo ou convenção (CLT, art. 59-A).");
+  else if (c.dias > 5) add("Dois dias de repouso", "ajustar", D1,
+    semInstrumento
+      ? `Trabalho em ${num1(c.dias)} dias por semana deixa de ser permitido: sem acordo ou convenção coletiva, são no máximo 5 dias, com dois repousos.`
+      : `Trabalho em ${num1(c.dias)} dias por semana só continua com regime de compensação excepcional, previsto em ${nomeInstr}, que garanta na média do mês dois repousos por semana (art. 7º, § 2º). Sem isso, passe a 5 dias.`);
+  else add("Dois dias de repouso", "ok", "—", "A escala já prevê ao menos dois dias livres por semana.");
+
+  // Escala
+  const escalas = {
+    "6x1": ["ajustar", D1, `A cláusula de escala 6x1 fica sem efeito. Migre para 5x2 com rodízio, 4x3 ou outra escala com dois repousos${semInstrumento ? "" : ", ou negocie o regime de compensação excepcional"}.`],
+    "sabado": ["ajustar", `${D1} e ${D2}`, `A cláusula antiga de compensação do sábado não basta. Até ${D1}, só cláusula nova permite 8h24 em 5 dias (42h). A partir de ${D2}, 8h por dia em 5 dias (40h).`],
+    "12x36": ["atencao", D2, `Média de 42h: compatível com a etapa 1. Até ${D2}, reduza a média para 40h (ex.: uma folga extra por quinzena, 12x36 com plantão a menos no mês ou 12x48), sem reduzir a remuneração. Acompanhe a lei complementar sobre escalas diferenciadas.`],
+    "turnos": ["atencao", D1, "O limite de 6h dos turnos ininterruptos de revezamento (art. 7º, XIV) não mudou. Garanta dois repousos e, se houver turnos de 8h negociados, que a média semanal caiba em 42h e depois em 40h."],
+    "especial": c.dias > 5
+      ? ["ajustar", D1, `A carga semanal já é inferior a 40h, mas o trabalho em ${num1(c.dias)} dias passa a exigir dois repousos. Com o limite diário da categoria mantido, a carga semanal cai sem redução salarial, salvo compensação excepcional negociada.`]
+      : ["ok", "—", "Jornada especial abaixo de 40h, já em 5 dias: em regra, não há mudança."],
+    "5x2": ["ok", "—", "A 5x2 já atende a regra dos dois repousos. Confira apenas a carga semanal."],
+    "4x3": ["ok", "—", "Semana reduzida atende a regra dos dois repousos. Confira se a jornada diária acima de 8h tem previsão coletiva."],
+    "outra": ["atencao", D1, "Confira se a escala garante dois repousos por semana e cabe em 42h e depois em 40h."],
+  };
+  const [nv, pz, ac] = escalas[c.escala] || escalas.outra;
+  add("Escala", nv, pz, ac);
+
+  // Jornada diária
+  if (c.escala !== "12x36" && c.diaria > 8) {
+    const lim = 8.4;
+    if (semInstrumento) add("Jornada diária", "ajustar", D1, `${num1(c.diaria)}h por dia acima de 8h só é possível por compensação válida. Sem instrumento coletivo, adote até 8h por dia.`);
+    else if (c.diaria > lim) add("Jornada diária", "ajustar", D1, `${num1(c.diaria)}h por dia supera o necessário para distribuir 42h em 5 dias (8h24). Renegocie a cláusula; a partir de ${D2}, o padrão é 8h por dia.`);
+    else add("Jornada diária", "atencao", D2, `Até 8h24 por dia é admitido na fase de 42h se previsto em ${nomeInstr} adequado à emenda. A partir de ${D2}, o padrão é 8h.`);
+  } else add("Jornada diária", "ok", "—", c.escala === "12x36" ? "12h na 12x36 continua admitida com previsão legal ou coletiva." : "Até 8h por dia, dentro do limite.");
+
+  // Domingos e feriados
+  if (c.domingo === "rodizio") add("Domingos e feriados", "atencao", D1, "Mantenha o rodízio: um dos dois repousos deve ser preferencialmente no domingo. No comércio, folga dominical ao menos uma vez a cada três semanas (Lei 10.101/2000, art. 6º) e feriados só com convenção coletiva (art. 6º-A).");
+  else if (c.domingo === "sem-regra") add("Domingos e feriados", "ajustar", D1, "Preveja rodízio de folga dominical e confira a autorização para trabalho em feriados no instrumento coletivo.");
+  else add("Domingos e feriados", "ok", "—", "Sem trabalho aos domingos: o segundo repouso pode ser o sábado.");
+
+  // Banco de horas
+  if (c.banco === "nao") add("Banco de horas", "ok", "—", "Não há banco de horas.");
+  else add("Banco de horas", "atencao", D1, `Continua permitido (CLT, art. 59, §§ 2º e 5º${c.banco === "individual" ? ", com compensação em até 6 meses no acordo individual" : ""}), mas recalcule limites e saldos com a nova jornada. Não pode ser usado para manter uma 6x1 de fato; há dúvida jurídica apontada pela CNC.`);
+
+  // Vigência e aditivo
+  const incompat = out.some(r => r.nivel === "ajustar");
+  if (semInstrumento) add("Instrumento coletivo", "atencao", D1, "Sem instrumento coletivo, valem só a EC e a CLT: até 8h por dia, 42h e depois 40h, dois repousos. Não há como usar 8h24 nem a compensação excepcional. Confirme no Mediador: o enquadramento sindical é automático pela atividade da empresa.");
+  else if (!incompat && c.jornada <= 40) add("Instrumento coletivo", "ok", "—", "Nenhuma cláusula de jornada ou repouso incompatível foi identificada: o aditivo não é obrigatório. Acompanhe a data-base e eventual regulamentação.");
+  else if (c.aditivo === "f2") add("Instrumento coletivo", "ok", "—", "Aditivo cobre as duas etapas. Confira se está registrado no Sistema Mediador.");
+  else if (c.aditivo === "f1") add("Instrumento coletivo", "atencao", D2, `O aditivo cobre só a etapa de 42h. Negocie a etapa de 40h antes de ${D2}.`);
+  else if (c.aditivo === "negociando") add("Instrumento coletivo", "atencao", D1, `Assine e registre o aditivo no Sistema Mediador antes de ${D1}, cobrindo as duas etapas.`);
+  else {
+    const vig = c.vigencia ? new Date(c.vigencia + "T00:00:00") : null;
+    if (vig && vig < ETAPAS[1].inicio) add("Instrumento coletivo", "atencao", D1, `A ${nomeInstr} vence em ${fmtData(vig)}, antes da etapa 1: inclua as regras das duas etapas na renovação.`);
+    else add("Instrumento coletivo", "ajustar", D1, `A ${nomeInstr} segue vigente ${vig ? "até " + fmtData(vig) : ""} com as cláusulas incompatíveis sem efeito a partir de ${D1}. Negocie termo aditivo com o sindicato e registre no Mediador.`);
+  }
+
+  add("Salário e piso", "atencao", D1, "Mantenha o salário mensal e o piso. O valor-hora sobe (divisor 210 e depois 200): recalcule horas extras, adicional noturno e demais verbas por hora.");
+  return out;
+}
+
+const NIVEL = { ok: ["ok", "✔ Compatível"], atencao: ["warn", "● Revisar"], ajustar: ["bad", "▲ Precisa mudar"] };
+
+function renderDiag() {
+  const rows = diagnostico(state.cct);
+  const n = k => rows.filter(r => r.nivel === k).length;
+  document.getElementById("diag-summary").innerHTML =
+    `<span class="tag bad">${n("ajustar")} precisa(m) mudar</span><span class="tag warn">${n("atencao")} para revisar</span><span class="tag ok">${n("ok")} compatível(is)</span>`;
+  document.getElementById("diag").innerHTML = rows.map(r => {
+    const [cls, txt] = NIVEL[r.nivel];
+    return `<tr><td><b>${r.ponto}</b></td><td><span class="tag ${cls}">${txt}</span></td><td>${r.prazo}</td><td>${r.acao}</td></tr>`;
+  }).join("");
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    INÍCIO
 ═══════════════════════════════════════════════════════════════════════════ */
 renderTimeline();
 bindParams();
 renderRoles();
+bindRamo();
 renderChecklist();
 update();
 </script>
