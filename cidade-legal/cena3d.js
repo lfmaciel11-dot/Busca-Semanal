@@ -23,7 +23,7 @@ const Cena = (() => {
   const brotando = {};     // lote → instante da construção
   const carros = [], nuvens = [], postes = [];
   let fantasma = null, fantasmaTipo = null, hover = -1, cursor = -1;
-  let texAgua, matRua, matCruz, chuva;
+  let texAgua = [], matRua, matCruz, matGrama, chuva, pmrem, envCena, envAlvo, envDia = -1, envChuva = null, diaAtual = 1;
   const relogio = () => performance.now() / 1000;
 
   const posX = c => c - LARGURA / 2 + .5;
@@ -33,16 +33,60 @@ const Cena = (() => {
   const cacheMat = {};
   function mat(cor, extra = {}) {
     const k = cor + JSON.stringify(extra);
-    return cacheMat[k] || (cacheMat[k] = new THREE.MeshStandardMaterial({ color: cor, roughness: .85, metalness: 0, ...extra }));
+    if (cacheMat[k]) return cacheMat[k];
+    const m = cacheMat[k] = new THREE.MeshStandardMaterial({ color: cor, roughness: .85, metalness: 0, ...extra });
+    if (extra.metalness || extra.roughness < .3) materiaisReflexo.push(m);
+    return m;
   }
   const materiaisNoturnos = []; // materiais que acendem à noite
+  const materiaisReflexo = [];  // vidros, água e metais: refletem o céu
 
-  function canvasTex(w, h, desenhar) {
+  function canvasTex(w, h, desenhar, linear = false) {
     const c = document.createElement('canvas'); c.width = w; c.height = h;
     desenhar(c.getContext('2d'), w, h);
     const t = new THREE.CanvasTexture(c);
-    t.anisotropy = 4; t.encoding = THREE.sRGBEncoding;
+    t.anisotropy = anisoMax; if (!linear) t.encoding = THREE.sRGBEncoding;
     return t;
+  }
+
+  /* ── Texturas PBR geradas (texturas.js): cor + relevo ───────────────────── */
+  const IMG = {};
+  let pronto = false, anisoMax = 4;
+  function carregarImagens() {
+    if (typeof TEXTURAS === 'undefined') return Promise.resolve(); // const global não fica em window
+    const tarefas = [];
+    Object.entries(TEXTURAS).forEach(([nome, tx]) => ['cor', 'relevo'].forEach(tipo => tarefas.push(new Promise(ok => {
+      const im = new Image();
+      im.onload = () => { IMG[nome + '_' + tipo] = im; ok(); };
+      im.onerror = ok; im.src = tx[tipo];
+    }))));
+    return Promise.all(tarefas);
+  }
+  function texImagem(nome, tipo, rx = 1, ry = rx) {
+    const im = IMG[nome + '_' + tipo];
+    if (!im) return null;
+    const tx = new THREE.Texture(im);
+    tx.needsUpdate = true; tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(rx, ry); tx.anisotropy = anisoMax;
+    if (tipo === 'cor') tx.encoding = THREE.sRGBEncoding;
+    return tx;
+  }
+  const cachePbr = {};
+  // Material com textura de cor e de relevo; "extra.color" tinge a textura
+  function pbr(nome, rx = 1, ry = rx, extra = {}) {
+    const k = [nome, rx, ry, JSON.stringify(extra)].join('|');
+    if (cachePbr[k]) return cachePbr[k];
+    const m = new THREE.MeshStandardMaterial({ roughness: .9, ...extra });
+    const cor = texImagem(nome, 'cor', rx, ry), rel = texImagem(nome, 'relevo', rx, ry);
+    if (cor) m.map = cor; else if (!extra.color) m.color.set('#9A9A9A');
+    if (rel) m.normalMap = rel;
+    return (cachePbr[k] = m);
+  }
+  // Desenha a imagem repetida rep×rep vezes no retângulo
+  function ladrilhar(ctx, nome, tipo, x, y, w, h, rep = 1) {
+    const im = IMG[nome + '_' + tipo];
+    if (!im) return false;
+    for (let i = 0; i < rep; i++) for (let j = 0; j < rep; j++) ctx.drawImage(im, x + i * w / rep, y + j * h / rep, w / rep, h / rep);
+    return true;
   }
 
   // Texturas de parede desenhadas em canvas: reboco, tijolo, concreto, madeira e vidro espelhado
@@ -93,32 +137,57 @@ const Cena = (() => {
     }, 4, 4);
   }
   const cacheTelha = {};
-  const matTelha = cor => cacheTelha[cor] || (cacheTelha[cor] = new THREE.MeshStandardMaterial({ color: cor, map: texTelha, roughness: .8 }));
+  function matTelha(cor) {
+    if (cacheTelha[cor]) return cacheTelha[cor];
+    const m = IMG.telha_cor ? pbr('telha', 2.4, 2.4, { color: cor, roughness: .75 }) : new THREE.MeshStandardMaterial({ color: cor, map: texTelha, roughness: .8 });
+    [m.map, m.normalMap].forEach(tx => { if (tx) { tx.center.set(.5, .5); tx.rotation = Math.PI / 2; } });
+    return (cacheTelha[cor] = m);
+  }
 
-  // Fachada: parede texturizada com grade de janelas; o emissiveMap acende as janelas à noite
+  // Fachada: parede com textura (tijolo, reboco, concreto, madeira ou vidro) e janelas
+  // com moldura, vidro e reflexo; o emissiveMap acende as janelas à noite
+  const PAREDES = { tijolo: { rep: 2, tingir: 0 }, reboco: { rep: 1, tingir: 1 }, concreto: { rep: 1, tingir: .45 }, madeira: { rep: 1, tingir: 0 } };
   const cacheFachada = {};
   function fachada(cor, cols, linhas, opc = {}) {
-    const k = [cor, cols, linhas, opc.vidro, opc.parede].join('|');
+    const parede = opc.parede || 'reboco', vidro = opc.vidro || '#7FA9C4';
+    const k = [cor, cols, linhas, vidro, parede].join('|');
     if (cacheFachada[k]) return cacheFachada[k];
-    const W = 128, H = 128, cortina = opc.parede === 'vidro';
-    const janelas = (ctx, acesa) => {
+    const cortina = parede === 'vidro', cfg = PAREDES[parede];
+    const janelas = (ctx, W, modo) => {
       for (let i = 0; i < cols; i++) for (let j = 0; j < linhas; j++) {
-        const x = W * (i + (cortina ? .04 : .22)) / cols, y = H * (j + (cortina ? .06 : .2)) / linhas;
-        const w = W * (cortina ? .92 : .56) / cols, h = H * (cortina ? .82 : .5) / linhas;
-        if (acesa) { ctx.fillStyle = ((i * 7 + j * 5) % 4) ? '#FFD27A' : '#000'; ctx.fillRect(x, y, w, h); continue; }
-        if (!cortina) { ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(x - 2, y - 2, w + 4, h + 4); } // moldura
-        ctx.fillStyle = opc.vidro || '#9FD3F0'; ctx.fillRect(x, y, w, h);
-        ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.beginPath(); ctx.moveTo(x, y + h); ctx.lineTo(x + w * .45, y); ctx.lineTo(x + w * .7, y); ctx.lineTo(x + w * .25, y + h); ctx.fill();
-        if (!cortina) { ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(x - 2, y + h + 2, w + 4, Math.max(2, h * .1)); } // peitoril
+        const x = W * (i + (cortina ? .03 : .24)) / cols, y = W * (j + (cortina ? .04 : .2)) / linhas;
+        const w = W * (cortina ? .94 : .52) / cols, h = W * (cortina ? .9 : .52) / linhas, m = W / 100;
+        if (modo === 'luz') { ctx.fillStyle = ((i * 7 + j * 5) % 4) ? '#FFD27A' : '#000'; ctx.fillRect(x, y, w, h); continue; }
+        if (modo === 'relevo') { ctx.fillStyle = 'rgb(128,128,255)'; ctx.fillRect(x - m, y - m, w + 2 * m, h + 3 * m); continue; }
+        if (!cortina) { ctx.fillStyle = '#E9E6DF'; ctx.fillRect(x - m, y - m, w + 2 * m, h + 2 * m); } // moldura
+        const g = ctx.createLinearGradient(x, y, x + w * .4, y + h);
+        g.addColorStop(0, tom(vidro, .35)); g.addColorStop(.45, vidro); g.addColorStop(1, tom(vidro, -.55));
+        ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = 'rgba(255,255,255,.16)'; // reflexo do céu
+        ctx.beginPath(); ctx.moveTo(x, y + h * .75); ctx.lineTo(x + w * .55, y); ctx.lineTo(x + w * .8, y); ctx.lineTo(x, y + h); ctx.fill();
+        ctx.fillStyle = cortina ? 'rgba(40,50,60,.8)' : '#E9E6DF';             // caixilhos
+        const e = cortina ? Math.max(1, m * .5) : m * .7;
+        ctx.fillRect(x + w / 2 - e / 2, y, e, h); if (!cortina) ctx.fillRect(x, y + h * .45, w, e);
+        if (!cortina) { ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(x - m, y + h + m, w + 2 * m, m * 1.4); } // peitoril
       }
     };
-    const map = canvasTex(W, H, (ctx) => {
-      pintarParede(ctx, W, H, cor, opc.parede);
-      janelas(ctx, false);
+    const W = 512;
+    const map = canvasTex(W, W, (ctx) => {
+      if (cortina) { ctx.fillStyle = tom(cor, -.3); ctx.fillRect(0, 0, W, W); }
+      else if (cfg && ladrilhar(ctx, parede, 'cor', 0, 0, W, W, cfg.rep)) {
+        if (cfg.tingir) { ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = cfg.tingir; ctx.fillStyle = cor; ctx.fillRect(0, 0, W, W); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+      } else pintarParede(ctx, W, W, cor, parede);
+      janelas(ctx, W, 'cor');
     });
-    const emissiveMap = canvasTex(W, H, (ctx) => { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); janelas(ctx, true); });
-    const lateral = new THREE.MeshStandardMaterial({ map, emissiveMap, emissive: 0xffffff, emissiveIntensity: 0, roughness: .8 });
+    const normalMap = canvasTex(256, 256, (ctx) => {
+      if (cortina || !cfg || !ladrilhar(ctx, parede, 'relevo', 0, 0, 256, 256, cfg.rep)) { ctx.fillStyle = 'rgb(128,128,255)'; ctx.fillRect(0, 0, 256, 256); }
+      janelas(ctx, 256, 'relevo');
+    }, true);
+    const emissiveMap = canvasTex(256, 256, (ctx) => { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 256, 256); janelas(ctx, 256, 'luz'); });
+    const lateral = new THREE.MeshStandardMaterial({ map, normalMap, emissiveMap, emissive: 0xffffff, emissiveIntensity: 0,
+      roughness: cortina ? .18 : .88, metalness: cortina ? .35 : 0 });
     materiaisNoturnos.push(lateral);
+    if (cortina) materiaisReflexo.push(lateral);
     const topo = mat(tom(cor, -.1));
     return (cacheFachada[k] = [lateral, lateral, topo, topo, lateral, lateral]);
   }
@@ -151,10 +220,10 @@ const Cena = (() => {
     ipe: new THREE.MeshStandardMaterial({ color: '#4FA64C', flatShading: true, roughness: .9 }),
   };
   const ESTACOES = {
-    verao: { copa: '#3F9A45', clara: '#5DB956', pinho: '#2C7A4B', grama: '#5FAE45' },
-    outono: { copa: '#8FA43E', clara: '#C9A23D', pinho: '#3B7A4E', grama: '#7AA84A' },
-    inverno: { copa: '#6E9346', clara: '#88A85A', pinho: '#3A6E4C', grama: '#8AAA55' },
-    primavera: { copa: '#4BAE4E', clara: '#7CCB5A', pinho: '#2E7D4F', grama: '#5DB847' },
+    verao: { copa: '#3F9A45', clara: '#5DB956', pinho: '#2C7A4B', grama: '#5FAE45', tinta: '#BFD0B0' },
+    outono: { copa: '#8FA43E', clara: '#C9A23D', pinho: '#3B7A4E', grama: '#7AA84A', tinta: '#CBBF8E' },
+    inverno: { copa: '#6E9346', clara: '#88A85A', pinho: '#3A6E4C', grama: '#8AAA55', tinta: '#C2B98C' },
+    primavera: { copa: '#4BAE4E', clara: '#7CCB5A', pinho: '#2E7D4F', grama: '#5DB847', tinta: '#C4D8B2' },
   };
   function arvore(tipo = 0, esc = 1) {
     const g = new THREE.Group();
@@ -175,18 +244,9 @@ const Cena = (() => {
     FOLHAS.copa.color.set(e.copa); FOLHAS.clara.color.set(e.clara); FOLHAS.pinho.color.set(e.pinho);
     // ipê-roxo floresce em junho/julho; ipê-amarelo em agosto/setembro
     FOLHAS.ipe.color.set(mesIdx === 5 || mesIdx === 6 ? '#B45FCB' : mesIdx === 7 || mesIdx === 8 ? '#F2C51C' : e.copa);
-    if (grama) {
-      const base = new THREE.Color(e.grama), tmp = new THREE.Color();
-      grama.userData.lotes.forEach((i, n) => {
-        if (grama.userData.agua[n]) return;
-        const r = Math.floor(i / LARGURA), c = i % LARGURA;
-        tmp.copy(base).offsetHSL(0, 0, ((r * 7 + c * 13) % 5 - 2) * .012);
-        grama.setColorAt(n, tmp);
-      });
-      grama.instanceColor.needsUpdate = true;
-    }
+    if (matGrama) matGrama.color.set(IMG.grama_cor ? e.tinta : e.grama);
   }
-  function calcada(g, tam = .94) { const c = caixa(tam, .03, tam, new THREE.MeshStandardMaterial({ color: '#E6E0D4', map: texPiso, roughness: .95 })); c.castShadow = false; g.add(c); }
+  function calcada(g, tam = .94) { const c = caixa(tam, .03, tam, IMG.piso_cor ? pbr('piso', 1) : new THREE.MeshStandardMaterial({ color: '#E6E0D4', map: texPiso })); c.castShadow = false; g.add(c); }
   function porta(g, d, cor = '#6B4B32', y = .03) { g.add(caixa(.12, .2, .02, cor, 0, y, d / 2 + .005)); }
   function luzPiscante(cor) {
     const m = new THREE.MeshStandardMaterial({ color: cor, emissive: cor, emissiveIntensity: 1 });
@@ -196,7 +256,7 @@ const Cena = (() => {
   /* ── Prédios ────────────────────────────────────────────────────────────── */
   // Cada construtor devolve um Group; userData.tick(t) anima partes; userData.altura posiciona a placa
   const CORES_CASA = ['#F4E1C1', '#CDE7F0', '#F6D6D6', '#E2F0CB', '#FFF1B8'];
-  const CORES_TELHA = ['#C9553F', '#3F6FB5', '#8E5A3C', '#5E8C4A'];
+  const CORES_TELHA = ['#C8643C', '#B4502F', '#9A5B3C', '#6F6A66'];
   const MODELOS = {
     prefeitura(g) {
       g.add(caixa(.92, .06, .92, '#CFC6B4')); g.add(caixa(.84, .05, .84, '#DDD5C4', 0, .06));
@@ -285,7 +345,7 @@ const Cena = (() => {
       g.userData.altura = 1;
     },
     parque(g) {
-      g.add(caixa(.96, .04, .96, '#58B04F'));
+      g.add(caixa(.96, .04, .96, IMG.grama_cor ? pbr('grama', 1, 1, { color: '#DDF5C8' }) : mat('#58B04F')));
       g.add(caixa(.96, .045, .14, '#E8D8A8')); g.add(caixa(.14, .045, .96, '#E8D8A8'));
       g.add(cilindro(.16, .18, .08, '#9AA3AE', 0, .04, 0, 20));
       g.add(cilindro(.14, .14, .02, mat('#5EC4F0', { emissive: '#0E3A55' }), 0, .1, 0, 20));
@@ -460,7 +520,7 @@ const Cena = (() => {
       g.userData.altura = 1.3;
     },
     ecoponto(g) {
-      g.add(caixa(.94, .04, .94, new THREE.MeshStandardMaterial({ color: '#BDBDBD', map: texPiso })));
+      g.add(caixa(.94, .04, .94, IMG.concreto_cor ? pbr('concreto', 1, 1, { color: '#D8D8D8' }) : mat('#BDBDBD')));
       const cores = ['#1E63C4', '#D32F2F', '#2E7D32', '#F9C80E', '#6D4C41']; // papel, plástico, vidro, metal, orgânico
       cores.forEach((c, k) => { g.add(caixa(.12, .2, .14, c, -.32 + k * .16, .04, .25)); g.add(caixa(.13, .03, .15, tom(c, -.25), -.32 + k * .16, .24, .25)); });
       g.add(caixa(.5, .32, .32, fachada('#7CB342', 2, 1, { parede: 'madeira' }), -.1, .04, -.2));
@@ -495,7 +555,7 @@ const Cena = (() => {
       g.userData.altura = .3;
     },
     praca(g) {
-      const piso = caixa(.98, .03, .98, new THREE.MeshStandardMaterial({ map: texPedra, roughness: .9 })); piso.castShadow = false; g.add(piso);
+      const piso = caixa(.98, .03, .98, IMG.pedra_cor ? pbr('pedra', 1) : new THREE.MeshStandardMaterial({ map: texPedra })); piso.castShadow = false; g.add(piso);
       g.add(cilindro(.14, .16, .07, '#B0BEC5', 0, .03, 0, 20));
       g.add(cilindro(.12, .12, .02, mat('#4FC3F7', { emissive: '#06425E' }), 0, .09, 0, 20));
       const jato = cilindro(.015, .03, .16, mat('#E1F5FE', { transparent: true, opacity: .8 }), 0, .09, 0, 8); g.add(jato);
@@ -569,67 +629,59 @@ const Cena = (() => {
 
   /* ── Terreno ────────────────────────────────────────────────────────────── */
   function montarTerreno() {
-    // ilha: terra + borda de grama
-    scene.add(caixa(LARGURA + .3, 1.2, ALTURA + .3, '#8A5A3B', 0, -1.32));
-    scene.add(caixa(LARGURA + .3, .12, ALTURA + .3, '#5FA348', 0, -.2));
+    // ilha: bloco de terra sob o mapa
+    scene.add(caixa(LARGURA, 1.3, ALTURA, IMG.terra_cor ? pbr('terra', 6, .5) : mat('#8A5A3B'), 0, -1.4));
     const matriz = new THREE.Object3D();
     const lotes = { grama: [], agua: [], rua: [], ponte: [] };
     s.mapa.forEach((l, i) => lotes[l && lotes[l.tipo] ? l.tipo : 'grama'].push(i));
 
-    // grama: textura de ruído (tufos) tingida pela cor da estação
-    const texGrama = canvasTex(64, 64, (ctx) => {
-      ctx.fillStyle = '#D2D2D2'; ctx.fillRect(0, 0, 64, 64);
-      for (let k = 0; k < 420; k++) {
-        const v = 160 + Math.floor(Math.random() * 80);
-        ctx.fillStyle = `rgb(${v},${v},${v})`; ctx.fillRect(Math.random() * 64, Math.random() * 64, 2, 3);
-      }
+    // grama: uma só superfície com coordenadas de textura do mundo (sem repetição lote a lote);
+    // barrancos de terra nas bordas da ilha e nas margens do rio
+    const pos = [], nor = [], uv = [], idTopo = [], idLado = [];
+    const quad = (pts, n, uvs, lista) => {
+      const k = pos.length / 3;
+      pts.forEach((p, j) => { pos.push(...p); nor.push(...n); uv.push(...uvs[j]); });
+      lista.push(k, k + 1, k + 2, k, k + 2, k + 3);
+    };
+    const ehAgua = (r, c) => r >= 0 && r < ALTURA && c >= 0 && c < LARGURA && s.mapa[r * LARGURA + c] && ['agua', 'ponte'].includes(s.mapa[r * LARGURA + c].tipo);
+    const fora = (r, c) => r < 0 || r >= ALTURA || c < 0 || c >= LARGURA;
+    const E = 4; // unidades de mundo por repetição da textura de grama
+    lotes.grama.forEach(i => {
+      const r = Math.floor(i / LARGURA), c = i % LARGURA;
+      const x0 = posX(c) - .5, x1 = x0 + 1, z0 = posZ(r) - .5, z1 = z0 + 1, b = -.1;
+      quad([[x0, 0, z0], [x0, 0, z1], [x1, 0, z1], [x1, 0, z0]], [0, 1, 0], [[x0 / E, -z0 / E], [x0 / E, -z1 / E], [x1 / E, -z1 / E], [x1 / E, -z0 / E]], idTopo);
+      const barranco = (rr, cc) => ehAgua(rr, cc) || fora(rr, cc);
+      if (barranco(r + 1, c)) quad([[x0, 0, z1], [x0, b, z1], [x1, b, z1], [x1, 0, z1]], [0, 0, 1], [[x0, 0], [x0, -.05], [x1, -.05], [x1, 0]], idLado);
+      if (barranco(r - 1, c)) quad([[x1, 0, z0], [x1, b, z0], [x0, b, z0], [x0, 0, z0]], [0, 0, -1], [[x1, 0], [x1, -.05], [x0, -.05], [x0, 0]], idLado);
+      if (barranco(r, c + 1)) quad([[x1, 0, z1], [x1, b, z1], [x1, b, z0], [x1, 0, z0]], [1, 0, 0], [[z1, 0], [z1, -.05], [z0, -.05], [z0, 0]], idLado);
+      if (barranco(r, c - 1)) quad([[x0, 0, z0], [x0, b, z0], [x0, b, z1], [x0, 0, z1]], [-1, 0, 0], [[z0, 0], [z0, -.05], [z1, -.05], [z1, 0]], idLado);
     });
-    const lotesGrama = lotes.grama.concat(lotes.agua);
-    grama = new THREE.InstancedMesh(new THREE.BoxGeometry(1, .1, 1), new THREE.MeshStandardMaterial({ map: texGrama, roughness: 1 }), lotesGrama.length);
-    grama.receiveShadow = true;
-    grama.userData = { lotes: lotesGrama, agua: [] };
-    lotesGrama.forEach((i, n) => {
-      const agua = s.mapa[i] && s.mapa[i].tipo === 'agua';
-      grama.userData.agua[n] = agua;
-      matriz.position.set(posX(i % LARGURA), agua ? -.2 : -.05, posZ(Math.floor(i / LARGURA))); matriz.updateMatrix();
-      grama.setMatrixAt(n, matriz.matrix);
-      grama.setColorAt(n, new THREE.Color(agua ? '#C9B48A' : '#86CB66'));
-    });
-    scene.add(grama);
+    const geoGrama = new THREE.BufferGeometry();
+    geoGrama.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geoGrama.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+    geoGrama.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geoGrama.setIndex(idTopo.concat(idLado));
+    geoGrama.addGroup(0, idTopo.length, 0); geoGrama.addGroup(idTopo.length, idLado.length, 1);
+    matGrama = IMG.grama_cor ? pbr('grama', 1, 1, { color: '#FFFFFF', roughness: 1 }) : mat('#6FB14F');
+    grama = new THREE.Mesh(geoGrama, [matGrama, IMG.terra_cor ? pbr('terra', 1, 1) : mat('#8A5A3B')]);
+    grama.receiveShadow = true; scene.add(grama);
 
-    // água com textura de ondinhas que desliza
-    texAgua = canvasTex(64, 64, (ctx) => {
-      ctx.fillStyle = '#3FA7DE'; ctx.fillRect(0, 0, 64, 64);
-      ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 2;
-      [[8, 14], [36, 30], [14, 48]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 7, y - 4, x + 14, y); ctx.stroke(); });
-    });
-    texAgua.wrapS = texAgua.wrapT = THREE.RepeatWrapping;
-    const agua = new THREE.InstancedMesh(new THREE.BoxGeometry(1, .08, 1),
-      new THREE.MeshStandardMaterial({ map: texAgua, transparent: true, opacity: .9, roughness: .2, metalness: .1 }), lotes.agua.length + lotes.ponte.length);
+    // água: textura de ondas que desliza, com relevo e reflexo do céu
+    const matAgua = IMG.agua_cor ? pbr('agua', 1, 1, { color: '#7FA9C2', transparent: true, opacity: .93, roughness: .1, metalness: .1 })
+      : new THREE.MeshStandardMaterial({ color: '#3FA7DE', transparent: true, opacity: .9, roughness: .2 });
+    texAgua = [matAgua.map, matAgua.normalMap].filter(Boolean);
+    materiaisReflexo.push(matAgua);
+    const agua = new THREE.InstancedMesh(new THREE.BoxGeometry(1, .08, 1), matAgua, lotes.agua.length + lotes.ponte.length);
     agua.receiveShadow = true;
     lotes.agua.concat(lotes.ponte).forEach((i, n) => {
       matriz.position.set(posX(i % LARGURA), -.1, posZ(Math.floor(i / LARGURA))); matriz.updateMatrix(); agua.setMatrixAt(n, matriz.matrix);
     });
     scene.add(agua);
 
-    // ruas: faixa central tracejada, girada nos trechos verticais; cruzamento com faixa de pedestres
-    const texRua = canvasTex(128, 128, (ctx) => {
-      ctx.fillStyle = '#C9CDD3'; ctx.fillRect(0, 0, 128, 128);                       // calçada
-      ctx.fillStyle = '#B5BAC2'; for (let x = 0; x < 128; x += 16) { ctx.fillRect(x, 0, 1, 13); ctx.fillRect(x, 115, 1, 13); }
-      ctx.fillStyle = '#8D939C'; ctx.fillRect(0, 12, 128, 3); ctx.fillRect(0, 113, 128, 3); // meio-fio
-      ctx.fillStyle = '#4A515C'; ctx.fillRect(0, 15, 128, 98);                       // asfalto
-      for (let k = 0; k < 500; k++) { const v = 60 + Math.random() * 40; ctx.fillStyle = `rgb(${v},${v + 4},${v + 10})`; ctx.fillRect(Math.random() * 128, 15 + Math.random() * 98, 1.5, 1.5); }
-      ctx.fillStyle = '#F2D20F'; ctx.fillRect(0, 61, 128, 2); ctx.fillRect(0, 65, 128, 2); // faixa dupla amarela
-      ctx.fillStyle = '#EDEDED'; ctx.fillRect(10, 37, 34, 2); ctx.fillRect(74, 37, 34, 2); ctx.fillRect(10, 89, 34, 2); ctx.fillRect(74, 89, 34, 2);
-    });
-    const texCruz = canvasTex(64, 64, (ctx) => {
-      ctx.fillStyle = '#4E5663'; ctx.fillRect(0, 0, 64, 64);
-      ctx.fillStyle = '#F4F4F4'; for (let k = 0; k < 6; k++) { ctx.fillRect(10 + k * 8, 2, 4, 8); ctx.fillRect(10 + k * 8, 54, 4, 8); ctx.fillRect(2, 10 + k * 8, 8, 4); ctx.fillRect(54, 10 + k * 8, 8, 4); }
-    });
-    matRua = new THREE.MeshStandardMaterial({ map: texRua, roughness: .9 });
-    matCruz = new THREE.MeshStandardMaterial({ map: texCruz, roughness: .9 });
+    // ruas: asfalto, calçadas de piso, meio-fio e pintura; girada nos trechos verticais
+    matRua = materialRua(false); matCruz = materialRua(true);
     const ruas = lotes.rua.filter(i => !(Math.floor(i / LARGURA) === LINHA_RUA && i % LARGURA === COLUNA_RUA));
-    const rua = new THREE.InstancedMesh(new THREE.BoxGeometry(1, .1, 1), new THREE.MeshStandardMaterial({ map: texRua, roughness: .9 }), ruas.length);
+    const rua = new THREE.InstancedMesh(new THREE.BoxGeometry(1, .1, 1), matRua, ruas.length);
     rua.receiveShadow = true;
     ruas.forEach((i, n) => {
       const r = Math.floor(i / LARGURA);
@@ -637,14 +689,14 @@ const Cena = (() => {
       rua.setMatrixAt(n, matriz.matrix);
     });
     scene.add(rua);
-    const cruz = caixa(1, .1, 1, new THREE.MeshStandardMaterial({ map: texCruz }), posX(COLUNA_RUA), -.1, posZ(LINHA_RUA));
+    const cruz = caixa(1, .1, 1, matCruz, posX(COLUNA_RUA), -.1, posZ(LINHA_RUA));
     cruz.castShadow = false; scene.add(cruz);
 
     // pontes de madeira com guarda-corpo
     lotes.ponte.forEach(i => {
       const r = Math.floor(i / LARGURA), c = i % LARGURA, g = new THREE.Group();
       const horizontal = r === LINHA_RUA;
-      g.add(caixa(1, .08, .8, '#A0774F', 0, -.04));
+      g.add(caixa(1, .08, .8, IMG.madeira_cor ? pbr('madeira', 1) : mat('#A0774F'), 0, -.04));
       g.add(caixa(1, .12, .04, '#7A5134', 0, .04, .42)); g.add(caixa(1, .12, .04, '#7A5134', 0, .04, -.42));
       g.position.set(posX(c), 0, posZ(r)); g.rotation.y = horizontal ? 0 : Math.PI / 2;
       scene.add(g);
@@ -665,6 +717,50 @@ const Cena = (() => {
     // plano invisível para descobrir o lote clicado
     plano = new THREE.Mesh(new THREE.PlaneGeometry(LARGURA, ALTURA), new THREE.MeshBasicMaterial({ visible: false }));
     plano.rotation.x = -Math.PI / 2; scene.add(plano);
+  }
+
+  function materialRua(cruzamento) {
+    const W = 1024, calc = 112, guia = 12;
+    const faixas = (ctx, S, modo) => { // modo 'cor' pinta; 'relevo' marca a tinta como superfície lisa
+      const k = S / W, liso = 'rgb(128,128,255)';
+      const pinta = (cor, x, y, w, h) => { ctx.fillStyle = modo === 'cor' ? cor : liso; ctx.fillRect(x * k, y * k, w * k, h * k); };
+      if (cruzamento) {
+        for (let n = 0; n < 9; n++) {
+          const p = 170 + n * 76;
+          pinta('rgba(240,240,236,.92)', p, 20, 40, 120); pinta('rgba(240,240,236,.92)', p, W - 140, 40, 120);
+          pinta('rgba(240,240,236,.92)', 20, p, 120, 40); pinta('rgba(240,240,236,.92)', W - 140, p, 120, 40);
+        }
+        return;
+      }
+      pinta('#E2B71A', 0, W / 2 - 16, W, 9); pinta('#E2B71A', 0, W / 2 + 7, W, 9);       // faixa dupla amarela
+      for (let x = 40; x < W; x += 260) { pinta('rgba(240,240,236,.9)', x, 300, 150, 8); pinta('rgba(240,240,236,.9)', x, W - 308, 150, 8); }
+    };
+    const cor = canvasTex(W, W, (ctx) => {
+      if (!ladrilhar(ctx, 'asfalto', 'cor', 0, 0, W, W, 1)) { ctx.fillStyle = '#3A3D42'; ctx.fillRect(0, 0, W, W); }
+      if (!cruzamento) {
+        [[0, 0], [0, W - calc]].forEach(([x, y]) => {
+          ctx.save(); ctx.beginPath(); ctx.rect(x, y, W, calc); ctx.clip();
+          for (let px = 0; px < W; px += calc * 2) ladrilhar(ctx, 'piso', 'cor', px, y - calc / 2, calc * 2, calc * 2, 1);
+          ctx.restore();
+        });
+        ctx.fillStyle = '#A8A6A0'; ctx.fillRect(0, calc, W, guia); ctx.fillRect(0, W - calc - guia, W, guia); // meio-fio
+        ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(0, calc + guia, W, 4); ctx.fillRect(0, W - calc - guia - 4, W, 4);
+      }
+      faixas(ctx, W, 'cor');
+    });
+    const relevo = canvasTex(512, 512, (ctx) => {
+      if (!ladrilhar(ctx, 'asfalto', 'relevo', 0, 0, 512, 512, 1)) { ctx.fillStyle = 'rgb(128,128,255)'; ctx.fillRect(0, 0, 512, 512); }
+      if (!cruzamento) {
+        const c2 = calc / 2;
+        [[0, 0], [0, 512 - c2]].forEach(([x, y]) => {
+          ctx.save(); ctx.beginPath(); ctx.rect(x, y, 512, c2); ctx.clip();
+          for (let px = 0; px < 512; px += c2 * 2) ladrilhar(ctx, 'piso', 'relevo', px, y - c2 / 2, c2 * 2, c2 * 2, 1);
+          ctx.restore();
+        });
+      }
+      faixas(ctx, 512, 'relevo');
+    }, true);
+    return new THREE.MeshStandardMaterial({ map: cor, normalMap: relevo, roughness: .92 });
   }
 
   /* ── Bairros bloqueados ─────────────────────────────────────────────────── */
@@ -848,6 +944,17 @@ const Cena = (() => {
     luaDisco.scale.set(6, 6, 1);
   }
 
+  // O céu atual vira mapa de ambiente: vidros, água e metais refletem o dia, o entardecer e a noite
+  function atualizarAmbiente() {
+    if (Math.abs(diaAtual - envDia) < .08 && envChuva === !!s.chuva) return;
+    envDia = diaAtual; envChuva = !!s.chuva;
+    if (!envCena) { envCena = new THREE.Scene(); envCena.add(new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), ceuMat)); }
+    const novo = pmrem.fromScene(envCena, 0, .1, 100);
+    if (envAlvo) envAlvo.dispose();
+    envAlvo = novo;
+    materiaisReflexo.forEach(m => { if (!m.envMap) m.needsUpdate = true; m.envMap = novo.texture; });
+  }
+
   const lerpCor = (a, b, k) => new THREE.Color(a).lerp(new THREE.Color(b), k);
   const suave = x => x * x * (3 - 2 * x);
   // Ajusta toda a iluminação para a hora h (0–24)
@@ -855,6 +962,7 @@ const Cena = (() => {
     const ang = (h - 6) / 13 * Math.PI;          // sol nasce às 6h e se põe às 19h
     const elev = Math.sin(ang);
     const dia = suave(Math.max(0, Math.min(1, (elev + .06) / .4)));
+    diaAtual = dia;
     const crep = Math.max(0, 1 - Math.abs(elev) / .32) * (h > 4 && h < 21 ? 1 : 0);
     const nublado = s.chuva ? 1 : 0;
     const luzes = Math.max(0, Math.min(1, 1 - dia * (nublado ? 1.1 : 1.7)));
@@ -874,7 +982,7 @@ const Cena = (() => {
     solDisco.visible = solDisco.visible && !nublado;
     ceuMat.uniforms.topo.value.copy(topo); ceuMat.uniforms.base.value.copy(base);
     scene.fog.color.copy(base);
-    hemi.intensity = .32 + .45 * dia;
+    hemi.intensity = .3 + .42 * dia;
     hemi.color.copy(lerpCor('#4A5E96', '#D6EEFF', dia)); hemi.groundColor.copy(lerpCor('#1A2233', '#5E7F45', dia));
     estrelas.material.opacity = 1 - dia;
     materiaisNoturnos.forEach(m => { m.emissiveIntensity = m.userData.farol ? luzes * 1.8 : luzes * .95; });
@@ -918,7 +1026,7 @@ const Cena = (() => {
   }
 
   function atualizar() {
-    if (!scene) return;
+    if (!scene || !pronto) return;
     s.mapa.forEach((l, i) => {
       const tipo = l && MODELOS[l.tipo] ? l.tipo : null;
       const chave = tipo === 'ruaLocal' ? tipo + orientacaoRua(i) : tipo;
@@ -1001,13 +1109,14 @@ const Cena = (() => {
       hora = (hora + dt * (hora >= 6 && hora < 19 ? 13 / 120 : 11 / 45)) % 24;
     }
     const luzes = aplicarHora(hora);
+    atualizarAmbiente();
     const hh = Math.floor(hora), mm = Math.floor((hora % 1) * 60);
     relogioEl.textContent = `${hora >= 6 && hora < 19 ? '☀️' : '🌙'} ${String(hh).padStart(2, '0')}:${String(mm - mm % 10).padStart(2, '0')}`;
 
     sincronizarCarros(); moverCarros(dt);
     sincronizarPessoas(); moverPessoas(dt, t, luzes);
     if (!reduzido) {
-      texAgua.offset.set(t * .05, t * .03);
+      texAgua.forEach((tx, k) => tx.offset.set(t * (k ? -.03 : .05), t * (k ? .04 : .03)));
       nuvens.forEach(n => { n.position.x += n.userData.v * dt; if (n.position.x > LARGURA) n.position.x = -LARGURA; });
     }
     Object.entries(predios).forEach(([i, g]) => {
@@ -1059,6 +1168,7 @@ const Cena = (() => {
     camera.updateProjectionMatrix();
   }
   function loteNoPonto(cx, cy) {
+    if (!pronto) return -1;
     const b = cv.getBoundingClientRect();
     const mouse = new THREE.Vector2(((cx - b.left) / b.width) * 2 - 1, -((cy - b.top) / b.height) * 2 + 1);
     const ray = new THREE.Raycaster(); ray.setFromCamera(mouse, camera);
@@ -1118,9 +1228,6 @@ const Cena = (() => {
       n.userData.v = .35 + (k % 3) * .12; nuvens.push(n); scene.add(n);
     }
 
-    texturasBase();
-    montarTerreno();
-    montarChuva();
     destaque = new THREE.Mesh(new THREE.BoxGeometry(.98, .02, .98), new THREE.MeshBasicMaterial({ color: '#FFFFFF', transparent: true, opacity: .35, depthWrite: false }));
     destaque.visible = false; scene.add(destaque);
 
@@ -1174,8 +1281,20 @@ const Cena = (() => {
       } else if ((e.key === 'Enter' || e.key === ' ') && cursor >= 0) { e.preventDefault(); aoClicar(cursor); }
     });
 
-    atualizar();
-    requestAnimationFrame(quadro);
+    anisoMax = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    pmrem = new THREE.PMREMGenerator(renderer);
+    const aviso = document.createElement('div');
+    aviso.className = 'carregando-mapa'; aviso.textContent = 'Carregando texturas…';
+    cv.parentElement.appendChild(aviso);
+    carregarImagens().then(() => {
+      texturasBase();
+      montarTerreno();
+      montarChuva();
+      pronto = true;
+      aviso.remove();
+      atualizar();
+      requestAnimationFrame(quadro);
+    });
     return true;
   }
   function anunciar() {

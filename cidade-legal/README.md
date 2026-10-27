@@ -14,6 +14,8 @@ O tempo passa de verdade: o sol cruza o céu, entardece e anoitece (janelas e po
 | `jogo.js` | Regras, economia, interface e salvamento |
 | `cena3d.js` | Cidade em 3D (modelos dos prédios, câmera, trânsito, dia/noite) |
 | `isometrico.js` | Versão 2.5D em canvas, usada quando não há WebGL |
+| `texturas.js` | Texturas PBR (cor + relevo) embutidas, geradas por `ferramentas/gerar_texturas.py` |
+| `texturas/` | As mesmas texturas em JPG: grama, asfalto, piso, tijolo, reboco, concreto, telha, madeira, pedra portuguesa, terra e água |
 | `vendor/` | Three.js r147 e OrbitControls (licença MIT) |
 
 ## Ciclo do jogo
@@ -54,6 +56,10 @@ O tempo passa de verdade: o sol cruza o céu, entardece e anoitece (janelas e po
 | 🎭 Centro Cultural | Direitos autorais (70 anos, ECAD, citação, paródia) |
 
 Também há **enfeites** sem licença (🌳 árvore, 🌷 canteiro, ⛲ praça com calçadão de pedra portuguesa e 🛣️ rua — prédios colados em rua rendem +20%) e um menu de construção por categorias.
+
+## Texturas
+
+As texturas são geradas por computador (`python3 ferramentas/gerar_texturas.py`), em 1024 px, emendam sem costura e têm mapa de relevo. Para usar **fotos reais** (por exemplo, do Poly Haven ou ambientCG, ambos CC0), substitua os arquivos em `texturas/` mantendo os nomes (`<nome>_cor.jpg` e `<nome>_relevo.jpg`, normal map no padrão OpenGL) e rode `python3 ferramentas/gerar_texturas.py --so-empacotar`.
 
 ## Clima e eventos
 
