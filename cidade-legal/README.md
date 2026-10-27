@@ -16,7 +16,7 @@ O tempo passa de verdade: o sol cruza o céu, entardece e anoitece (janelas e po
 | `isometrico.js` | Versão 2.5D em canvas, usada quando não há WebGL |
 | `texturas.js` | Texturas PBR (cor + relevo) embutidas, geradas por `ferramentas/gerar_texturas.py` |
 | `texturas/` | As mesmas texturas em JPG: grama, asfalto, piso, tijolo, reboco, concreto, telha, madeira, pedra portuguesa, terra e água |
-| `vendor/` | Three.js r147 e OrbitControls (licença MIT) |
+| `vendor/` | Three.js r147, OrbitControls e pós-processamento — SSAO e Bloom (licença MIT) |
 
 ## Ciclo do jogo
 
@@ -66,7 +66,16 @@ A partir de 60 habitantes, a cidade precisa de **água, esgoto e energia** (cada
 
 Também há **enfeites** sem licença (🌳 árvore, 🌷 canteiro, ⛲ praça com calçadão de pedra portuguesa, 🏞️ lagoa com patos e 🚏 ponto de ônibus; e, na infraestrutura, 🛣️ rua e 🌉 ponte — prédios colados em rua rendem +20%) e um menu de construção por categorias.
 
+## Mais jeitos de jogar
+
+- **Ampliar prédios** (nível 1 a 3): cada nível soma 50% aos efeitos e deixa o prédio mais alto.
+- **Projetos de lei**: com a Câmara Municipal construída, chegam projetos para sancionar ou vetar (horário do comércio, fila no banco, aplicativos de transporte, IPTU Verde, Lei do Silêncio...). Lei inconstitucional sancionada acaba derrubada no STF.
+- **Voz da cidade**: os moradores comentam o que falta, o que melhorou e postam um "Você sabia?" com um ponto de lei.
+- **Barcos no rio e pássaros** cruzando o céu.
+
 ## Texturas
+
+No mapa, ✨ liga os **gráficos realistas**: sombras de contato nos cantos (SSAO) e brilho das luzes à noite (bloom), com tons de cinema; em aparelho lento eles se desligam sozinhos. As fachadas têm desgaste (sujeira junto ao chão e escorridos sob as janelas).
 
 As texturas são geradas por computador (`python3 ferramentas/gerar_texturas.py`), em 1024 px, emendam sem costura e têm mapa de relevo. Para usar **fotos reais** (por exemplo, do Poly Haven ou ambientCG, ambos CC0), substitua os arquivos em `texturas/` mantendo os nomes (`<nome>_cor.jpg` e `<nome>_relevo.jpg`, normal map no padrão OpenGL) e rode `python3 ferramentas/gerar_texturas.py --so-empacotar`.
 
@@ -80,6 +89,7 @@ Todo o conteúdo jurídico está em `dados.js`:
 
 - **Perguntas de licença** → `PREDIOS.<prédio>.licenca`: `{ p, ops, c, exp }` (`c` = índice da alternativa correta).
 - **Bairros** → `BAIRROS`: `{ id, nome, icone, preco, r0, r1, c0, c1, lei: { titulo, pontos, base } }`.
+- **Projetos de lei** → `PROJETOS_LEI`: `{ id, titulo, autor, texto, constitucional, efeito, exp, base }`.
 - **Eventos** → `EVENTOS` (`dados.js`), sorteados em `sortearClimaEEventos` (`jogo.js`).
 - **Casos mensais** → `CASOS`: `{ predio, titulo, quem, texto, ops, c, exp, base }`.
 - **Novo prédio** → nova chave em `PREDIOS` com `custo`, `nivel` (título mínimo), `efeito`, `aula` e `licenca`, mais um modelo em `MODELOS` (`cena3d.js`) e em `PREDIOS_ISO` (`isometrico.js`).

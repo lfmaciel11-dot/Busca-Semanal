@@ -171,9 +171,16 @@ function ganharXp(qtd) {
 }
 
 /* ── Economia e indicadores ───────────────────────────────────────────────── */
+// Prédios podem ser ampliados até o nível 3: cada nível soma 50% aos efeitos e 30% à manutenção
+const MAX_NIVEL = 3;
+const multNivel = l => 1 + .5 * (((l && l.nivel) || 1) - 1);
+const multManut = l => 1 + .3 * (((l && l.nivel) || 1) - 1);
+const ampliavel = tipo => PREDIOS[tipo] && PREDIOS[tipo].cat !== 'enfeite' && !['prefeitura', 'ruaLocal', 'ponteLocal', 'iluminacao'].includes(tipo);
+const custoAmpliar = l => Math.round(PREDIOS[l.tipo].custo * .8 * (l.nivel || 1));
+
 function rendaDoLote(i) {
   const p = PREDIOS[s.mapa[i].tipo];
-  let r = p.efeito.renda * (beiraRua(i) ? 1.2 : 1);
+  let r = p.efeito.renda * multNivel(s.mapa[i]) * (beiraRua(i) ? 1.2 : 1) * (1 + (s.bonusRenda || 0));
   if (conta(s, 'fazenda')) r *= 1.2;
   return r * (0.6 + s.felicidade / 125); // cidadãos felizes pagam em dia
 }
@@ -184,9 +191,10 @@ function calcular() {
   s.mapa.forEach(t => {
     if (!t || !PREDIOS[t.tipo]) return;
     const p = PREDIOS[t.tipo];
-    manut += p.efeito.manutencao; popCap += p.efeito.pop;
-    if (p.cat === 'enfeite') felEnfeites += p.efeito.felicidade; else felBonus += p.efeito.felicidade;
-    if (p.servico) servicos[p.servico] = (servicos[p.servico] || 0) + 1;
+    const m = multNivel(t);
+    manut += p.efeito.manutencao * multManut(t); popCap += p.efeito.pop * m;
+    if (p.cat === 'enfeite') felEnfeites += p.efeito.felicidade; else felBonus += p.efeito.felicidade * m;
+    if (p.servico) servicos[p.servico] = (servicos[p.servico] || 0) + m; // nível maior atende mais gente
   });
   // Serviços públicos insuficientes reduzem a felicidade (cada unidade atende ~60 pessoas)
   const faltas = [];
@@ -200,7 +208,7 @@ function calcular() {
   s.felicidade = fel; s.pop = pop;
   let renda = 0;
   s.mapa.forEach((t, i) => { if (t && PREDIOS[t.tipo] && PREDIOS[t.tipo].efeito.renda) renda += rendaDoLote(i); });
-  return { renda: Math.round(renda), manut, pop, fel, faltas };
+  return { renda: Math.round(renda), manut: Math.round(manut), pop, fel, faltas };
 }
 
 /* ── Renderização ─────────────────────────────────────────────────────────── */
@@ -402,6 +410,7 @@ function renderVade() {
 }
 
 function renderDiario() {
+  renderVoz();
   $('diario').innerHTML = s.diario.slice(0, 12).map(d => `<li><span class="d-mes">${nomeMes(d.mes, true)}/${anoDe(d.mes)}</span> ${d.texto}</li>`).join('');
 }
 
@@ -518,7 +527,7 @@ function construirEm(i) {
   s.mapa[i] = { tipo };
   ultimoConstruido = i;
   som('construir');
-  if (conta(s, tipo) === 1) registrar(`🏗️ Inaugurado(a): <b>${p.icone} ${p.nome}</b>.`);
+  if (conta(s, tipo) === 1) { registrar(`🏗️ Inaugurado(a): <b>${p.icone} ${p.nome}</b>.`); if (p.aula) s.ultimaObra = `${p.icone} ${p.nome}`; }
   if (p.unico || s.dinheiro < p.custo) s.selecionado = null;
   verificarMissoes();
   render();
@@ -530,12 +539,26 @@ function abrirPredio(i) {
   const extra = p.efeito.renda ? `<p class="nota">💰 Este prédio rende <b>${fmt(rendaDoLote(i))}</b>/mês${beiraRua(i) ? ' (inclui +20% por estar na beira da rua)' : ''}.</p>` : '';
   abrirModal(`<div class="cab-modal" style="--cor:${p.cor}"><span class="icone-grande">${p.icone}</span>
       <div><small>${p.area}</small><h2>${p.nome}</h2></div></div>
+    ${ampliavel(tipo) ? `<div class="nivel-predio"><span>Nível ${'⭐'.repeat(s.mapa[i].nivel || 1)}${'☆'.repeat(MAX_NIVEL - (s.mapa[i].nivel || 1))}</span>
+      <small>${(s.mapa[i].nivel || 1) < MAX_NIVEL ? 'Ampliar soma +50% aos efeitos (renda, moradores, felicidade e atendimento).' : 'Nível máximo.'}</small></div>` : ''}
     ${p.aula ? htmlAula(p) : `<p class="resumo">${p.cat === 'enfeite' ? 'Enfeites deixam a cidade mais agradável: cada um soma felicidade (até um limite de +12 no total).' : 'Obra de infraestrutura da cidade.'}${p.bonus ? ' ' + p.bonus : ''}</p>`}${extra}
     <div class="botoes">
       ${tipo !== 'prefeitura' ? `<button class="btn perigo" id="m-demolir">Demolir (+${Math.floor(p.custo / 2)})</button>` : ''}
+      ${ampliavel(tipo) && (s.mapa[i].nivel || 1) < MAX_NIVEL ? `<button class="btn" id="m-ampliar" ${s.dinheiro < custoAmpliar(s.mapa[i]) ? 'disabled' : ''}>⬆️ Ampliar (💰 ${fmt(custoAmpliar(s.mapa[i]))})</button>` : ''}
       <button class="btn primario" id="m-fechar">Fechar</button>
     </div>`, cx => {
     cx.querySelector('#m-fechar').onclick = fecharModal;
+    const amp = cx.querySelector('#m-ampliar');
+    if (amp) amp.onclick = () => {
+      const custo = custoAmpliar(s.mapa[i]);
+      if (s.dinheiro < custo) return;
+      s.dinheiro -= custo;
+      s.mapa[i].nivel = (s.mapa[i].nivel || 1) + 1;
+      ultimoConstruido = i;
+      registrar(`⬆️ ${p.icone} ${p.nome} ampliado(a) para o nível ${s.mapa[i].nivel}.`);
+      fecharModal(); som('construir'); confete(30); verificarMissoes(); render();
+      flutuar(i, `−${fmt(custo)} 💰`, 'neg');
+    };
     const d = cx.querySelector('#m-demolir');
     if (d) d.onclick = () => {
       s.mapa[i] = tipo === 'ponteLocal' ? { tipo: 'agua' } : null; s.dinheiro += Math.floor(p.custo / 2);
@@ -580,11 +603,20 @@ function proximoMes() {
     if (p.expira >= s.mes) return true;
     s.reputacao = Math.max(-30, s.reputacao - 5);
     s.sequencia = 0;
+    if (p.lei) {
+      const pl = PROJETOS_LEI.find(x => x.id === p.lei);
+      s.leis[p.lei] = 'arquivado';
+      registrar(`🗄️ O projeto "<b>${pl.titulo}</b>" ficou parado na mesa do prefeito e foi arquivado.`);
+      return false;
+    }
     registrar(`😤 Um cidadão desistiu de esperar no caso "<b>${CASOS[p.caso].titulo}</b>". A cidade ficou insatisfeita.`);
     return false;
   });
 
   const novo = Math.random() < 0.85 ? gerarCaso() : null;
+  const projeto = conta(s, 'camara') && Math.random() < .45 ? gerarProjeto() : null;
+  if (projeto) setTimeout(() => toast('📜 Um projeto de lei chegou da Câmara para você sancionar ou vetar.'), 1200);
+  gerarVoz(c);
   verificarMissoes();
   render();
   const btn = $('btn-mes');
@@ -633,6 +665,93 @@ function sortearClimaEEventos(mesIdx) {
   if (s.chuva && !ev.includes('temporal')) registrar('🌧️ Mês chuvoso na cidade.');
 }
 
+function gerarProjeto() {
+  s.leis = s.leis || {};
+  if (s.pendentes.length >= MAX_PENDENTES || s.pendentes.some(p => p.lei)) return null;
+  const restantes = PROJETOS_LEI.filter(pl => !s.leis[pl.id]);
+  const tile = s.mapa.findIndex(l => l && l.tipo === 'camara');
+  if (!restantes.length || tile < 0) return null;
+  const pend = { lei: restantes[Math.floor(Math.random() * restantes.length)].id, tile, expira: s.mes + 3 };
+  s.pendentes.push(pend);
+  return pend;
+}
+
+function abrirProjeto(pend) {
+  const pl = PROJETOS_LEI.find(x => x.id === pend.lei);
+  som('clique');
+  abrirModal(`<div class="cab-modal" style="--cor:#B8862B"><span class="icone-grande">📜</span>
+      <div><small>Projeto de lei aprovado pela Câmara · autoria: ${pl.autor}</small><h2>${pl.titulo}</h2></div></div>
+    <blockquote class="fala"><b>Art. 1º</b>${pl.texto}</blockquote>
+    <p class="pergunta">Como prefeito(a), você sanciona ou veta? <small>Lembre-se: lei inconstitucional não deve ser sancionada.</small></p>
+    <div class="botoes botoes-lei"><button class="btn" id="m-vetar">🚫 Vetar</button><button class="btn primario" id="m-sancionar">✍️ Sancionar</button></div>
+    <div id="feedback"></div>`, cx => {
+    const decidir = sancionou => {
+      s.leis = s.leis || {};
+      s.pendentes = s.pendentes.filter(x => x !== pend);
+      s.leis[pl.id] = sancionou ? 'sancionada' : 'vetada';
+      const certo = sancionou === pl.constitucional;
+      let titulo;
+      if (certo) {
+        ganharXp(20); s.reputacao = Math.min(30, s.reputacao + 2);
+        if (sancionou && pl.efeito) {
+          if (pl.efeito.fel) s.reputacao = Math.min(30, s.reputacao + pl.efeito.fel);
+          if (pl.efeito.renda) s.bonusRenda = (s.bonusRenda || 0) + pl.efeito.renda;
+        }
+        titulo = sancionou ? '✅ Lei sancionada e em vigor! +20 XP' : '✅ Veto correto: o projeto era inconstitucional. +20 XP';
+        som('certo');
+      } else if (sancionou) {
+        s.leis[pl.id] = 'derrubada'; s.reputacao = Math.max(-30, s.reputacao - 4); ganharXp(5);
+        titulo = '⚖️ A lei foi questionada e o STF a declarou inconstitucional. A cidade ficou mal na foto.';
+        som('erro');
+      } else {
+        s.reputacao = Math.max(-30, s.reputacao - 2); ganharXp(5);
+        titulo = '❌ O veto não tinha base: o projeto era constitucional e a cidade perdeu uma boa lei.';
+        som('erro');
+      }
+      registrar(`📜 Projeto "<b>${pl.titulo}</b>": ${{ sancionada: 'sancionado', vetada: 'vetado', derrubada: 'sancionado e derrubado pelo STF' }[s.leis[pl.id]]}. <i>${pl.base}</i>`);
+      cx.querySelector('.botoes-lei').remove();
+      cx.querySelector('#feedback').innerHTML = `<div class="explicacao ${certo ? 'ok' : 'erro'}"><b>${titulo}</b> ${pl.exp}<small class="base">📌 ${pl.base}</small></div>
+        <div class="botoes"><button class="btn primario" id="m-ok">Continuar</button></div>`;
+      cx.querySelector('#m-ok').onclick = () => { fecharModal(); verificarMissoes(); render(); };
+      cx.querySelector('#m-ok').focus();
+    };
+    cx.querySelector('#m-vetar').onclick = () => decidir(false);
+    cx.querySelector('#m-sancionar').onclick = () => decidir(true);
+  });
+}
+
+// ── Voz da cidade: comentários dos moradores conforme o que acontece ──
+const PERFIS = ['@ana.souza', '@joao_pedro', '@tia.cida', '@marcos.bike', '@lu.santos', '@seu.ze', '@bia_estuda', '@dj.kaio', '@vovo.lurdes', '@rafa.motoboy'];
+function gerarVoz(c) {
+  const opcoes = [];
+  const falta = { agua: 'Faltou água de novo aqui no bairro 😩 #CadêAÁgua', esgoto: 'Cheiro de esgoto na rua inteira... cadê a estação de tratamento? 🤢',
+    energia: 'Mais um apagão! Precisamos de energia ⚡😡', educacao: 'Não tem vaga na escola pro meu filho 😞', saude: 'Fila enorme no posto de saúde hoje 🏥',
+    seguranca: 'Tá faltando policiamento à noite 🚓', lazer: 'Queria um parque pra levar as crianças no fim de semana 🌳', justica: 'Precisava de um fórum mais perto pra resolver meu processo ⚖️' };
+  c.faltas.forEach(k => opcoes.push(falta[k]));
+  if (s.chuva) opcoes.push('Chuva o mês inteiro ☔ pelo menos as plantas agradecem');
+  if (s.felicidade >= 75) opcoes.push(`Que cidade boa de morar! Amo ${s.nome} 💛`, 'Parabéns à prefeitura, a cidade tá linda 👏');
+  if (s.felicidade < 35) opcoes.push('Tá difícil viver nessa cidade... 😤');
+  if (s.dinheiro < 0) opcoes.push('Dizem que as contas da prefeitura estão no vermelho 👀 #LRF');
+  if ([5, 6, 7, 8].includes((s.mes - 1) % 12)) opcoes.push('Os ipês floriram! Que lindo 🌸📸');
+  if (s.ultimaObra) { opcoes.push(`Inauguraram ${s.ultimaObra} aqui perto! Finalmente 🎉`); s.ultimaObra = null; }
+  if (s.pendentes.length) opcoes.push('Já faz tempo que estou esperando atendimento na prefeitura... ⏳');
+  opcoes.push(`Bom dia, ${s.nome}! ☀️`, 'Alguém sabe se o ônibus passa no domingo? 🚌');
+  const posts = embaralhar(opcoes).slice(0, 2).map(texto => ({ quem: PERFIS[Math.floor(Math.random() * PERFIS.length)], texto }));
+  // um "Você sabia?" com um ponto de lei de uma área já liberada
+  const areas = Object.keys(PREDIOS).filter(k => PREDIOS[k].aula && s.licencas[k]);
+  if (areas.length) {
+    const a = PREDIOS[areas[Math.floor(Math.random() * areas.length)]].aula;
+    posts.push({ quem: '@prof.renata 📚', texto: 'Você sabia? ' + a.pontos[Math.floor(Math.random() * a.pontos.length)], dica: true });
+  }
+  s.voz = posts.concat(s.voz || []).slice(0, 6);
+}
+function renderVoz() {
+  const el = $('voz');
+  if (!el) return;
+  el.innerHTML = (s.voz || []).length ? s.voz.slice(0, 4).map(v => `<li class="${v.dica ? 'dica-lei' : ''}"><b>${v.quem}</b><span>${v.texto}</span></li>`).join('')
+    : '<li class="vazio">Os moradores vão comentar o que acontece na cidade a cada mês.</li>';
+}
+
 function gerarCaso() {
   if (s.pendentes.length >= MAX_PENDENTES) return null;
   const ocupados = new Set(s.pendentes.map(p => p.tile));
@@ -656,6 +775,7 @@ function gerarCaso() {
 }
 
 function abrirCaso(pend) {
+  if (pend.lei) return abrirProjeto(pend);
   const i = pend.caso, c = CASOS[i], p = PREDIOS[c.predio];
   const restam = pend.expira - s.mes;
   const ordem = embaralhar(c.ops.map((t, k) => ({ t, i: k })));
@@ -796,6 +916,14 @@ document.addEventListener('DOMContentLoaded', () => {
     $('btn-passeio').onclick = () => { const on = Mapa.passeio(); $('btn-passeio').classList.toggle('ativo', on); };
     $('btn-foto').onclick = () => { som('moeda'); Mapa.foto(`${s.nome.replace(/[^\w\-]+/g, '-').toLowerCase() || 'cidade'}.png`); toast('📸 Foto da cidade salva!'); };
   } else { $('btn-passeio').hidden = true; $('btn-foto').hidden = true; }
+  if (Mapa.graficos) {
+    $('btn-graficos').classList.toggle('ativo', Mapa.graficos());
+    $('btn-graficos').onclick = () => {
+      const on = Mapa.graficos(true);
+      $('btn-graficos').classList.toggle('ativo', on);
+      toast(on ? '✨ Gráficos realistas ligados' : '⚡ Gráficos leves (mais rápido)');
+    };
+  } else $('btn-graficos').hidden = true;
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       // provas não podem ser puladas com Esc; aulas, informações e casos ainda não respondidos sim

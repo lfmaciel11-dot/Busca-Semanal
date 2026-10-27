@@ -48,6 +48,7 @@
         <button id="btn-zoom-mais" class="btn icone" title="Aproximar" aria-label="Aproximar">＋</button>
         <button id="btn-zoom-menos" class="btn icone" title="Afastar" aria-label="Afastar">－</button>
         <button id="btn-zoom-reset" class="btn icone" title="Voltar à vista inicial" aria-label="Voltar à vista inicial">⟲</button>
+        <button id="btn-graficos" class="btn icone" title="Gráficos realistas: sombras de contato e brilho das luzes" aria-label="Alternar gráficos realistas">✨</button>
         <button id="btn-placas" class="btn icone" title="Mostrar/ocultar placas dos prédios" aria-label="Mostrar ou ocultar placas">🏷️</button>
       </div>
       <p class="ajuda-mapa"><span class="mouse">🖱️ Arraste para girar · role para zoom · botão direito move</span><span class="toque">👆 1 dedo gira · 2 dedos zoom e movem</span></p>
@@ -70,6 +71,8 @@
 </main>
 
 <section class="diario">
+  <h2>💬 Voz da cidade</h2>
+  <ul id="voz" class="voz"></ul>
   <h2>📰 Diário Oficial</h2>
   <ul id="diario"></ul>
 </section>
@@ -87,6 +90,7 @@
 
 <script src="vendor/three.min.js"></script>
 <script src="vendor/OrbitControls.js"></script>
+<script src="vendor/pos-processamento.js"></script>
 <script src="dados.js"></script>
 <script src="isometrico.js"></script>
 <script src="texturas.js"></script>

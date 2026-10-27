@@ -171,6 +171,28 @@ const Cena = (() => {
         if (!cortina) { ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(x - m, y + h + m, w + 2 * m, m * 1.4); } // peitoril
       }
     };
+    // Desgaste: sujeira junto ao chão, sombra sob o beiral, escorridos sob as janelas e manchas
+    const envelhecer = (ctx, S, vidro) => {
+      let g = ctx.createLinearGradient(0, S, 0, S * .8);
+      g.addColorStop(0, 'rgba(55,42,30,.38)'); g.addColorStop(1, 'rgba(55,42,30,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, S * .8, S, S * .2);
+      g = ctx.createLinearGradient(0, 0, 0, S * .07);
+      g.addColorStop(0, 'rgba(0,0,0,.22)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, S, S * .07);
+      if (vidro) return;
+      for (let i = 0; i < cols; i++) for (let j = 0; j < linhas; j++) {
+        const x = S * (i + .24) / cols, y = S * (j + .2) / linhas + S * .55 / linhas, w = S * .52 / cols, h = S * .4 / linhas;
+        g = ctx.createLinearGradient(0, y, 0, y + h);
+        g.addColorStop(0, 'rgba(40,35,30,.16)'); g.addColorStop(1, 'rgba(40,35,30,0)');
+        ctx.fillStyle = g; ctx.fillRect(x + w * .15, y, w * .7, h);
+      }
+      for (let k = 0; k < 7; k++) {
+        const x = Math.random() * S, y = Math.random() * S, r = S * (.05 + Math.random() * .12);
+        g = ctx.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, `rgba(${Math.random() < .5 ? '60,50,40' : '255,255,255'},.07)`); g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+      }
+    };
     const W = 512;
     const map = canvasTex(W, W, (ctx) => {
       if (cortina) { ctx.fillStyle = tom(cor, -.3); ctx.fillRect(0, 0, W, W); }
@@ -178,6 +200,7 @@ const Cena = (() => {
         if (cfg.tingir) { ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = cfg.tingir; ctx.fillStyle = cor; ctx.fillRect(0, 0, W, W); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
       } else pintarParede(ctx, W, W, cor, parede);
       janelas(ctx, W, 'cor');
+      envelhecer(ctx, W, cortina);
     });
     const normalMap = canvasTex(256, 256, (ctx) => {
       if (cortina || !cfg || !ladrilhar(ctx, parede, 'relevo', 0, 0, 256, 256, cfg.rep)) { ctx.fillStyle = 'rgb(128,128,255)'; ctx.fillRect(0, 0, 256, 256); }
@@ -716,6 +739,52 @@ const Cena = (() => {
     },
   });
 
+  /* ── Barcos no rio e bando de pássaros ──────────────────────────────────── */
+  const barcos = [], passaros = [];
+  function montarBarcosEPassaros() {
+    const caminho = CURSO_RIO.map((c, r) => new THREE.Vector3(posX(c), 0, posZ(r)));
+    [['#FFFFFF', '#C62828', 0, 1], ['#FFD54F', '#1565C0', .55, -1]].forEach(([casco, faixa, t0, dir]) => {
+      const b = new THREE.Group(), corpo = new THREE.Group();
+      corpo.add(caixa(.32, .05, .13, casco, 0, 0, 0));
+      corpo.add(caixa(.33, .012, .135, faixa, 0, .035, 0));
+      corpo.add(caixa(.12, .06, .1, '#ECEFF1', -.04, .05, 0));
+      corpo.add(caixa(.13, .01, .11, faixa, -.04, .11, 0));
+      b.add(corpo); b.position.y = -.08; scene.add(b);
+      barcos.push({ obj: b, corpo, t: t0, dir, caminho });
+    });
+    for (let k = 0; k < 7; k++) {
+      const p = new THREE.Group();
+      const asa = x => { const a = caixa(.07, .004, .025, '#37474F', x, 0, 0); a.castShadow = false; a.geometry.translate(x > 0 ? .035 : -.035, 0, 0); a.position.x = 0; p.add(a); return a; };
+      const e = asa(1), d = asa(-1);
+      p.userData = { e, d, ang: k * .35, raio: 6 + (k % 3) * .4, alt: 3.2 + (k % 2) * .3, fase: k };
+      scene.add(p); passaros.push(p);
+    }
+  }
+  function moverBarcosEPassaros(dt, t) {
+    barcos.forEach(b => {
+      if (!reduzido) b.t = (b.t + dt * .018 * b.dir + 1) % 1;
+      const n = b.caminho.length - 1, f = b.t * n, k = Math.min(n - 1, Math.floor(f)), u = f - k;
+      const a = b.caminho[k], c = b.caminho[k + 1];
+      b.obj.position.x = a.x + (c.x - a.x) * u; b.obj.position.z = a.z + (c.z - a.z) * u;
+      b.obj.rotation.y = Math.atan2(-(c.z - a.z) * b.dir, (c.x - a.x) * b.dir);
+      b.corpo.position.y = Math.sin(t * 2 + b.dir) * .006; b.corpo.rotation.z = Math.sin(t * 1.4) * .03;
+      const r = Math.round(b.obj.position.z + ALTURA / 2 - .5), col = Math.round(b.obj.position.x + LARGURA / 2 - .5);
+      const lote = s.mapa[r * LARGURA + col];
+      b.obj.visible = !(lote && ['ponte', 'ponteLocal'].includes(lote.tipo)); // passa por baixo da ponte
+    });
+    const voando = diaAtual > .35 && !s.chuva;
+    passaros.forEach(p => {
+      p.visible = voando;
+      if (!voando) return;
+      const u = p.userData;
+      if (!reduzido) u.ang += dt * .12;
+      p.position.set(Math.cos(u.ang) * u.raio, u.alt + Math.sin(t + u.fase) * .15, Math.sin(u.ang) * u.raio * .7);
+      p.rotation.y = -u.ang;
+      const bate = reduzido ? 0 : Math.sin(t * 9 + u.fase) * .6;
+      u.e.rotation.z = bate; u.d.rotation.z = -bate;
+    });
+  }
+
   /* ── Semáforos nos cruzamentos ──────────────────────────────────────────── */
   // ciclo de 14 s: avenida horizontal verde → amarelo → todos vermelhos → vertical verde → amarelo
   function estadoSemaforo(t) {
@@ -971,7 +1040,8 @@ const Cena = (() => {
       ctx.font = '700 58px Nunito, sans-serif'; ctx.fillText(`🔒 ${b.nome}`, 256, 72);
       ctx.fillStyle = '#FFD54A'; ctx.font = '800 50px Nunito, sans-serif'; ctx.fillText(`💰 ${b.preco.toLocaleString('pt-BR')}`, 256, 140);
     });
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true, toneMapped: false }));
+    sp.layers.set(1);
     sp.renderOrder = 11;
     const w = Math.min(2.6, (b.c1 - b.c0 + 1) * .9 + .6);
     sp.scale.set(w, w * 200 / 512, 1);
@@ -1201,17 +1271,35 @@ const Cena = (() => {
         ctx.font = '64px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(emoji, 64, 70);
       });
-      cacheSprite[k] = new THREE.SpriteMaterial({ map: tex, depthTest: false, sizeAttenuation: false }); // tamanho fixo na tela
+      cacheSprite[k] = new THREE.SpriteMaterial({ map: tex, depthTest: false, sizeAttenuation: false, toneMapped: false }); // tamanho fixo na tela
     }
     const sp = new THREE.Sprite(cacheSprite[k]);
+    sp.layers.set(1);
     sp.renderOrder = 10;
     return sp;
   }
 
   /* ── Sincronização com o estado do jogo ─────────────────────────────────── */
+  let matSombraContato;
   function criarPredio(tipo, i) {
-    const g = new THREE.Group();
-    MODELOS[tipo](g, i * 7 + Math.floor(i / LARGURA), i);
+    const g = new THREE.Group(), corpo = new THREE.Group();
+    MODELOS[tipo](corpo, i * 7 + Math.floor(i / LARGURA), i);
+    const nivel = (s.mapa[i] && s.mapa[i].nivel) || 1;
+    corpo.userData.escalaY = 1 + .25 * (nivel - 1);       // ampliado: mais andares
+    corpo.scale.y = corpo.userData.escalaY;
+    g.add(corpo);
+    g.userData.corpo = corpo; g.userData.tick = corpo.userData.tick;
+    g.userData.altura = (corpo.userData.altura || 1) * corpo.userData.escalaY;
+    if (!['enfeite'].includes(PREDIOS[tipo].cat) && !['ruaLocal', 'ponteLocal', 'parque'].includes(tipo)) {
+      matSombraContato = matSombraContato || new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false,
+        map: canvasTex(128, 128, (ctx) => {
+          const gr = ctx.createRadialGradient(64, 64, 20, 64, 64, 64);
+          gr.addColorStop(0, 'rgba(0,0,0,.5)'); gr.addColorStop(.6, 'rgba(0,0,0,.25)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = gr; ctx.fillRect(0, 0, 128, 128);
+        }) });
+      const sombra = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 1.25), matSombraContato);
+      sombra.rotation.x = -Math.PI / 2; sombra.position.y = .006; sombra.renderOrder = 1; g.add(sombra);
+    }
     criarFrequentadores(g, tipo, i);
     g.position.set(posX(i % LARGURA), 0, posZ(Math.floor(i / LARGURA)));
     g.rotation.y = (i * 13 % 4) * Math.PI / 2 * (tipo === 'casa' || tipo === 'arvore' ? 1 : 0); // casas viradas para lados diferentes
@@ -1228,7 +1316,8 @@ const Cena = (() => {
     if (!scene || !pronto) return;
     s.mapa.forEach((l, i) => {
       const tipo = l && MODELOS[l.tipo] ? l.tipo : null;
-      const chave = tipo === 'ruaLocal' ? tipo + orientacaoRua(i) : tipo === 'ponteLocal' ? tipo + orientacaoPonte(i) : tipo;
+      const base = tipo === 'ruaLocal' ? tipo + orientacaoRua(i) : tipo === 'ponteLocal' ? tipo + orientacaoPonte(i) : tipo;
+      const chave = base && base + ':' + ((l && l.nivel) || 1);
       if (tiposNoLote[i] === chave) return;
       if (predios[i]) { scene.remove(predios[i]); delete predios[i]; }
       if (tipo) {
@@ -1326,17 +1415,19 @@ const Cena = (() => {
       if (brotando[i]) {
         const x = Math.min(1, (agora - brotando[i]) / 600);
         const k = x >= 1 ? 1 : 1 + 2.2 * Math.pow(x - 1, 3) + 1.2 * Math.pow(x - 1, 2); // easeOutBack
-        g.scale.set(1, Math.max(.02, k), 1);
-        if (x >= 1) { delete brotando[i]; g.scale.set(1, 1, 1); }
+        const corpo = g.userData.corpo, ey = corpo.userData.escalaY || 1;
+        corpo.scale.set(1, Math.max(.02, k) * ey, 1);
+        if (x >= 1) { delete brotando[i]; corpo.scale.set(1, ey, 1); }
       }
       if (g.userData.tick && !reduzido) g.userData.tick(t);
       if (g.userData.gente) moverFrequentadores(g, dt, t, luzes);
     });
     moverChuva(dt);
+    moverBarcosEPassaros(dt, t);
     Object.values(baloes).forEach(b => { b.position.y = b.userData.base + (reduzido ? 0 : Math.abs(Math.sin(t * 4)) * .18); });
     atualizarFantasma();
     controls.update();
-    renderer.render(scene, camera);
+    desenhar(luzes, (agora - (quadro.anterior || agora)) / 1000); quadro.anterior = agora;
     atualizarRotulo();
   }
 
@@ -1360,12 +1451,59 @@ const Cena = (() => {
   /* ── Câmera, tamanho e seleção ──────────────────────────────────────────── */
   // vista inicial: perto da Prefeitura, no cruzamento das avenidas
   const VISTA = { pos: new THREE.Vector3(4.5, 8.5, 10.5), alvo: new THREE.Vector3(-1.5, 0, -.8) };
+  let composer = null, passoSSAO, passoBrilho, graficosAltos = false, escolhaDoUsuario = false;
+  const medidor = { quadros: 0, tempo: 0 };
+  function montarPosProcessamento() {
+    if (!THREE.EffectComposer || !THREE.SSAOPass || !THREE.UnrealBloomPass) return;
+    try {
+      const flutuante = renderer.capabilities.isWebGL2 && renderer.extensions.has('EXT_color_buffer_float');
+      const tipo = flutuante ? THREE.HalfFloatType : THREE.UnsignedByteType; // HDR antes dos tons de cinema
+      const tam = renderer.getSize(new THREE.Vector2()), pr = renderer.getPixelRatio();
+      composer = new THREE.EffectComposer(renderer, new THREE.WebGLRenderTarget(tam.x * pr, tam.y * pr, { type: tipo }));
+      composer.setPixelRatio(pr);
+      passoSSAO = new THREE.SSAOPass(scene, camera, tam.x, tam.y);
+      passoSSAO.beautyRenderTarget.texture.type = tipo;
+      passoSSAO.kernelRadius = .7; passoSSAO.minDistance = .0005; passoSSAO.maxDistance = .06;
+      composer.addPass(passoSSAO);
+      passoBrilho = new THREE.UnrealBloomPass(new THREE.Vector2(tam.x, tam.y), .15, .45, .92);
+      composer.addPass(passoBrilho);
+      composer.addPass(new THREE.ShaderPass({ // aplica os tons de cinema (ACES) e a conversão sRGB no fim
+        uniforms: { tDiffuse: { value: null } },
+        vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: 'uniform sampler2D tDiffuse; varying vec2 vUv; void main(){ gl_FragColor = texture2D(tDiffuse, vUv);\n#include <tonemapping_fragment>\n#include <encodings_fragment>\n}',
+      }));
+      composer.setSize(tam.x, tam.y);
+      let pref = null;
+      try { pref = localStorage.getItem('cidade-legal-graficos'); } catch (e) { /* ignora */ }
+      escolhaDoUsuario = !!pref;
+      graficosAltos = pref ? pref === 'altos' : matchMedia('(pointer: fine)').matches && window.innerWidth >= 1000 && !reduzido;
+    } catch (e) { composer = null; }
+  }
+  // Desenha a cena: com efeitos (camada 0) e depois as placas por cima (camada 1)
+  function desenhar(luzes = 0, dt = 0) {
+    // aparelho lento: se os efeitos derrubarem a fluidez, volta sozinho para os gráficos leves
+    if (graficosAltos && !escolhaDoUsuario && dt) {
+      medidor.quadros++; medidor.tempo += dt;
+      if (medidor.quadros >= 45) {
+        if (medidor.tempo / medidor.quadros > .045) { graficosAltos = false; document.getElementById('btn-graficos').classList.remove('ativo'); }
+        medidor.quadros = 0; medidor.tempo = 0; escolhaDoUsuario = true; // mede só uma vez
+      }
+    }
+    if (graficosAltos && composer) {
+      passoBrilho.strength = .12 + .7 * luzes; passoBrilho.threshold = .92 - .25 * luzes;
+      camera.layers.set(0); composer.render();
+      camera.layers.set(1); renderer.autoClear = false; renderer.clearDepth(); renderer.render(scene, camera); renderer.autoClear = true;
+      camera.layers.enableAll();
+    } else { camera.layers.enableAll(); renderer.render(scene, camera); }
+  }
+
   function redimensionar() {
     const W = cv.parentElement.clientWidth;
     if (!W) return;
     const estreito = W < 640;
     const H = Math.round(estreito ? Math.min(window.innerHeight * .62, W * 1.15) : Math.min(W * .62, Math.max(380, window.innerHeight * .74)));
     renderer.setSize(W, H, true);
+    if (composer) composer.setSize(W, H);
     camera.aspect = W / H;
     camera.fov = estreito ? 52 : 40;
     camera.updateProjectionMatrix();
@@ -1456,6 +1594,7 @@ const Cena = (() => {
 
     new ResizeObserver(redimensionar).observe(cv.parentElement);
     redimensionar();
+    montarPosProcessamento();
 
     // clique = apertar e soltar sem arrastar
     let ini = null;
@@ -1494,6 +1633,7 @@ const Cena = (() => {
       texturasBase();
       montarTerreno();
       montarChuva();
+      montarBarcosEPassaros();
       pronto = true;
       aviso.remove();
       atualizar();
@@ -1510,9 +1650,14 @@ const Cena = (() => {
 
   return {
     init, atualizar,
+    graficos(alternar) {
+      if (!composer) return false;
+      if (alternar) { graficosAltos = !graficosAltos; escolhaDoUsuario = true; try { localStorage.setItem('cidade-legal-graficos', graficosAltos ? 'altos' : 'leves'); } catch (e) { /* ignora */ } }
+      return graficosAltos;
+    },
     passeio() { controls.autoRotate = !controls.autoRotate; controls.autoRotateSpeed = .7; return controls.autoRotate; },
     foto(nome) {
-      renderer.render(scene, camera);
+      desenhar();
       const a = document.createElement('a');
       a.href = renderer.domElement.toDataURL('image/png'); a.download = nome || 'cidade.png';
       document.body.appendChild(a); a.click(); a.remove();

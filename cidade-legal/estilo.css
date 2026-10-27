@@ -229,6 +229,14 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 600; }
 /* ── Diário ─────────────────────────────────────────────────────────────── */
 .diario { max-width: 1280px; margin: 0 auto; padding: 0 16px 16px; }
 .diario h2 { font-size: 18px; margin-bottom: 8px; }
+.voz { margin-bottom: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; border: 0 !important; background: none !important; }
+.voz li { display: flex; flex-direction: column; gap: 2px; background: var(--panel); border: 2px solid var(--border) !important; border-radius: 14px; padding: 10px 12px; }
+.voz li b { font-size: 13px; color: var(--muted); }
+.voz li.dica-lei { border-color: var(--accent) !important; }
+.voz li.vazio { color: var(--muted); }
+.nivel-predio { display: flex; flex-direction: column; gap: 2px; background: var(--panel2); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; }
+.nivel-predio span { font-weight: 800; }
+.nivel-predio small { color: var(--muted); }
 .diario ul { list-style: none; margin: 0; padding: 0; background: var(--panel); border: 2px solid var(--border); border-radius: 16px; overflow: hidden; }
 .diario li { padding: 8px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
 .diario li:first-child { animation: entrar-lista .4s; }
