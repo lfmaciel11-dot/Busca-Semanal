@@ -14,7 +14,7 @@ const Cena = (() => {
   let renderer, scene, camera, controls, cv, aoClicar, aoClicarPessoa, pessoaSobMouse = -1;
   let sol, lua, hemi, estrelas, plano, destaque, rotulo, relogioEl, ceuMat, solDisco, luaDisco, grama;
   let mostrarPlacas = true, reduzido = false;
-  let hora = 9, lapso = null, estacaoAtual = '', bairrosDesenhados = '';
+  let hora = 9, lapso = null, estacaoAtual = '', bairrosDesenhados = '', voo = null;
   const pessoas = [], zonas = {};
   const predios = {};      // lote → THREE.Group
   const tiposNoLote = {};  // lote → tipo desenhado (para detectar mudanças)
@@ -117,6 +117,19 @@ const Cena = (() => {
   const texRepetida = (w, h, desenhar, rx, ry) => { const tx = canvasTex(w, h, desenhar); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(rx, ry); return tx; };
   let texTelha, texPedra, texPiso;
   function texturasBase() {
+    // folhagem: manchas de folhas claras e escuras (a cor vem da estação)
+    const folhas = (claro) => texRepetida(128, 128, (ctx) => {
+      ctx.fillStyle = claro ? '#E2E2E2' : '#C8C8C8'; ctx.fillRect(0, 0, 128, 128);
+      for (let k = 0; k < 900; k++) {
+        const v = 150 + Math.floor(Math.random() * 105);
+        ctx.fillStyle = `rgb(${v},${v},${v})`;
+        ctx.save(); ctx.translate(Math.random() * 128, Math.random() * 128); ctx.rotate(Math.random() * 3.2);
+        ctx.beginPath(); ctx.ellipse(0, 0, 3.2, 1.6, 0, 0, 7); ctx.fill(); ctx.restore();
+      }
+    }, 2, 2);
+    const tf = folhas(true), tp = folhas(false);
+    [FOLHAS.copa, FOLHAS.clara, FOLHAS.ipe].forEach(m => { m.map = tf; m.needsUpdate = true; });
+    FOLHAS.pinho.map = tp; FOLHAS.pinho.needsUpdate = true;
     texTelha = texRepetida(64, 64, (ctx) => {
       ctx.fillStyle = '#F2F2F2'; ctx.fillRect(0, 0, 64, 64);
       for (let y = 0; y < 64; y += 10) for (let x = (y / 10 % 2) * -6; x < 64; x += 12) {
@@ -237,10 +250,10 @@ const Cena = (() => {
   }
   // Materiais de folhagem compartilhados: mudam de cor conforme a estação
   const FOLHAS = {
-    copa: new THREE.MeshStandardMaterial({ color: '#4FA64C', flatShading: true, roughness: .9 }),
-    clara: new THREE.MeshStandardMaterial({ color: '#66BF5C', flatShading: true, roughness: .9 }),
-    pinho: new THREE.MeshStandardMaterial({ color: '#2E7D4F', flatShading: true, roughness: .9 }),
-    ipe: new THREE.MeshStandardMaterial({ color: '#4FA64C', flatShading: true, roughness: .9 }),
+    copa: new THREE.MeshStandardMaterial({ color: '#4FA64C', roughness: .85 }),
+    clara: new THREE.MeshStandardMaterial({ color: '#66BF5C', roughness: .85 }),
+    pinho: new THREE.MeshStandardMaterial({ color: '#2E7D4F', roughness: .85 }),
+    ipe: new THREE.MeshStandardMaterial({ color: '#4FA64C', roughness: .85 }),
   };
   const ESTACOES = {
     verao: { copa: '#3F9A45', clara: '#5DB956', pinho: '#2C7A4B', grama: '#5FAE45', tinta: '#BFD0B0' },
@@ -248,13 +261,16 @@ const Cena = (() => {
     inverno: { copa: '#6E9346', clara: '#88A85A', pinho: '#3A6E4C', grama: '#8AAA55', tinta: '#C2B98C' },
     primavera: { copa: '#4BAE4E', clara: '#7CCB5A', pinho: '#2E7D4F', grama: '#5DB847', tinta: '#C4D8B2' },
   };
+  // Árvore: copa em tufos arredondados com textura de folhas (tinta da estação); pinheiro em camadas
   function arvore(tipo = 0, esc = 1) {
     const g = new THREE.Group();
-    g.add(cilindro(.03 * esc, .045 * esc, .22 * esc, '#7A5134', 0, 0, 0, 6));
-    if (tipo === 1) g.add(malha(new THREE.ConeGeometry(.16 * esc, .46 * esc, 7), FOLHAS.pinho, 0, .42 * esc, 0));
-    else {
-      g.add(malha(new THREE.IcosahedronGeometry(.18 * esc, 0), tipo === 2 ? FOLHAS.ipe : FOLHAS.copa, 0, .34 * esc, 0));
-      g.add(malha(new THREE.IcosahedronGeometry(.12 * esc, 0), tipo === 2 ? FOLHAS.ipe : FOLHAS.clara, .07 * esc, .44 * esc, .04 * esc));
+    const tronco = cilindro(.022 * esc, .038 * esc, .26 * esc, '#6D4C35', 0, 0, 0, 8); g.add(tronco);
+    if (tipo === 1) {
+      [[.17, .24, .2], [.13, .2, .33], [.085, .16, .45]].forEach(([r, h, y]) => g.add(malha(new THREE.ConeGeometry(r * esc, h * esc, 12), FOLHAS.pinho, 0, y * esc, 0)));
+    } else {
+      const m1 = tipo === 2 ? FOLHAS.ipe : FOLHAS.copa, m2 = tipo === 2 ? FOLHAS.ipe : FOLHAS.clara;
+      [[0, .36, 0, .165, m1], [.095, .32, .05, .115, m2], [-.085, .33, -.045, .12, m1], [.02, .46, -.02, .115, m2], [-.03, .3, .09, .1, m2]]
+        .forEach(([x, y, z, r, m]) => g.add(malha(new THREE.SphereGeometry(r * esc, 11, 8), m, x * esc, y * esc, z * esc)));
     }
     return g;
   }
@@ -298,29 +314,54 @@ const Cena = (() => {
       g.userData.tick = t => { bandeira.rotation.y = Math.sin(t * 2.5) * .25; };
       g.userData.altura = 1.4;
     },
-    casa(g, n) {
-      calcada(g, .8);
+    casa(g, n, i) {
+      const nivel = i >= 0 && s.mapa[i] ? (s.mapa[i].nivel || 1) : 1, v = n % 3;
+      calcada(g, .88);
       const cor = CORES_CASA[n % CORES_CASA.length], telha = CORES_TELHA[n % CORES_TELHA.length];
-      const sobrado = n % 3 === 0, h = sobrado ? .66 : .4;
-      g.add(caixa(.1, .32, .1, '#9C6B4E', .14, h + .02, -.12));
-      g.add(caixa(.54, h, .48, fachada(cor, 2, sobrado ? 2 : 1, { parede: 'reboco' }), 0, .03));
-      porta(g, .48);
-      g.add(duasAguas(.64, .3, .58, telha, h + .03));
-      if (n % 4 === 1) { const a = arvore(0, .7); a.position.set(-.34, .03, .3); g.add(a); }
-      g.userData.altura = h + .4;
+      const andares = nivel >= 2 ? 2 : 1, h = andares === 2 ? .64 : .4;
+      const w = nivel >= 2 ? .5 : .54, x0 = nivel >= 2 ? -.1 : 0;
+      const corpo = new THREE.Group(); corpo.position.x = x0; g.add(corpo);
+      corpo.add(caixa(w, h, .48, fachada(cor, 2, andares, { parede: 'reboco' }), 0, .03));
+      porta(corpo, .48);
+      if (v === 0) { // duas águas com chaminé
+        corpo.add(caixa(.09, .3, .09, '#9C6B4E', .13, h + .02, -.12));
+        corpo.add(duasAguas(w + .1, .3, .58, telha, h + .03));
+      } else if (v === 1) { // quatro águas
+        const r = Math.max(w, .48) * .78 + .04;
+        const tel = malha(new THREE.ConeGeometry(r, .26, 4), matTelha(telha), 0, h + .16, 0);
+        tel.rotation.y = Math.PI / 4; tel.scale.set(w / .48 > 1 ? 1 : 1, 1, .48 / Math.max(w, .48) + .04); corpo.add(tel);
+      } else { // moderna: laje com platibanda e painel de madeira
+        corpo.add(caixa(w + .04, .06, .52, '#ECEFF1', 0, h + .03));
+        corpo.add(caixa(w * .38, h * .82, .012, IMG.madeira_cor ? pbr('madeira', 1) : mat('#8D6E63'), w * .25, .03, .245));
+        corpo.add(caixa(.16, .1, .12, '#CFD8DC', -.1, h + .09, -.1)); // caixa d'água
+      }
+      if (nivel >= 2) { // garagem com portão
+        const portao = canvasTex(64, 64, ctx => { ctx.fillStyle = '#ECEFF1'; ctx.fillRect(0, 0, 64, 64); ctx.fillStyle = '#B0BEC5'; for (let y = 4; y < 64; y += 7) ctx.fillRect(0, y, 64, 2); });
+        g.add(caixa(.26, .24, .42, mat(tom(cor, -.06)), x0 + w / 2 + .13, .03, .02));
+        g.add(caixa(.2, .17, .006, new THREE.MeshStandardMaterial({ map: portao }), x0 + w / 2 + .13, .03, .233));
+        g.add(caixa(.3, .03, .46, '#ECEFF1', x0 + w / 2 + .13, .27, .02));
+      }
+      if (nivel >= 3) { // piscina com deque e cerca
+        g.add(caixa(.36, .02, .22, IMG.madeira_cor ? pbr('madeira', 1) : mat('#A1887F'), .22, .03, -.33));
+        const p = caixa(.28, .012, .15, mat('#4FC3F7', { roughness: .08, metalness: .1, emissive: '#06425E' }), .22, .045, -.33); p.castShadow = false; g.add(p);
+        for (let k = 0; k < 6; k++) g.add(cilindro(.006, .006, .1, '#ECEFF1', -.42 + k * .17, .03, .43, 5));
+      } else if (n % 4 === 1) { const a = arvore(0, .7); a.position.set(-.36, .03, .3); g.add(a); }
+      g.userData.altura = h + .38;
     },
-    aluguel(g) {
+    aluguel(g, n) {
       calcada(g);
-      g.add(caixa(.66, 1.8, .66, fachada('#9AA9BC', 3, 7, { parede: 'concreto' }), 0, .03));
+      g.add(caixa(.66, 1.8, .66, fachada(['#9AA9BC', '#C9B8A6', '#A7B9A0'][n % 3], 3, 7, { parede: 'concreto' }), 0, .03));
+      g.add(cilindro(.008, .008, .3, '#90A4AE', .2, 1.89, .2, 5));
       g.add(caixa(.7, .06, .7, '#6F86A8', 0, 1.83));
       g.add(cilindro(.09, .09, .18, '#B9C4D2', -.15, 1.89, -.15, 10));
       porta(g, .66, '#40536E');
       g.userData.altura = 2.1;
     },
-    mercado(g) {
+    mercado(g, n) {
       calcada(g);
+      const corToldo = ['#E07B2A', '#2E7D32', '#C62828', '#1565C0'][n % 4];
       g.add(caixa(.8, .48, .72, fachada('#F7F1E3', 3, 1, { vidro: '#B8E2F5' }), 0, .03));
-      const listras = canvasTex(64, 16, (ctx) => { for (let i = 0; i < 8; i++) { ctx.fillStyle = i % 2 ? '#FFFFFF' : '#E07B2A'; ctx.fillRect(i * 8, 0, 8, 16); } });
+      const listras = canvasTex(64, 16, (ctx) => { for (let i = 0; i < 8; i++) { ctx.fillStyle = i % 2 ? '#FFFFFF' : corToldo; ctx.fillRect(i * 8, 0, 8, 16); } });
       const toldo = caixa(.84, .03, .22, new THREE.MeshStandardMaterial({ map: listras }), 0, .36, .44);
       toldo.rotation.x = .35; g.add(toldo);
       g.add(caixa(.5, .16, .06, '#E07B2A', 0, .51, .2));
@@ -635,7 +676,19 @@ const Cena = (() => {
         const braco = new THREE.Group(); braco.add(caixa(.4, .02, .04, '#FFB300', 0, 0, 0)); braco.position.set(x, .18, z); g.add(braco); bracos.push(braco);
       });
       g.add(caixa(.3, .26, .24, fachada('#DCE775', 2, 1, { parede: 'concreto' }), .24, .04, .26));
-      g.userData.tick = t => bracos.forEach((b, k) => { b.rotation.y = t * (.5 + k * .2); });
+      const vapor = [];
+      for (let k = 0; k < 6; k++) {
+        const b = malha(new THREE.SphereGeometry(.05, 10, 8), new THREE.MeshStandardMaterial({ color: '#F5F5F5', transparent: true, opacity: .4, roughness: 1, depthWrite: false }));
+        b.castShadow = false; vapor.push(b); g.add(b);
+      }
+      g.userData.tick = t => {
+        bracos.forEach((b, k) => { b.rotation.y = t * (.5 + k * .2); });
+        vapor.forEach((b, k) => {
+          const f = (t * .18 + k / vapor.length) % 1, c = k % 2 ? [-.2, .18] : [.22, -.16];
+          b.position.set(c[0] + Math.sin(k * 3) * .08, .17 + f * .45, c[1] + Math.cos(k * 3) * .08);
+          b.scale.setScalar(.6 + f * 1.4); b.material.opacity = .35 * (1 - f);
+        });
+      };
       g.userData.altura = .5;
     },
     usina(g) {
@@ -739,6 +792,29 @@ const Cena = (() => {
     },
   });
 
+  /* ── Folhas caindo no outono ────────────────────────────────────────────── */
+  const folhasCaindo = [];
+  function montarFolhas() {
+    const cores = ['#D2691E', '#E0A030', '#B5452B', '#C8A23D'];
+    for (let k = 0; k < 70; k++) {
+      const f = new THREE.Mesh(new THREE.PlaneGeometry(.035, .022), new THREE.MeshStandardMaterial({ color: cores[k % 4], side: THREE.DoubleSide, roughness: .9 }));
+      f.castShadow = false; f.userData = { x: (Math.random() - .5) * LARGURA, z: (Math.random() - .5) * ALTURA, y: Math.random() * .7, v: .05 + Math.random() * .06, fase: Math.random() * 6 };
+      scene.add(f); folhasCaindo.push(f);
+    }
+  }
+  function moverFolhas(dt, t) {
+    const outono = estacaoAtual.startsWith('outono');
+    folhasCaindo.forEach(f => {
+      f.visible = outono;
+      if (!outono || reduzido) return;
+      const u = f.userData;
+      u.y -= u.v * dt;
+      if (u.y < 0) { u.y = .6 + Math.random() * .3; u.x = (Math.random() - .5) * LARGURA; u.z = (Math.random() - .5) * ALTURA; }
+      f.position.set(u.x + Math.sin(t * 1.3 + u.fase) * .08, u.y, u.z + Math.cos(t * 1.1 + u.fase) * .06);
+      f.rotation.set(t * 2 + u.fase, t + u.fase, 0);
+    });
+  }
+
   /* ── Barcos no rio e bando de pássaros ──────────────────────────────────── */
   const barcos = [], passaros = [];
   function montarBarcosEPassaros() {
@@ -835,21 +911,38 @@ const Cena = (() => {
   const CORES_CARRO = ['#E53935', '#1E88E5', '#FDD835', '#43A047', '#FB8C00', '#8E24AA', '#ECEFF1'];
   function criarVeiculo(tipo, cor = '#E53935') {
     const g = new THREE.Group();
-    const roda = (x, z) => { const r = cilindro(.035, .035, .03, '#222222', x, 0, z, 10); r.rotation.x = Math.PI / 2; r.position.y = .04; g.add(r); };
+    const roda = (x, z) => {
+      const r = cilindro(.032, .032, .026, '#1E1E1E', x, 0, z, 14); r.rotation.x = Math.PI / 2; r.position.y = .034; g.add(r);
+      const c = cilindro(.016, .016, .028, '#B0BEC5', x, 0, z, 10); c.rotation.x = Math.PI / 2; c.position.y = .034; g.add(c);
+    };
     if (tipo === 'onibus') {
       g.add(caixa(.62, .22, .2, fachada('#F2B705', 5, 1, { vidro: '#CFE9F7' }), 0, .04));
       [-.2, .2].forEach(x => { roda(x, .1); roda(x, -.1); });
       return g;
     }
-    g.add(caixa(.32, .09, .17, tipo === 'policia' ? '#F4F4F4' : cor, 0, .04));
-    g.add(caixa(.17, .07, .15, tipo === 'policia' ? '#1E3A8A' : '#CFE8F5', -.02, .13));
-    [-.1, .1].forEach(x => { roda(x, .09); roda(x, -.09); });
+    // carroceria: perfil lateral com curvas, extrudado com chanfro (cantos arredondados)
+    const perfil = new THREE.Shape();
+    perfil.moveTo(-.15, .035); perfil.lineTo(.15, .035); perfil.quadraticCurveTo(.17, .035, .17, .06); perfil.lineTo(.168, .082);
+    perfil.quadraticCurveTo(.16, .095, .125, .097); perfil.lineTo(.07, .1); perfil.quadraticCurveTo(.05, .145, .02, .148);
+    perfil.lineTo(-.08, .148); perfil.quadraticCurveTo(-.11, .146, -.125, .115); perfil.lineTo(-.155, .1);
+    perfil.quadraticCurveTo(-.17, .095, -.17, .07); perfil.lineTo(-.17, .055); perfil.quadraticCurveTo(-.17, .035, -.15, .035);
+    const geo = new THREE.ExtrudeGeometry(perfil, { depth: .12, bevelEnabled: true, bevelThickness: .016, bevelSize: .012, bevelSegments: 3, curveSegments: 6 });
+    geo.translate(0, 0, -.06);
+    g.add(malha(geo, mat(tipo === 'policia' ? '#F4F4F4' : cor, { roughness: .3, metalness: .35 })));
+    const vidro = mat('#1C2836', { roughness: .1, metalness: .5 });
+    [-.077, .077].forEach(z => g.add(caixa(.13, .036, .004, vidro, -.035, .104, z)));                    // janelas laterais
+    const para = caixa(.004, .042, .11, vidro, .045, .1, 0); para.rotation.z = .78; g.add(para);       // para-brisa
+    const tras = caixa(.004, .036, .11, vidro, -.105, .1, 0); tras.rotation.z = -.7; g.add(tras);      // vidro traseiro
+    [-.095, .095].forEach(x => { roda(x, .075); roda(x, -.075); });
     if (tipo === 'policia') {
-      const sir = luzPiscante('#FF3030'); g.add(caixa(.05, .03, .1, sir, -.02, .2)); g.userData.sirene = sir;
+      [-.077, .077].forEach(z => g.add(caixa(.12, .02, .004, '#1E3A8A', .02, .055, z)));
+      const sir = luzPiscante('#FF3030'); g.add(caixa(.05, .025, .09, sir, -.03, .16)); g.userData.sirene = sir;
     }
     const farol = new THREE.MeshStandardMaterial({ color: '#FFF6C8', emissive: '#FFF0A0', emissiveIntensity: 0 });
     materiaisNoturnos.push(farol); farol.userData = { farol: true };
-    g.add(caixa(.01, .03, .04, farol, .165, .07, .05)); g.add(caixa(.01, .03, .04, farol, .165, .07, -.05));
+    g.add(caixa(.01, .02, .03, farol, .182, .065, .045)); g.add(caixa(.01, .02, .03, farol, .182, .065, -.045));
+    const lanterna = mat('#B71C1C', { emissive: '#5A0000' });
+    g.add(caixa(.008, .018, .03, lanterna, -.183, .07, .045)); g.add(caixa(.008, .018, .03, lanterna, -.183, .07, -.045));
     return g;
   }
   function sincronizarCarros() {
@@ -947,6 +1040,7 @@ const Cena = (() => {
 
     // ruas: asfalto, calçadas de piso, meio-fio e pintura; girada nos trechos verticais
     matRua = materialRua(false); matCruz = materialRua(true);
+    materiaisReflexo.push(matRua, matCruz);
     const ruas = lotes.rua.filter(i => !(Math.floor(i / LARGURA) === LINHA_RUA && i % LARGURA === COLUNA_RUA));
     const rua = new THREE.InstancedMesh(new THREE.BoxGeometry(1, .1, 1), matRua, ruas.length);
     rua.receiveShadow = true;
@@ -1082,14 +1176,19 @@ const Cena = (() => {
   function criarPessoa(n, crianca = false) {
     const g = new THREE.Group();
     const calca = mat(['#2B3A55', '#3E2723', '#37474F', '#1565C0'][n % 4]);
-    const membro = (w, h, cor, x, y) => { const m = caixa(w, h, w, cor, x, 0, 0); m.geometry.translate(0, -h / 2, 0); m.position.y = y; m.castShadow = false; g.add(m); return m; };
-    const pe1 = membro(.018, .06, calca, -.012, .06), pe2 = membro(.018, .06, calca, .012, .06);
+    // membros em cápsula, com o pivô no topo (quadril ou ombro) para balançar ao andar
+    const membro = (r, h, cor, x, y) => {
+      const geo = new THREE.CapsuleGeometry(r, h, 3, 8); geo.translate(0, -(h / 2 + r), 0);
+      const m = malha(geo, typeof cor === 'string' ? mat(cor) : cor, x, y, 0); m.castShadow = false; g.add(m); return m;
+    };
+    const pe1 = membro(.009, .042, calca, -.011, .062), pe2 = membro(.009, .042, calca, .011, .062);
     const camisa = CAMISAS[n % CAMISAS.length], pele = mat(PELES[n % PELES.length]);
-    const corpo = cilindro(.026, .03, .062, camisa, 0, .058, 0, 8); corpo.castShadow = false; g.add(corpo);
-    const br1 = membro(.012, .052, pele, -.034, .116), br2 = membro(.012, .052, pele, .034, .116);
-    const cabeca = malha(new THREE.SphereGeometry(.021, 10, 8), pele, 0, .142, 0); cabeca.castShadow = false; g.add(cabeca);
-    const cabelo = malha(new THREE.SphereGeometry(.0225, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2.1), mat(CABELOS[n % CABELOS.length]), 0, .146, -.003); cabelo.castShadow = false; g.add(cabelo);
-    if (n % 7 === 3) { const chapeu = cilindro(.026, .026, .012, '#F5DEB3', 0, .158, 0, 10); chapeu.castShadow = false; g.add(chapeu); }
+    const corpo = malha(new THREE.CapsuleGeometry(.024, .034, 3, 10), mat(camisa), 0, .094, 0); corpo.castShadow = false; g.add(corpo);
+    const br1 = membro(.0075, .038, pele, -.033, .122), br2 = membro(.0075, .038, pele, .033, .122);
+    const cabeca = malha(new THREE.SphereGeometry(.021, 14, 10), pele, 0, .152, 0); cabeca.castShadow = false; g.add(cabeca);
+    const cabelo = malha(new THREE.SphereGeometry(.0225, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2.1), mat(CABELOS[n % CABELOS.length]), 0, .156, -.003); cabelo.castShadow = false; g.add(cabelo);
+    if (n % 7 === 3) { const chapeu = cilindro(.027, .027, .01, '#F5DEB3', 0, .166, 0, 14); chapeu.castShadow = false; g.add(chapeu); }
+    if (n % 5 === 2) { const bolsa = caixa(.022, .03, .012, ['#6D4C41', '#AD1457', '#263238'][n % 3], .03, .07, 0); bolsa.castShadow = false; g.add(bolsa); }
     if (crianca) g.scale.setScalar(.68);
     // área de clique invisível, maior que o boneco, para facilitar tocar nas pessoas
     const alvo = new THREE.Mesh(new THREE.BoxGeometry(.14, .26, .14), new THREE.MeshBasicMaterial({ visible: false }));
@@ -1237,6 +1336,10 @@ const Cena = (() => {
     diaAtual = dia;
     const crep = Math.max(0, 1 - Math.abs(elev) / .32) * (h > 4 && h < 21 ? 1 : 0);
     const nublado = s.chuva ? 1 : 0;
+    if (matRua && matRua.userData.molhado !== nublado) {
+      [matRua, matCruz].forEach(m => { m.roughness = nublado ? .28 : .92; m.metalness = nublado ? .15 : 0; m.userData.molhado = nublado; });
+      if (matGrama) matGrama.roughness = nublado ? .7 : 1;
+    }
     const luzes = Math.max(0, Math.min(1, 1 - dia * (nublado ? 1.1 : 1.7)));
 
     const dirSol = new THREE.Vector3(Math.cos(ang) * 1, Math.max(elev, -.3), -.45).normalize();
@@ -1282,13 +1385,90 @@ const Cena = (() => {
     return sp;
   }
 
+  /* ── Detalhes de fachada: letreiros e aparelhos de ar-condicionado ─────── */
+  // [texto, largura, altura, x, y, z, fundo, cor do texto] — z é a face da frente de cada modelo
+  const LETREIROS = {
+    prefeitura: ['PREFEITURA', .5, .045, 0, .685, .332, '#1F3A5F', '#F2D20F'], escola: ['ESCOLA MUNICIPAL', .5, .06, 0, .47, .302, '#C0392B'],
+    saude: ['POSTO DE SAÚDE', .46, .06, 0, .62, .352, '#C62828'], delegacia: ['POLÍCIA CIVIL', .5, .05, 0, .495, .362, '#FFFFFF', '#1B2E4B'],
+    forum: ['FÓRUM', .3, .04, 0, .725, .352, '#5D4037'], camara: ['CÂMARA MUNICIPAL', .52, .055, 0, .49, .352, '#3A6EA5'],
+    cartorio: ['CARTÓRIO', .36, .06, 0, .6, .302, '#5A2A1C'], banco: ['BANCO', .4, .07, 0, .7, .352, '#1F6F8B'],
+    inss: ['INSS', .3, .07, 0, .47, .322, '#1F4E9A'], bombeiros: ['BOMBEIROS', .5, .05, 0, .41, .243, '#FFFFFF', '#B71C1C'],
+    cultura: ['CENTRO CULTURAL', .58, .06, 0, .375, .482, '#C2185B'], fazenda: ['SEC. DA FAZENDA', .5, .06, 0, .8, .362, '#24493A'],
+    mercado: ['MERCADO', .46, .13, 0, .59, .232, null], empresa: ['ESCRITÓRIOS', .5, .07, 0, .15, .432, '#263238'],
+    terminal: ['TERMINAL', .5, .035, 0, .51, .282, '#0D7896'], estacaoAgua: ['ÁGUA', .28, .045, -.18, .27, -.128, '#1E88E5'],
+    esgoto: ['ESGOTO', .24, .04, .24, .25, .382, '#6D8B3A'], condominio: ['RESIDENCIAL', .4, .05, 0, .09, .432, '#5D4037'],
+    aluguel: ['EDIFÍCIO', .3, .04, 0, .27, .332, '#40536E'],
+  };
+  const cacheLetreiro = {};
+  function letreiro(g, tipo, n) {
+    const L = LETREIROS[tipo];
+    if (!L) return;
+    const [texto, w, h, x, y, z, fundoBase, corTexto = '#FFFFFF'] = L;
+    const fundo = fundoBase || ['#E07B2A', '#2E7D32', '#C62828', '#1565C0'][n % 4];
+    const k = texto + fundo + corTexto;
+    if (!cacheLetreiro[k]) {
+      const W = 512, H = Math.max(48, Math.round(512 * h / w));
+      cacheLetreiro[k] = new THREE.MeshStandardMaterial({ roughness: .6, map: canvasTex(W, H, (ctx) => {
+        ctx.fillStyle = fundo; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(0, 0, W, H * .12);
+        ctx.fillStyle = corTexto; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        let fs = H * .62; ctx.font = `800 ${fs}px Nunito, "Segoe UI", sans-serif`;
+        while (ctx.measureText(texto).width > W * .9 && fs > 10) { fs -= 2; ctx.font = `800 ${fs}px Nunito, "Segoe UI", sans-serif`; }
+        ctx.fillText(texto, W / 2, H / 2 + 2);
+      }) });
+    }
+    const placa = new THREE.Mesh(new THREE.PlaneGeometry(w, h), cacheLetreiro[k]);
+    placa.position.set(x, y, z + .003); g.add(placa);
+  }
+  // [x da face lateral, z, alturas] dos aparelhos de ar-condicionado
+  const APARELHOS = {
+    aluguel: [.33, .12, [.32, .58, .84, 1.1, 1.36, 1.62]], condominio: [.11, -.2, [.35, .58, .82, 1.05, 1.28, 1.52, 1.75]],
+    escola: [.43, -.1, [.2, .42]], saude: [.39, -.12, [.22, .46]], cartorio: [.31, -.1, [.2, .48]], fazenda: [.36, -.12, [.25, .5, .72]],
+    camara: [.4, -.12, [.2, .42]], delegacia: [.38, -.12, [.2, .38]],
+  };
+  function aparelhos(g, tipo) {
+    const A = APARELHOS[tipo];
+    if (!A) return;
+    A[2].forEach((y, k) => {
+      const ap = caixa(.03, .035, .055, '#E8EAED', A[0] + .015, y, A[1] + (k % 2) * .18); ap.castShadow = false; g.add(ap);
+      const grade = caixa(.002, .024, .04, '#9AA4AE', A[0] + .031, y + .005, A[1] + (k % 2) * .18); grade.castShadow = false; g.add(grade);
+    });
+  }
+
+  /* ── Canteiro de obras (tapume, andaime e guindaste) antes do prédio subir ── */
+  const obras = {};
+  let matTapume;
+  function criarObra() {
+    const g = new THREE.Group();
+    matTapume = matTapume || new THREE.MeshStandardMaterial({ map: canvasTex(256, 32, (ctx) => {
+      ctx.fillStyle = '#1565C0'; ctx.fillRect(0, 0, 256, 32);
+      ctx.fillStyle = '#FFFFFF'; ctx.font = '800 18px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('OBRA DA PREFEITURA', 128, 17);
+    }) });
+    const terra = caixa(.9, .012, .9, '#8D6E63'); terra.castShadow = false; g.add(terra);
+    [[0, .45, .9, .02], [0, -.45, .9, .02], [.45, 0, .02, .9], [-.45, 0, .02, .9]].forEach(([x, z, w, d]) => g.add(caixa(w, .14, d, matTapume, x, 0, z)));
+    [[-.22, -.22], [.22, -.22], [-.22, .22], [.22, .22]].forEach(([x, z]) => g.add(cilindro(.008, .008, .5, '#B0BEC5', x, 0, z, 5)));
+    [.18, .36].forEach(y => g.add(caixa(.48, .012, .48, IMG.madeira_cor ? pbr('madeira', 1) : mat('#A1887F'), 0, y)));
+    const mastro = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, 1.5, 4, 8, true), new THREE.MeshBasicMaterial({ color: '#F9A825', wireframe: true }));
+    mastro.position.set(-.33, .75, -.33); mastro.rotation.y = Math.PI / 4; g.add(mastro);
+    const lanca = new THREE.Group(); lanca.position.set(-.33, 1.5, -.33);
+    lanca.add(caixa(1, .035, .04, '#F9A825', .3, 0, 0)); lanca.add(caixa(.14, .08, .08, '#455A64', -.2, -.02, 0));
+    lanca.add(cilindro(.003, .003, .55, '#263238', .62, -.55, 0, 4)); lanca.add(caixa(.05, .04, .05, '#E53935', .62, -.6, 0));
+    g.add(lanca);
+    for (let k = 0; k < 8; k++) g.add(caixa(.06, .03, .03, '#B5523B', .25 + (k % 4) * .035, .012 + Math.floor(k / 4) * .03, .32));
+    g.userData.tick = tt => { lanca.rotation.y = Math.sin(tt * .8) * 1.2; };
+    return g;
+  }
+
   /* ── Sincronização com o estado do jogo ─────────────────────────────────── */
   let matSombraContato;
   function criarPredio(tipo, i) {
     const g = new THREE.Group(), corpo = new THREE.Group();
-    MODELOS[tipo](corpo, i * 7 + Math.floor(i / LARGURA), i);
+    const n = i * 7 + Math.floor(i / LARGURA);
+    MODELOS[tipo](corpo, n, i);
+    letreiro(corpo, tipo, n); aparelhos(corpo, tipo);
     const nivel = (s.mapa[i] && s.mapa[i].nivel) || 1;
-    corpo.userData.escalaY = 1 + .25 * (nivel - 1);       // ampliado: mais andares
+    corpo.userData.escalaY = tipo === 'casa' ? 1 : 1 + .25 * (nivel - 1); // casa troca de modelo; os demais ganham andares
     corpo.scale.y = corpo.userData.escalaY;
     g.add(corpo);
     g.userData.corpo = corpo; g.userData.tick = corpo.userData.tick;
@@ -1323,6 +1503,7 @@ const Cena = (() => {
       const chave = base && base + ':' + ((l && l.nivel) || 1);
       if (tiposNoLote[i] === chave) return;
       if (predios[i]) { scene.remove(predios[i]); delete predios[i]; }
+      if (obras[i]) { scene.remove(obras[i]); delete obras[i]; }
       if (tipo) {
         predios[i] = criarPredio(tipo, i); scene.add(predios[i]);
         if (enfeites[i]) { scene.remove(enfeites[i]); delete enfeites[i]; }
@@ -1342,6 +1523,7 @@ const Cena = (() => {
     });
     sincronizarBairros();
     sincronizarSemaforos();
+    if (visaoAtiva) desenharVisao();
     aplicarEstacao((s.mes - 1) % 12);
     // balões ❗ dos cidadãos
     const pend = new Set((s.pendentes || []).map(p => p.tile));
@@ -1354,6 +1536,61 @@ const Cena = (() => {
       scene.add(b); baloes[i] = b;
     });
     Object.values(predios).forEach(g => { if (g.userData.placa) g.userData.placa.visible = mostrarPlacas && !pend.has(g.userData.tile); });
+  }
+
+  /* ── Visões de cobertura: alcance de cada serviço em volta dos prédios ──── */
+  let visaoAtiva = null, malhaVisao = null;
+  function desenharVisao() {
+    if (malhaVisao) { scene.remove(malhaVisao); malhaVisao.geometry.dispose(); malhaVisao = null; }
+    if (!visaoAtiva) return { raio: 0, semAtendimento: 0 };
+    const fontes = [];
+    s.mapa.forEach((l, i) => { if (l && PREDIOS[l.tipo] && PREDIOS[l.tipo].servico === visaoAtiva) fontes.push({ r: Math.floor(i / LARGURA), c: i % LARGURA, raio: 4 + (l.nivel || 1) }); });
+    const lotes = s.mapa.map((l, i) => (!l || PREDIOS[l.tipo]) && s.bairros[bairroDe(i).id] ? i : -1).filter(i => i >= 0);
+    const geo = new THREE.PlaneGeometry(.94, .94); geo.rotateX(-Math.PI / 2);
+    malhaVisao = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ transparent: true, opacity: .55, depthWrite: false, toneMapped: false }), lotes.length);
+    const m = new THREE.Object3D(), verde = new THREE.Color('#2ECC71'), vermelho = new THREE.Color('#E74C3C'), cinza = new THREE.Color('#95A5A6'), c = new THREE.Color();
+    let sem = 0;
+    lotes.forEach((i, n) => {
+      const r = Math.floor(i / LARGURA), col = i % LARGURA, l = s.mapa[i];
+      const folga = fontes.reduce((b, f) => Math.max(b, f.raio - Math.hypot(f.r - r, f.c - col)), -1);
+      const moradia = l && RESIDENCIAIS.includes(l.tipo);
+      if (folga >= 0) c.copy(verde).lerp(new THREE.Color('#A3E4A0'), Math.max(0, 1 - folga / 3));
+      else if (moradia) { c.copy(vermelho); sem++; } else c.copy(cinza);
+      m.position.set(posX(col), .05, posZ(r)); m.updateMatrix(); malhaVisao.setMatrixAt(n, m.matrix); malhaVisao.setColorAt(n, c);
+    });
+    malhaVisao.renderOrder = 3; scene.add(malhaVisao);
+    return { raio: 5, semAtendimento: sem };
+  }
+
+  /* ── Miniaturas 3D de cada prédio para o menu de construção ─────────────── */
+  const miniaturas = {};
+  function gerarMiniaturas() {
+    let r2;
+    try { r2 = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); } catch (e) { return; }
+    r2.setPixelRatio(1); r2.setSize(120, 120); r2.outputEncoding = THREE.sRGBEncoding;
+    r2.toneMapping = THREE.ACESFilmicToneMapping; r2.toneMappingExposure = 1.15;
+    const cena = new THREE.Scene();
+    cena.add(new THREE.HemisphereLight('#FFFFFF', '#8FA3B8', 1.1));
+    const luz = new THREE.DirectionalLight('#FFF4E0', 1.7); luz.position.set(3, 5, 4); cena.add(luz);
+    const cam = new THREE.PerspectiveCamera(28, 1, .1, 50);
+    const tipos = Object.keys(MODELOS).filter(k => PREDIOS[k]);
+    let k = 0;
+    const passo = () => {
+      for (let q = 0; q < 3 && k < tipos.length; q++, k++) {
+        const tipo = tipos[k], g = new THREE.Group();
+        try { MODELOS[tipo](g, 7, -1); letreiro(g, tipo, 7); } catch (e) { continue; }
+        cena.add(g);
+        const alt = Math.max(.45, Math.min(3, g.userData.altura || 1));
+        const d = .95 + alt * .55;
+        cam.position.set(d * .9, .5 + alt * .55, d * 1.1); cam.lookAt(0, alt * .36, 0);
+        r2.render(cena, cam);
+        miniaturas[tipo] = r2.domElement.toDataURL('image/png');
+        cena.remove(g);
+      }
+      if (k < tipos.length) setTimeout(passo, 20);
+      else { r2.dispose(); r2.forceContextLoss(); window.dispatchEvent(new Event('miniaturas-prontas')); }
+    };
+    passo();
   }
 
   function atualizarFantasma() {
@@ -1415,7 +1652,11 @@ const Cena = (() => {
       nuvens.forEach(n => { n.position.x += n.userData.v * dt; if (n.position.x > LARGURA) n.position.x = -LARGURA; });
     }
     Object.entries(predios).forEach(([i, g]) => {
-      if (brotando[i]) {
+      if (brotando[i] && agora < brotando[i]) { // ainda em obra
+        g.userData.corpo.scale.set(1, .001, 1);
+        if (obras[i]) obras[i].userData.tick(t);
+      } else if (brotando[i]) {
+        if (obras[i]) { scene.remove(obras[i]); delete obras[i]; }
         const x = Math.min(1, (agora - brotando[i]) / 600);
         const k = x >= 1 ? 1 : 1 + 2.2 * Math.pow(x - 1, 3) + 1.2 * Math.pow(x - 1, 2); // easeOutBack
         const corpo = g.userData.corpo, ey = corpo.userData.escalaY || 1;
@@ -1427,8 +1668,15 @@ const Cena = (() => {
     });
     moverChuva(dt);
     moverBarcosEPassaros(dt, t);
+    moverFolhas(dt, t);
     Object.values(baloes).forEach(b => { b.position.y = b.userData.base + (reduzido ? 0 : Math.abs(Math.sin(t * 4)) * .18); });
     atualizarFantasma();
+    if (!mostrarPlacas) Object.values(predios).forEach(g => { if (g.userData.placa) g.userData.placa.visible = g.userData.tile === hover && !baloes[g.userData.tile]; });
+    if (voo) { // câmera cinematográfica: desliza até o lote
+      const x = Math.min(1, (agora - voo.ini) / 1000), e = suave(x);
+      controls.target.lerpVectors(voo.t0, voo.t1, e); camera.position.lerpVectors(voo.p0, voo.p1, e);
+      if (x >= 1) voo = null;
+    }
     controls.update();
     desenhar(luzes, (agora - (quadro.anterior || agora)) / 1000); quadro.anterior = agora;
     atualizarRotulo();
@@ -1455,7 +1703,7 @@ const Cena = (() => {
   /* ── Câmera, tamanho e seleção ──────────────────────────────────────────── */
   // vista inicial: perto da Prefeitura, no cruzamento das avenidas
   const VISTA = { pos: new THREE.Vector3(4.5, 8.5, 10.5), alvo: new THREE.Vector3(-1.5, 0, -.8) };
-  let composer = null, passoSSAO, passoBrilho, graficosAltos = false, escolhaDoUsuario = false;
+  let composer = null, passoSSAO, passoBrilho, passoContorno, passoFinal, graficosAltos = false, escolhaDoUsuario = false;
   const medidor = { quadros: 0, tempo: 0 };
   function montarPosProcessamento() {
     if (!THREE.EffectComposer || !THREE.SSAOPass || !THREE.UnrealBloomPass) return;
@@ -1469,13 +1717,38 @@ const Cena = (() => {
       passoSSAO.beautyRenderTarget.texture.type = tipo;
       passoSSAO.kernelRadius = .7; passoSSAO.minDistance = .0005; passoSSAO.maxDistance = .06;
       composer.addPass(passoSSAO);
+      passoContorno = new THREE.OutlinePass(new THREE.Vector2(tam.x, tam.y), scene, camera);
+      Object.assign(passoContorno, { edgeStrength: 4, edgeThickness: 1.4, edgeGlow: .2 });
+      passoContorno.visibleEdgeColor.set('#FFD54A'); passoContorno.hiddenEdgeColor.set('#7A5C00');
+      composer.addPass(passoContorno);
       passoBrilho = new THREE.UnrealBloomPass(new THREE.Vector2(tam.x, tam.y), .15, .45, .92);
       composer.addPass(passoBrilho);
-      composer.addPass(new THREE.ShaderPass({ // aplica os tons de cinema (ACES) e a conversão sRGB no fim
-        uniforms: { tDiffuse: { value: null } },
+      // passe final: efeito maquete (desfoque nas bordas de cima e de baixo), cores mais vivas,
+      // vinheta suave, tons de cinema (ACES) e conversão sRGB
+      passoFinal = new THREE.ShaderPass({
+        uniforms: { tDiffuse: { value: null }, resolucao: { value: new THREE.Vector2(tam.x * pr, tam.y * pr) }, forca: { value: 3.2 * pr } },
         vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-        fragmentShader: 'uniform sampler2D tDiffuse; varying vec2 vUv; void main(){ gl_FragColor = texture2D(tDiffuse, vUv);\n#include <tonemapping_fragment>\n#include <encodings_fragment>\n}',
-      }));
+        fragmentShader: [
+          'uniform sampler2D tDiffuse; uniform vec2 resolucao; uniform float forca; varying vec2 vUv;',
+          'void main(){',
+          '  float d = smoothstep(.2, .55, abs(vUv.y - .55));',
+          '  vec2 px = forca * d / resolucao;',
+          '  vec4 c = texture2D(tDiffuse, vUv) * .2;',
+          '  for (int k = 0; k < 8; k++) {',
+          '    float a = float(k) * .785398;',
+          '    vec2 o = vec2(cos(a), sin(a));',
+          '    c += texture2D(tDiffuse, vUv + o * px) * .06 + texture2D(tDiffuse, vUv + o * px * 2.2) * .04;',
+          '  }',
+          '  vec3 cor = c.rgb;',
+          '  float l = dot(cor, vec3(.2126, .7152, .0722));',
+          '  cor = mix(vec3(l), cor, 1.14);',
+          '  vec2 q = vUv - .5; cor *= 1.0 - dot(q, q) * .38;',
+          '  gl_FragColor = vec4(cor, 1.0);',
+          '#include <tonemapping_fragment>',
+          '#include <encodings_fragment>',
+          '}'].join('\n'),
+      });
+      composer.addPass(passoFinal);
       composer.setSize(tam.x, tam.y);
       let pref = null;
       try { pref = localStorage.getItem('cidade-legal-graficos'); } catch (e) { /* ignora */ }
@@ -1495,6 +1768,8 @@ const Cena = (() => {
     }
     if (graficosAltos && composer) {
       passoBrilho.strength = .12 + .7 * luzes; passoBrilho.threshold = .92 - .25 * luzes;
+      const foco = hover >= 0 ? hover : cursor;
+      passoContorno.selectedObjects = foco >= 0 && predios[foco] && !s.selecionado ? [predios[foco].userData.corpo] : [];
       camera.layers.set(0); composer.render();
       camera.layers.set(1); renderer.autoClear = false; renderer.clearDepth(); renderer.render(scene, camera); renderer.autoClear = true;
       camera.layers.enableAll();
@@ -1505,9 +1780,13 @@ const Cena = (() => {
     const W = cv.parentElement.clientWidth;
     if (!W) return;
     const estreito = W < 640;
-    const H = Math.round(estreito ? Math.min(window.innerHeight * .62, W * 1.15) : Math.min(W * .62, Math.max(380, window.innerHeight * .74)));
+    const H = cv.parentElement.clientHeight || Math.round(estreito ? Math.min(window.innerHeight * .62, W * 1.15) : Math.min(W * .62, Math.max(380, window.innerHeight * .74)));
     renderer.setSize(W, H, true);
-    if (composer) composer.setSize(W, H);
+    if (composer) {
+      composer.setSize(W, H);
+      const pr = renderer.getPixelRatio();
+      passoFinal.uniforms.resolucao.value.set(W * pr, H * pr);
+    }
     camera.aspect = W / H;
     camera.fov = estreito ? 52 : 40;
     camera.updateProjectionMatrix();
@@ -1546,7 +1825,9 @@ const Cena = (() => {
     } catch (e) { return false; }
     cv = canvas; aoClicar = clique; aoClicarPessoa = cliquePessoa;
     reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    try { mostrarPlacas = localStorage.getItem('cidade-legal-placas') !== '0'; } catch (e) { /* ignora */ }
+    // placas: por padrão só aparecem quando importam (caso pendente ou prédio sob o mouse)
+    mostrarPlacas = false;
+    try { mostrarPlacas = localStorage.getItem('cidade-legal-placas') === 'todas'; } catch (e) { /* ignora */ }
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1616,7 +1897,7 @@ const Cena = (() => {
 
     // clique = apertar e soltar sem arrastar
     let ini = null;
-    cv.addEventListener('pointerdown', e => { ini = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+    cv.addEventListener('pointerdown', e => { ini = { x: e.clientX, y: e.clientY, t: performance.now() }; voo = null; });
     cv.addEventListener('pointerup', e => {
       if (!ini || e.button > 0) { ini = null; return; }
       const parado = Math.hypot(e.clientX - ini.x, e.clientY - ini.y) < 7 && performance.now() - ini.t < 600;
@@ -1660,7 +1941,9 @@ const Cena = (() => {
       montarTerreno();
       montarChuva();
       montarBarcosEPassaros();
+      montarFolhas();
       pronto = true;
+      setTimeout(gerarMiniaturas, 400);
       aviso.remove();
       atualizar();
       requestAnimationFrame(quadro);
@@ -1676,6 +1959,17 @@ const Cena = (() => {
 
   return {
     init, atualizar,
+    miniatura: tipo => miniaturas[tipo],
+    visao(k) { visaoAtiva = k; return desenharVisao(); },
+    focar(i, perto) {
+      if (!pronto || i < 0) return;
+      const alvo = new THREE.Vector3(posX(i % LARGURA), 0, posZ(Math.floor(i / LARGURA)));
+      const dir = camera.position.clone().sub(controls.target);
+      const dist = perto ? 6.5 : Math.min(Math.max(dir.length(), 7), 11);
+      const p1 = alvo.clone().add(dir.setLength(dist));
+      if (reduzido) { controls.target.copy(alvo); camera.position.copy(p1); return; }
+      voo = { ini: performance.now(), t0: controls.target.clone(), p0: camera.position.clone(), t1: alvo, p1 };
+    },
     graficos(alternar) {
       if (!composer) return false;
       if (alternar) { graficosAltos = !graficosAltos; escolhaDoUsuario = true; try { localStorage.setItem('cidade-legal-graficos', graficosAltos ? 'altos' : 'leves'); } catch (e) { /* ignora */ } }
@@ -1690,7 +1984,15 @@ const Cena = (() => {
     },
     passarTempo() { if (!reduzido) lapso = { ini: performance.now(), de: hora }; },
     definirHora(h) { hora = h; lapso = null; },
-    brotar(i) { brotando[i] = performance.now(); },
+    brotar(i) {
+      const g = predios[i], l = s.mapa[i];
+      const comObra = g && l && PREDIOS[l.tipo] && PREDIOS[l.tipo].cat !== 'enfeite' && !['ruaLocal', 'ponteLocal'].includes(l.tipo);
+      if (comObra && !reduzido) {
+        if (obras[i]) scene.remove(obras[i]);
+        obras[i] = criarObra(); obras[i].position.copy(g.position); scene.add(obras[i]);
+        brotando[i] = performance.now() + 1700; // o prédio sobe quando a obra termina
+      } else brotando[i] = performance.now();
+    },
     zoom(delta) {
       if (delta === 0) { camera.position.copy(VISTA.pos); controls.target.copy(VISTA.alvo); controls.update(); return; }
       const dir = camera.position.clone().sub(controls.target);
@@ -1699,7 +2001,7 @@ const Cena = (() => {
     },
     alternarPlacas() {
       mostrarPlacas = !mostrarPlacas;
-      try { localStorage.setItem('cidade-legal-placas', mostrarPlacas ? '1' : '0'); } catch (e) { /* ignora */ }
+      try { localStorage.setItem('cidade-legal-placas', mostrarPlacas ? 'todas' : 'inteligentes'); } catch (e) { /* ignora */ }
       atualizar(); return mostrarPlacas;
     },
     placas: () => mostrarPlacas,

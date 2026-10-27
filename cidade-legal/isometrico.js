@@ -470,7 +470,7 @@ const Iso = (() => {
     const larg = cv.parentElement.clientWidth;
     if (!larg) return;
     W = larg;
-    H = Math.round(Math.min(W * .68, Math.max(320, window.innerHeight * .78)));
+    H = cv.parentElement.clientHeight || Math.round(Math.min(W * .68, Math.max(320, window.innerHeight * .78)));
     dpr = window.devicePixelRatio || 1;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     cv.style.width = W + 'px'; cv.style.height = H + 'px';

@@ -416,3 +416,159 @@ textarea { font: inherit; width: 100%; padding: 8px 10px; border-radius: 12px; b
   .cab-modal h2 { font-size: 18px; }
   .icone-grande { font-size: 36px; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TELA CHEIA — o mapa ocupa a janela e a interface flutua por cima em
+   painéis de vidro fosco (HUD). --topo-h é medido pelo jogo (altura do topo).
+══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --vidro: rgba(255,255,255,.80); --vidro-forte: rgba(255,255,255,.92); --vidro-borda: rgba(255,255,255,.65);
+  --sombra-hud: 0 10px 30px rgba(14,32,58,.18), 0 1px 0 rgba(255,255,255,.6) inset;
+  --topo-h: 84px; --painel-l: 350px; --gap-hud: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --vidro: rgba(16,28,46,.78); --vidro-forte: rgba(16,28,46,.92); --vidro-borda: rgba(120,150,190,.22);
+    --sombra-hud: 0 10px 30px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.06) inset;
+  }
+}
+:root[data-theme="dark"] {
+  --vidro: rgba(16,28,46,.78); --vidro-forte: rgba(16,28,46,.92); --vidro-borda: rgba(120,150,190,.22);
+  --sombra-hud: 0 10px 30px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.06) inset;
+}
+html:has(body.tela-jogo), body.tela-jogo { height: 100%; overflow: hidden; }
+.app { position: fixed; inset: 0; }
+.hud {
+  background: var(--vidro); border: 1px solid var(--vidro-borda); box-shadow: var(--sombra-hud);
+  -webkit-backdrop-filter: blur(16px) saturate(1.35); backdrop-filter: blur(16px) saturate(1.35);
+}
+.ico { width: 20px; height: 20px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* mapa */
+.app .moldura-mapa { position: absolute; inset: 0; border: 0; border-radius: 0; box-shadow: none; }
+.app .mapa-iso { width: 100%; height: 100%; }
+
+/* topo */
+.app .topo {
+  position: absolute; z-index: 20; top: max(var(--gap-hud), env(safe-area-inset-top, 0px));
+  left: max(var(--gap-hud), env(safe-area-inset-left, 0px)); right: max(var(--gap-hud), env(safe-area-inset-right, 0px));
+  border-radius: 18px; padding: 8px 12px 14px; gap: 8px 16px; border-bottom: 1px solid var(--vidro-borda); background: var(--vidro);
+}
+.app .marca-icone { width: 44px; height: 44px; font-size: 26px; border-radius: 13px; }
+.app .marca h1 { font-size: 20px; }
+.app .stat { background: var(--vidro-forte); border: 1px solid var(--border); padding: 3px 12px 3px 8px; }
+.app .stat .ico { width: 18px; height: 18px; color: var(--accent-esc); }
+.app .acoes-topo .btn.icone { width: 40px; height: 40px; padding: 0; display: grid; place-items: center; position: relative; }
+#btn-mes { display: inline-flex; align-items: center; gap: 6px; }
+#btn-mes .ico { width: 16px; height: 16px; }
+.badge {
+  position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  background: var(--erro); color: #fff; font-size: 11px; font-weight: 800; line-height: 18px; text-align: center;
+}
+.app .barra-xp { position: absolute; left: 14px; right: 14px; bottom: 5px; height: 5px; border-radius: 99px; border: 0; overflow: hidden; background: rgba(120,140,170,.25); }
+.app .barra-xp span { display: none; }
+
+/* dica do momento */
+.app .dica {
+  position: absolute; z-index: 15; top: calc(var(--topo-h) + var(--gap-hud) * 2); left: max(var(--gap-hud), env(safe-area-inset-left, 0px));
+  max-width: min(560px, calc(100% - var(--painel-l) - 60px)); margin: 0; border-radius: 16px; padding: 7px 14px; color: var(--ink);
+}
+
+/* painel de construção */
+.app .painel {
+  position: absolute; z-index: 15; right: max(var(--gap-hud), env(safe-area-inset-right, 0px));
+  top: calc(var(--topo-h) + var(--gap-hud) * 2); bottom: max(var(--gap-hud), env(safe-area-inset-bottom, 0px));
+  width: var(--painel-l); border-radius: 18px; border: 1px solid var(--vidro-borda); display: flex; flex-direction: column;
+  overflow: visible; transition: transform .35s cubic-bezier(.3,1.2,.5,1);
+}
+.app .painel .abas { border-radius: 18px 18px 0 0; background: transparent; }
+.app .painel .aba.ativa { background: var(--vidro-forte); }
+.app .conteudo-aba { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
+.app .painel.recolhido { transform: translateX(calc(100% + var(--gap-hud) + 4px)); }
+.painel-alca {
+  position: absolute; left: -38px; top: 10px; width: 30px; height: 44px; border-radius: 12px 0 0 12px; cursor: pointer;
+  background: var(--vidro-forte); border: 1px solid var(--vidro-borda); border-right: 0; color: var(--ink); display: grid; place-items: center;
+}
+.painel-alca .ico { transition: transform .3s; }
+.painel.recolhido .painel-alca .ico { transform: rotate(180deg); }
+.app .item-predio { background: var(--vidro-forte); }
+.miniatura { width: 52px; height: 52px; flex: none; border-radius: 12px; background: linear-gradient(160deg, #DDEBFA, #B9D3EE); object-fit: cover; box-shadow: inset 0 -4px 0 var(--cor); }
+
+/* controles do mapa */
+.app .controles-mapa {
+  right: calc(var(--painel-l) + var(--gap-hud) * 2 + max(var(--gap-hud), env(safe-area-inset-right, 0px)));
+  bottom: max(var(--gap-hud), env(safe-area-inset-bottom, 0px)); padding: 6px; gap: 6px; border-radius: 16px; transition: right .35s;
+}
+.app.painel-fechado .controles-mapa { right: max(calc(var(--gap-hud) + 6px), env(safe-area-inset-right, 0px)); }
+.app .controles-mapa .btn { width: 40px; height: 40px; display: grid; place-items: center; background: var(--vidro-forte); color: var(--ink); border: 1px solid var(--border); box-shadow: none; }
+.app .controles-mapa .btn.ativo { background: var(--accent); color: var(--accent-ink); border-color: #D19D00; }
+.app .ajuda-mapa { left: max(var(--gap-hud), env(safe-area-inset-left, 0px)); bottom: max(var(--gap-hud), env(safe-area-inset-bottom, 0px)); }
+.app .relogio-mapa { left: max(var(--gap-hud), env(safe-area-inset-left, 0px)); top: auto; bottom: calc(max(var(--gap-hud), env(safe-area-inset-bottom, 0px)) + 34px); }
+
+/* visões de cobertura */
+.visoes {
+  position: absolute; z-index: 16; bottom: max(var(--gap-hud), env(safe-area-inset-bottom, 0px));
+  right: calc(var(--painel-l) + var(--gap-hud) * 3 + 64px); padding: 8px; border-radius: 16px; display: flex; flex-direction: column; gap: 4px; line-height: 1.3;
+}
+.visoes .chip { padding: 5px 10px; text-align: left; }
+.app.painel-fechado .visoes { right: 76px; }
+.visoes .chip { text-align: left; }
+.legenda-visao {
+  position: absolute; z-index: 15; left: max(var(--gap-hud), env(safe-area-inset-left, 0px)); bottom: calc(max(var(--gap-hud), env(safe-area-inset-bottom, 0px)) + 68px);
+  padding: 8px 12px; border-radius: 14px; font-size: 13px; line-height: 1.35; max-width: 280px;
+}
+.legenda-visao small { display: block; margin-top: 4px; }
+.legenda-visao b { display: block; font-family: "Fredoka", sans-serif; font-size: 15px; }
+.legenda-visao .cores { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.legenda-visao i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 4px; vertical-align: -1px; }
+
+/* celular do prefeito */
+.celular {
+  position: absolute; z-index: 18; left: max(var(--gap-hud), env(safe-area-inset-left, 0px));
+  top: calc(var(--topo-h) + var(--gap-hud) * 2); bottom: max(var(--gap-hud), env(safe-area-inset-bottom, 0px));
+  width: 380px; border-radius: 26px; display: flex; flex-direction: column; overflow: hidden;
+  transition: transform .35s cubic-bezier(.3,1.2,.5,1), opacity .25s;
+}
+.celular.fechado { transform: translateX(calc(-100% - 30px)); opacity: 0; pointer-events: none; }
+.celular-topo { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 8px 16px; border-bottom: 1px solid var(--border); }
+.celular-topo b { font-family: "Fredoka", sans-serif; font-size: 16px; }
+.celular-topo .btn { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; box-shadow: none; }
+.celular .diario { flex: 1; overflow-y: auto; padding: 12px; max-width: none; margin: 0; }
+.celular .voz { grid-template-columns: 1fr; }
+.celular .rodape { padding: 10px 14px; border-top: 1px solid var(--border); font-size: 11px; }
+
+/* celulares: topo compacto, painel vira folha que sobe de baixo */
+@media (max-width: 760px) {
+  :root { --gap-hud: 8px; --painel-h: 46vh; }
+  .app .topo { padding: 6px 8px 12px; gap: 6px; }
+  .app .marca { flex-basis: 100%; }
+  .app .marca-icone { width: 36px; height: 36px; font-size: 20px; }
+  .app .marca h1 { font-size: 17px; }
+  .app .stats { gap: 4px; }
+  .app .stat { padding: 2px 8px 2px 6px; }
+  .app .acoes-topo { width: 100%; overflow-x: auto; }
+  .app .acoes-topo .btn.icone { width: 36px; height: 36px; flex: none; }
+  .app .dica { max-width: calc(100% - 16px); font-size: 13px; padding: 5px 12px; }
+  .app .painel { left: max(var(--gap-hud), env(safe-area-inset-left, 0px)); top: auto; width: auto; height: var(--painel-h); border-radius: 18px 18px 14px 14px; }
+  .app .painel.recolhido { transform: translateY(calc(100% - 52px)); }
+  .painel-alca { left: 50%; top: -20px; width: 52px; height: 22px; transform: translateX(-50%); border-radius: 12px 12px 0 0; border: 1px solid var(--vidro-borda); border-bottom: 0; }
+  .painel-alca .ico { transform: rotate(90deg); }
+  .painel.recolhido .painel-alca .ico { transform: rotate(-90deg); }
+  .app .controles-mapa { flex-direction: row; right: max(var(--gap-hud), env(safe-area-inset-right, 0px)); bottom: calc(var(--painel-h) + 30px); transition: bottom .35s; }
+  .app.painel-fechado .controles-mapa { right: max(var(--gap-hud), env(safe-area-inset-right, 0px)); bottom: 70px; }
+  .app .controles-mapa .btn { width: 36px; height: 36px; }
+  .visoes { right: auto; left: max(var(--gap-hud), env(safe-area-inset-left, 0px)); bottom: calc(var(--painel-h) + 84px); flex-direction: row; flex-wrap: wrap; max-width: calc(100% - 16px); }
+  .app.painel-fechado .visoes { right: auto; bottom: 124px; }
+  .app .ajuda-mapa { display: none; }
+  .app .relogio-mapa { bottom: auto; top: calc(var(--topo-h) + 56px); }
+  .legenda-visao { bottom: auto; top: calc(var(--topo-h) + 56px); left: auto; right: max(var(--gap-hud), env(safe-area-inset-right, 0px)); }
+  .celular { right: max(var(--gap-hud), env(safe-area-inset-right, 0px)); width: auto; }
+  .app .acoes-topo { gap: 4px; }
+  .app .acoes-topo .btn.icone { width: 34px; height: 34px; }
+  #btn-mes { flex: none; white-space: nowrap; font-size: 15px; padding: 7px 12px; }
+  #btn-mes .longo { display: none; }
+  .legenda-visao { top: calc(var(--topo-h) + 16px); left: max(var(--gap-hud), env(safe-area-inset-left, 0px)); font-size: 12px; }
+}
+/* com uma visão de cobertura ativa, a legenda ocupa o lugar do relógio, da ajuda e da dica */
+.app.com-visao .relogio-mapa, .app.com-visao .ajuda-mapa, .app.com-visao .dica { display: none; }
+@media (min-width: 761px) { .app.com-visao .legenda-visao { bottom: max(var(--gap-hud), env(safe-area-inset-bottom, 0px)); } }

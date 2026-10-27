@@ -228,7 +228,9 @@ function render() {
   const seq = $('s-seq');
   seq.classList.toggle('oculto', s.sequencia < 2);
   seq.querySelector('b').textContent = s.sequencia;
-  $('btn-som').textContent = s.som ? '🔊' : '🔇';
+  $('btn-som').innerHTML = `<svg class="ico"><use href="#i-${s.som ? 'som' : 'mudo'}"/></svg>`;
+  const nl = s.vozNaoLidas || 0;
+  $('badge-celular').textContent = nl; $('badge-celular').classList.toggle('oculto', !nl);
 
   const n = nivelAtual(), prox = NIVEIS[n + 1];
   $('barra-xp').style.width = prox ? ((s.xp - NIVEIS[n].xp) / (prox.xp - NIVEIS[n].xp) * 100) + '%' : '100%';
@@ -303,7 +305,7 @@ function renderConstruir(c) {
     else if (!temLicenca) acao = `<button class="btn pequeno licenca" data-licenca="${k}">📝 Licença</button>`;
     else acao = `<button class="btn pequeno primario" data-construir="${k}" ${s.dinheiro < p.custo ? 'disabled' : ''}>💰 ${p.custo}</button>`;
     h += `<li class="item-predio ${bloqueado ? 'bloqueado' : ''} ${s.selecionado === k ? 'sel' : ''}" style="--cor:${p.cor}">
-      <span class="item-icone">${p.icone}</span>
+      ${Mapa.miniatura && Mapa.miniatura(k) ? `<img class="miniatura" src="${Mapa.miniatura(k)}" alt="" loading="lazy">` : `<span class="item-icone">${p.icone}</span>`}
       <div class="item-info"><b>${p.nome}</b><small>${p.area}</small><span class="efeitos">${efeitos}</span>${p.bonus ? `<small>${p.bonus}</small>` : ''}</div>
       ${acao}</li>`;
   }
@@ -531,7 +533,11 @@ function construirEm(i) {
   s.mapa[i] = { tipo };
   ultimoConstruido = i;
   som('construir');
-  if (conta(s, tipo) === 1) { registrar(`🏗️ Inaugurado(a): <b>${p.icone} ${p.nome}</b>.`); if (p.aula) s.ultimaObra = `${p.icone} ${p.nome}`; }
+  if (conta(s, tipo) === 1) {
+    registrar(`🏗️ Inaugurado(a): <b>${p.icone} ${p.nome}</b>.`);
+    if (p.aula) s.ultimaObra = `${p.icone} ${p.nome}`;
+    if (Mapa.focar && p.cat !== 'enfeite') Mapa.focar(i); // câmera acompanha a primeira obra de cada tipo
+  }
   if (p.unico || s.dinheiro < p.custo) s.selecionado = null;
   verificarMissoes();
   render();
@@ -558,6 +564,7 @@ function abrirPredio(i) {
       if (s.dinheiro < custo) return;
       s.dinheiro -= custo;
       s.mapa[i].nivel = (s.mapa[i].nivel || 1) + 1;
+      if (Mapa.focar) Mapa.focar(i);
       ultimoConstruido = i;
       registrar(`⬆️ ${p.icone} ${p.nome} ampliado(a) para o nível ${s.mapa[i].nivel}.`);
       fecharModal(); som('construir'); confete(30); verificarMissoes(); render();
@@ -757,6 +764,7 @@ function gerarVoz(c) {
     posts.push({ quem: '@prof.renata 📚', texto: 'Você sabia? ' + a.pontos[Math.floor(Math.random() * a.pontos.length)], dica: true });
   }
   s.voz = posts.concat(s.voz || []).slice(0, 6);
+  if ($('celular').classList.contains('fechado')) s.vozNaoLidas = Math.min(9, (s.vozNaoLidas || 0) + posts.length);
 }
 function renderVoz() {
   const el = $('voz');
@@ -788,6 +796,7 @@ function gerarCaso() {
 }
 
 function abrirCaso(pend) {
+  if (Mapa.focar) Mapa.focar(pend.tile, true);
   if (pend.lei) return abrirProjeto(pend);
   const i = pend.caso, c = CASOS[i], p = PREDIOS[c.predio];
   const restam = pend.expira - s.mes;
@@ -1216,6 +1225,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!salvo) boasVindas();
 
   $('btn-mes').onclick = proximoMes;
+  window.addEventListener('miniaturas-prontas', () => render()); // o menu ganha as miniaturas 3D
   $('btn-orcamento').onclick = abrirOrcamento;
   $('btn-salvar').onclick = abrirSalvar;
   $('btn-professor').onclick = abrirProfessor;
@@ -1236,6 +1246,45 @@ document.addEventListener('DOMContentLoaded', () => {
     cx.querySelector('#m-fechar').onclick = fecharModal;
     cx.querySelector('#m-reiniciar').onclick = () => { s = novoEstado(); render(); boasVindas(); };
   });
+  // ── interface em tela cheia: topo medido, painel recolhível, celular e visões ──
+  const topo = document.querySelector('.topo');
+  new ResizeObserver(() => document.documentElement.style.setProperty('--topo-h', topo.offsetHeight + 'px')).observe(topo);
+  const recolherPainel = fechar => {
+    $('painel').classList.toggle('recolhido', fechar);
+    document.querySelector('.app').classList.toggle('painel-fechado', fechar);
+    $('btn-painel').setAttribute('aria-expanded', String(!fechar));
+  };
+  recolherPainel(matchMedia('(max-width: 760px)').matches); // no celular a cidade começa à vista
+  $('btn-painel').onclick = () => { som('clique'); recolherPainel(!$('painel').classList.contains('recolhido')); };
+  const abrirCelular = abrir => {
+    $('celular').classList.toggle('fechado', !abrir);
+    if (abrir) { s.vozNaoLidas = 0; render(); }
+  };
+  $('btn-celular').onclick = () => { som('clique'); abrirCelular($('celular').classList.contains('fechado')); };
+  $('btn-fechar-celular').onclick = () => abrirCelular(false);
+  if (Mapa.visao) {
+    const VISOES = [['', 'Nenhuma', '🏙️'], ['agua', 'Água', '💧'], ['esgoto', 'Esgoto', '🚽'], ['energia', 'Energia', '⚡'], ['educacao', 'Educação', '🏫'],
+      ['saude', 'Saúde', '🏥'], ['seguranca', 'Segurança', '🚓'], ['lazer', 'Lazer', '🌳'], ['justica', 'Justiça', '⚖️']];
+    let visaoAtual = '';
+    const desenharVisoes = () => {
+      $('visoes').innerHTML = VISOES.map(([k, nome, ic]) => `<button class="chip ${k === visaoAtual ? 'ativo' : ''}" data-visao="${k}">${ic} ${nome}</button>`).join('');
+      $('visoes').querySelectorAll('[data-visao]').forEach(b => b.onclick = () => {
+        visaoAtual = b.dataset.visao; som('clique');
+        const leg = Mapa.visao(visaoAtual || null);
+        $('btn-visoes').classList.toggle('ativo', !!visaoAtual);
+        $('legenda-visao').classList.toggle('oculto', !visaoAtual);
+        document.querySelector('.app').classList.toggle('com-visao', !!visaoAtual);
+        if (visaoAtual) $('legenda-visao').innerHTML = `<b>${VISOES.find(v => v[0] === visaoAtual)[2]} Cobertura de ${VISOES.find(v => v[0] === visaoAtual)[1].toLowerCase()}</b>
+          Alcance de ${leg.raio} quadras a partir de cada prédio que presta o serviço.
+          <div class="cores"><span><i style="background:#2ECC71"></i>atendido</span><span><i style="background:#E74C3C"></i>moradia sem atendimento</span><span><i style="background:#95A5A6"></i>fora do alcance</span></div>
+          ${leg.semAtendimento ? `<small>${leg.semAtendimento} moradia(s) fora do alcance.</small>` : '<small>Todas as moradias estão no alcance. 👏</small>'}`;
+        desenharVisoes();
+      });
+    };
+    desenharVisoes();
+    $('btn-visoes').onclick = () => { som('clique'); $('visoes').classList.toggle('oculto'); };
+  } else $('btn-visoes').hidden = true;
+
   document.querySelectorAll('.aba').forEach(a => a.onclick = () => {
     som('clique');
     document.querySelectorAll('.aba').forEach(x => x.classList.toggle('ativa', x === a));
@@ -1244,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-zoom-mais').onclick = () => Mapa.zoom(.5);
   $('btn-zoom-menos').onclick = () => Mapa.zoom(-.5);
   $('btn-zoom-reset').onclick = () => Mapa.zoom(0);
-  $('btn-placas').onclick = () => { Mapa.alternarPlacas(); renderMapa(); };
+  $('btn-placas').onclick = () => { const todas = Mapa.alternarPlacas(); renderMapa(); toast(todas ? '🏷️ Mostrando as placas de todos os prédios' : '🏷️ Placas só quando importa (casos, obras e mouse)'); };
   if (Mapa.passeio) {
     $('btn-passeio').onclick = () => { const on = Mapa.passeio(); $('btn-passeio').classList.toggle('ativo', on); };
     $('btn-foto').onclick = () => { som('moeda'); Mapa.foto(`${s.nome.replace(/[^\w\-]+/g, '-').toLowerCase() || 'cidade'}.png`); toast('📸 Foto da cidade salva!'); };

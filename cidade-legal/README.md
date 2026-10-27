@@ -77,6 +77,19 @@ Também há **enfeites** sem licença (🌳 árvore, 🌷 canteiro, ⛲ praça c
 - **🎓 Modo professor**: aproveitamento por área do Direito (provas de licença, casos e projetos de lei), áreas para revisar, nome do aluno e turma, relatório para copiar e planilha CSV.
 - **💾 Salvar e carregar**: baixe a cidade em arquivo `.json` ou copie um código de texto, e carregue em outro aparelho.
 
+## Visual
+
+O estilo mistura **maquete realista** (texturas PBR, sombras, reflexos) com **miniatura estilizada**: desfoque de "tilt-shift" nas bordas, cores mais vivas e vinheta, como se a cidade fosse uma maquete fotografada de perto.
+
+- **Tela cheia**: o mapa ocupa a tela toda e a interface flutua por cima em painéis de vidro, com ícones próprios em SVG. No celular, o menu de construção vira uma gaveta que sobe de baixo.
+- **📱 Celular do prefeito**: a Voz da cidade e o Diário Oficial ficam numa gaveta lateral, com um contador de mensagens não lidas.
+- **Cartões de construção com miniatura 3D** de cada prédio, geradas na hora.
+- **Prédios mais ricos**: casas em três estilos (telhado de duas águas com chaminé, telhado de quatro águas, moderna com laje e caixa-d'água). No nível 2 ganham garagem e no nível 3 piscina e cerca. Há letreiros nas fachadas, aparelhos de ar-condicionado, toldos de cores variadas e vapor saindo da estação de esgoto.
+- **Árvores, pessoas e carros** com formas arredondadas: copas em tufos, pinheiros em camadas, pessoas com chapéu ou bolsa e carros com rodas, faróis e lanternas. As viaturas da polícia têm faixa e sirene.
+- **Vida na cidade**: cada prédio novo passa por um canteiro de obras (tapume, andaime e guindaste girando). No outono caem folhas, na chuva as ruas ficam molhadas e refletem as luzes, e a câmera voa até o prédio do caso ou até a primeira construção de cada tipo.
+- **Placas inteligentes**: a placa aparece só no prédio sob o mouse, e o prédio ganha um contorno amarelo. O botão 🏷️ alterna para mostrar todas as placas.
+- **Visões de cobertura** (botão de camadas): água, esgoto, energia, educação, saúde, segurança, lazer e justiça. O mapa pinta de verde as moradias atendidas, de vermelho as que estão sem atendimento e de cinza o que fica fora do alcance.
+
 ## Texturas
 
 No mapa, ✨ liga os **gráficos realistas**: sombras de contato nos cantos (SSAO) e brilho das luzes à noite (bloom), com tons de cinema; em aparelho lento eles se desligam sozinhos. As fachadas têm desgaste (sujeira junto ao chão e escorridos sob as janelas).
