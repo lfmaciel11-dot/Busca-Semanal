@@ -66,6 +66,25 @@ A partir de 60 habitantes, a cidade precisa de **água, esgoto e energia** (cada
 
 Também há **enfeites** sem licença (🌳 árvore, 🌷 canteiro, ⛲ praça com calçadão de pedra portuguesa, 🏞️ lagoa com patos e 🚏 ponto de ônibus; e, na infraestrutura, 🛣️ rua e 🌉 ponte — prédios colados em rua rendem +20%) e um menu de construção por categorias.
 
+### Zona rural, indústria, transporte, porto e aeroporto
+
+| Construção | Área do Direito |
+|---|---|
+| 🌾 Lavoura | Agrário: função social da terra (CF, art. 186), reforma agrária, pequena propriedade impenhorável, agrotóxicos |
+| 🐄 Fazenda de gado | Ambiental rural: Reserva Legal, APP, CAR e maus-tratos a animais |
+| 🧺 Cooperativa agrícola | Cooperativas (Lei 5.764/1971), agricultura familiar e merenda escolar (PNAE) |
+| 📦 Centro logístico | Transporte de cargas: descanso do motorista (CTB, art. 67-C; CLT), ANTT, excesso de peso |
+| ⚙️ Indústria pesada | Responsabilidade ambiental objetiva, crime ambiental da empresa, dano ambiental imprescritível |
+| 🗑️ Aterro sanitário | Resíduos sólidos: fim dos lixões, rejeitos, catadores (Lei 12.305/2010) |
+| 🚕 Ponto de táxi | Mobilidade urbana, táxis e aplicativos (Lei 12.587/2012; ADPF 449) |
+| 🅿️ Estacionamento | Responsabilidade por danos e furtos (Súmula 130 do STJ), vagas reservadas |
+| ⛽ Posto de combustível | ANP, combustível adulterado, cartel |
+| 🚆 Estação de VLT | Transporte como direito social (EC 90/2015), Plano de Mobilidade |
+| ⚓ Porto fluvial | Portos e navegação (CF, art. 21, XII; Lei 12.815/2013; Capitania dos Portos); só na margem da água |
+| ✈️ Aeroporto | ANAC, zonas de ruído, direitos do passageiro (Resolução ANAC 400/2016); longe das moradias |
+
+**Zoneamento**: lavoura, gado e cooperativa rendem 30% a mais nas Chácaras do Oeste ou na Serra Norte; centro logístico e indústria, no Distrito Industrial; o porto, na Beira-Rio ou no Distrito Industrial. No trânsito aparecem táxis, ônibus, caminhões, ambulância, caminhão de bombeiros, coleta de lixo e trator, conforme o que a cidade tem. Com porto, um navio de carga sobe o rio; com aeroporto, um avião circula sobre a cidade.
+
 ## Mais jeitos de jogar
 
 - **Ampliar prédios** (nível 1 a 3): cada nível soma 50% aos efeitos e deixa o prédio mais alto.
