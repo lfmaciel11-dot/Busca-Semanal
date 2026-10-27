@@ -44,6 +44,20 @@ O tempo passa de verdade: o sol cruza o céu, entardece e anoitece (janelas e po
 | 💾 Centro de Dados | LGPD |
 | 🚌 Terminal de Ônibus | Trânsito (CTB), Estatuto da Pessoa Idosa, LBI |
 | 💰 Secretaria da Fazenda | Tributário e Responsabilidade Fiscal |
+| 🏦 Banco | Bancário (Súmulas 297 e 479 do STJ, superendividamento) |
+| 🧓 Agência do INSS | Previdenciário (EC 103/2019, BPC/LOAS, carência) |
+| 🏙️ Condomínio | Condominial (multa de 2%, síndico, condômino antissocial, animais) |
+| 🛐 Templo | Liberdade religiosa e Estado laico |
+| 🏢 Escritórios | Empresarial (limitada, desconsideração, recuperação judicial) |
+| 🚒 Bombeiros | Prevenção e Defesa Civil (Lei Kiss, Lei 12.608/2012, omissão de socorro) |
+| ♻️ Ecoponto | Resíduos sólidos (logística reversa, cores da coleta seletiva) |
+| 🎭 Centro Cultural | Direitos autorais (70 anos, ECAD, citação, paródia) |
+
+Também há **enfeites** sem licença (🌳 árvore, 🌷 canteiro, ⛲ praça com calçadão de pedra portuguesa e 🛣️ rua — prédios colados em rua rendem +20%) e um menu de construção por categorias.
+
+## Clima e eventos
+
+Cada mês pode ser chuvoso (mais no verão, menos no inverno), com chuva visível na cidade. Eventos trazem uma dica de lei no Diário Oficial: Carnaval (fevereiro), Festa Junina (junho), eleições municipais (outubro, a cada 4 anos — reeleição se a aprovação for boa), temporais (os Bombeiros reduzem os estragos) e auditorias do Tribunal de Contas. No mapa, 🎥 liga o modo passeio e 📸 salva uma foto da cidade.
 
 ## Como adicionar conteúdo
 
@@ -51,6 +65,7 @@ Todo o conteúdo jurídico está em `dados.js`:
 
 - **Perguntas de licença** → `PREDIOS.<prédio>.licenca`: `{ p, ops, c, exp }` (`c` = índice da alternativa correta).
 - **Bairros** → `BAIRROS`: `{ id, nome, icone, preco, r0, r1, c0, c1, lei: { titulo, pontos, base } }`.
+- **Eventos** → `EVENTOS` (`dados.js`), sorteados em `sortearClimaEEventos` (`jogo.js`).
 - **Casos mensais** → `CASOS`: `{ predio, titulo, quem, texto, ops, c, exp, base }`.
 - **Novo prédio** → nova chave em `PREDIOS` com `custo`, `nivel` (título mínimo), `efeito`, `aula` e `licenca`, mais um modelo em `MODELOS` (`cena3d.js`) e em `PREDIOS_ISO` (`isometrico.js`).
 

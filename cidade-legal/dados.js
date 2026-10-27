@@ -340,7 +340,219 @@ const PREDIOS = {
       { p: 'Uma igreja deve pagar IPTU sobre o templo?', ops: ['Sim, como todos', 'Não, templos de qualquer culto têm imunidade', 'Só metade', 'Só se tiver estacionamento'], c: 1, exp: 'O art. 150, VI, "b", da CF garante imunidade aos templos de qualquer culto (e a EC 116/2022 estendeu ao IPTU de imóveis alugados para o templo).' },
     ],
   },
+
+  banco: {
+    nome: 'Banco', icone: '🏦', area: 'Direito Bancário', cor: '#1F6F8B',
+    custo: 340, nivel: 2,
+    efeito: { renda: 36, manutencao: 0, pop: 0, felicidade: 1 },
+    aula: {
+      resumo: 'Banco também é fornecedor: o cliente é consumidor e tem a proteção do CDC.',
+      pontos: [
+        'O Código de Defesa do Consumidor se aplica às instituições financeiras (Súmula 297 do STJ).',
+        'Bancos respondem pelos danos de fraudes praticadas por terceiros em operações bancárias, como golpes com cartão clonado — é risco da atividade (Súmula 479 do STJ).',
+        'Quem cobra dívida indevida e recebe deve devolver em dobro o que foi pago a mais, salvo engano justificável (CDC, art. 42, parágrafo único).',
+        'A Lei do Superendividamento (Lei 14.181/2021) permite ao consumidor endividado renegociar todas as dívidas num plano de pagamento, preservando o mínimo existencial (CDC, arts. 54-A e 104-A).',
+      ],
+      pratica: 'Apareceu no extrato um empréstimo que você nunca fez? O banco deve cancelar, devolver o que foi descontado e pode ter de indenizar.',
+    },
+    licenca: [
+      { p: 'O Código de Defesa do Consumidor vale para bancos?', ops: ['Não, bancos têm lei própria e só ela vale', 'Sim, conforme a Súmula 297 do STJ', 'Só para contas-salário', 'Só para bancos públicos'], c: 1, exp: 'A Súmula 297 do STJ diz que o CDC é aplicável às instituições financeiras.' },
+      { p: 'Um golpista clonou o cartão do cliente e fez compras. Em regra, quem responde?', ops: ['Só o cliente', 'O banco, pois fraude de terceiros é risco da atividade bancária', 'A loja onde a compra foi feita', 'Ninguém'], c: 1, exp: 'Súmula 479 do STJ: as instituições financeiras respondem objetivamente por danos de fraudes e delitos de terceiros no âmbito das operações bancárias.' },
+      { p: 'Qual lei protege quem está com dívidas impagáveis, permitindo um plano de pagamento?', ops: ['Lei do Superendividamento (Lei 14.181/2021)', 'Lei de Falências', 'Lei do Inquilinato', 'Código Penal'], c: 0, exp: 'A Lei 14.181/2021 incluiu no CDC regras de prevenção e tratamento do superendividamento.' },
+    ],
+  },
+
+  inss: {
+    nome: 'Agência do INSS', icone: '🧓', area: 'Direito Previdenciário', cor: '#1F4E9A',
+    custo: 300, nivel: 2,
+    efeito: { renda: 0, manutencao: 14, pop: 0, felicidade: 6 },
+    aula: {
+      resumo: 'A Previdência protege quem contribui contra riscos como idade avançada, doença e morte; a Assistência Social ampara quem precisa, mesmo sem contribuir.',
+      pontos: [
+        'A Previdência Social é contributiva: quem contribui (empregado, autônomo, MEI...) tem direito a aposentadoria, auxílio por incapacidade, pensão e outros benefícios (CF, art. 201).',
+        'Após a Reforma da Previdência (EC 103/2019), a aposentadoria urbana exige, em regra, 65 anos para homens e 62 para mulheres, além de tempo mínimo de contribuição (CF, art. 201, §7º, I).',
+        'O auxílio por incapacidade temporária exige, em regra, 12 contribuições de carência — dispensadas em caso de acidente (Lei 8.213/1991, arts. 25 e 26).',
+        'O BPC/LOAS paga 1 salário mínimo a idosos a partir de 65 anos e a pessoas com deficiência de baixa renda, mesmo sem contribuição (CF, art. 203, V; Lei 8.742/1993, art. 20).',
+      ],
+      pratica: 'Dona Maria tem 66 anos, nunca contribuiu e vive com renda muito baixa? Ela pode ter direito ao BPC, que é assistencial.',
+    },
+    licenca: [
+      { p: 'Após a EC 103/2019, qual a idade mínima, em regra, para a aposentadoria urbana da mulher?', ops: ['55 anos', '60 anos', '62 anos', '65 anos'], c: 2, exp: 'CF, art. 201, §7º, I: 65 anos para homens e 62 para mulheres, com tempo mínimo de contribuição.' },
+      { p: 'O BPC/LOAS exige contribuição ao INSS?', ops: ['Sim, 15 anos', 'Sim, 5 anos', 'Não, é benefício assistencial para quem tem baixa renda', 'Só para servidores públicos'], c: 2, exp: 'O BPC é assistencial (CF, art. 203, V): independe de contribuição, mas exige critérios de renda e idade ou deficiência.' },
+      { p: 'Um trabalhador com 2 meses de contribuição sofreu acidente e ficou afastado. Ele precisa cumprir a carência de 12 meses?', ops: ['Sim, sempre', 'Não, em caso de acidente a carência é dispensada', 'Só se for acidente de trânsito', 'Ele não tem direito a nada'], c: 1, exp: 'O art. 26, II, da Lei 8.213/91 dispensa a carência do auxílio por incapacidade decorrente de acidente de qualquer natureza.' },
+    ],
+  },
+
+  condominio: {
+    nome: 'Condomínio', icone: '🏙️', area: 'Direito Condominial', cor: '#6C7A89',
+    custo: 300, nivel: 1,
+    efeito: { renda: 28, manutencao: 0, pop: 16, felicidade: 0 },
+    aula: {
+      resumo: 'No condomínio, cada um é dono da sua unidade e todos dividem as áreas comuns, seguindo o Código Civil e a convenção.',
+      pontos: [
+        'O condomínio edilício é regido pelo Código Civil (arts. 1.331 a 1.358), pela convenção e pelo regimento interno.',
+        'A multa por atraso da taxa condominial é de no máximo 2%, mais juros (CC, art. 1.336, §1º).',
+        'O síndico é eleito em assembleia, com mandato de até 2 anos, que pode ser renovado (CC, art. 1.347).',
+        'O condômino com comportamento antissocial reiterado pode ser multado em até 10 vezes a taxa condominial, por deliberação da assembleia (CC, art. 1.337, parágrafo único).',
+        'A convenção não pode proibir de forma genérica animais de estimação que não tragam risco ou incômodo (STJ, REsp 1.783.076/DF).',
+      ],
+      pratica: 'O condomínio quer cobrar 10% de multa pelo boleto atrasado? Não pode: o limite legal é 2%, mais juros.',
+    },
+    licenca: [
+      { p: 'Qual a multa máxima por atraso na taxa de condomínio?', ops: ['2%', '10%', '20%', 'Não há limite'], c: 0, exp: 'CC, art. 1.336, §1º: multa de até 2% sobre o débito, além dos juros.' },
+      { p: 'Qual o mandato máximo do síndico?', ops: ['6 meses', '1 ano', '2 anos, renovável', '5 anos'], c: 2, exp: 'CC, art. 1.347: mandato não superior a dois anos, o qual poderá renovar-se.' },
+      { p: 'A convenção pode proibir qualquer animal de estimação, mesmo um gato que não incomoda ninguém?', ops: ['Sim, a convenção manda', 'Não, a proibição genérica é inválida, segundo o STJ', 'Só se o síndico quiser', 'Só em prédios novos'], c: 1, exp: 'O STJ (REsp 1.783.076/DF) entendeu que a proibição genérica de animais que não causam risco ou incômodo é desarrazoada.' },
+    ],
+  },
+
+  templo: {
+    nome: 'Templo', icone: '🛐', area: 'Liberdade Religiosa', cor: '#8E6CB0',
+    custo: 200, nivel: 1,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 6 },
+    aula: {
+      resumo: 'O Brasil é um Estado laico: todas as crenças são livres e o poder público não pode favorecer nem perseguir nenhuma.',
+      pontos: [
+        'É inviolável a liberdade de consciência e de crença, garantido o livre exercício dos cultos (CF, art. 5º, VI).',
+        'O poder público não pode estabelecer cultos, subvencioná-los, embaraçar seu funcionamento ou manter com eles aliança (CF, art. 19, I).',
+        'Templos de qualquer culto têm imunidade de impostos (CF, art. 150, VI, "b").',
+        'O estudante pode pedir prestação alternativa quando a prova cair em dia de guarda religiosa (Lei 9.394/1996, art. 7º-A, incluído pela Lei 13.796/2019).',
+        'Praticar, induzir ou incitar discriminação por religião é crime (Lei 7.716/1989, art. 20).',
+      ],
+      pratica: 'O prefeito quer usar dinheiro público para pintar só a igreja que ele frequenta? Não pode: o Estado é laico (CF, art. 19, I).',
+    },
+    licenca: [
+      { p: 'O que significa dizer que o Brasil é um Estado laico?', ops: ['Que a religião é proibida', 'Que o Estado não adota nem favorece nenhuma religião, e todas são livres', 'Que existe uma religião oficial', 'Que só templos registrados podem funcionar'], c: 1, exp: 'CF, art. 19, I: é vedado ao poder público estabelecer cultos, subvencioná-los ou embaraçar seu funcionamento.' },
+      { p: 'Ofender e discriminar alguém por causa de sua religião é:', ops: ['Liberdade de expressão sempre', 'Crime previsto na Lei 7.716/1989', 'Apenas falta de educação', 'Infração de trânsito'], c: 1, exp: 'O art. 20 da Lei 7.716/89 pune quem pratica, induz ou incita discriminação por religião.' },
+      { p: 'Um aluno guarda o sábado por religião e a prova foi marcada nesse dia. O que a lei prevê?', ops: ['Ele perde a prova', 'Pode pedir prestação alternativa', 'A escola deve cancelar a prova para todos', 'Nada'], c: 1, exp: 'A Lei 13.796/2019 incluiu o art. 7º-A na LDB, garantindo prestação alternativa ao aluno.' },
+    ],
+  },
+
+  empresa: {
+    nome: 'Escritórios', icone: '🏢', area: 'Direito Empresarial', cor: '#2B6CB0',
+    custo: 420, nivel: 3,
+    efeito: { renda: 55, manutencao: 0, pop: 2, felicidade: 0 },
+    aula: {
+      resumo: 'O Direito Empresarial organiza a vida das empresas: como abrir, como os sócios respondem pelas dívidas e o que fazer numa crise.',
+      pontos: [
+        'Empresário é quem exerce profissionalmente atividade econômica organizada para produzir ou fazer circular bens ou serviços (CC, art. 966).',
+        'É obrigatória a inscrição na Junta Comercial antes de começar a atividade (CC, art. 967).',
+        'Na sociedade limitada, cada sócio responde até o valor de suas quotas; desde 2019 ela pode ter um único sócio (CC, art. 1.052).',
+        'Se houver abuso — desvio de finalidade ou confusão entre o patrimônio da empresa e o dos sócios — o juiz pode atingir os bens dos sócios: é a desconsideração da personalidade jurídica (CC, art. 50).',
+        'Empresa em crise pode pedir recuperação judicial para renegociar dívidas e evitar a falência (Lei 11.101/2005).',
+      ],
+      pratica: 'O sócio pagava a reforma da própria casa com a conta da empresa e deixou dívidas? O juiz pode alcançar os bens pessoais dele (CC, art. 50).',
+    },
+    licenca: [
+      { p: 'Na sociedade limitada, até quanto o sócio responde pelas dívidas da empresa, em regra?', ops: ['Por todas, com todos os seus bens', 'Até o valor de suas quotas', 'Só por metade', 'Não responde por nada nunca'], c: 1, exp: 'CC, art. 1.052: a responsabilidade de cada sócio é restrita ao valor de suas quotas (todos respondem solidariamente pela integralização do capital).' },
+      { p: 'Onde o empresário deve se registrar antes de começar?', ops: ['No cartório de imóveis', 'Na Junta Comercial', 'Na delegacia', 'Na Câmara Municipal'], c: 1, exp: 'CC, art. 967: é obrigatória a inscrição no Registro Público de Empresas Mercantis (Junta Comercial).' },
+      { p: 'Qual instrumento ajuda a empresa em crise a negociar dívidas e continuar funcionando?', ops: ['Usucapião', 'Recuperação judicial', 'Habeas corpus', 'Mandado de segurança'], c: 1, exp: 'A recuperação judicial (Lei 11.101/2005) busca viabilizar a superação da crise e preservar a empresa e os empregos.' },
+    ],
+  },
+
+  bombeiros: {
+    nome: 'Bombeiros', icone: '🚒', area: 'Prevenção e Defesa Civil', cor: '#D32F2F',
+    custo: 320, nivel: 2,
+    efeito: { renda: 0, manutencao: 15, pop: 0, felicidade: 6 },
+    servico: 'seguranca',
+    bonus: 'Reduz os estragos dos temporais.',
+    aula: {
+      resumo: 'Prevenir é a melhor proteção: locais com público precisam de regras contra incêndio, e o município deve cuidar das áreas de risco.',
+      pontos: [
+        'A Lei Kiss (Lei 13.425/2017) traz normas de prevenção e combate a incêndio em estabelecimentos e locais de reunião de público, com vistoria e licenciamento.',
+        'A Política Nacional de Proteção e Defesa Civil (Lei 12.608/2012) organiza prevenção, preparação, resposta e recuperação em desastres.',
+        'Cabe ao município identificar e mapear as áreas de risco, fiscalizá-las e vedar novas ocupações nelas (Lei 12.608/2012, art. 8º).',
+        'Deixar de prestar socorro, quando possível fazê-lo sem risco pessoal, a quem está em perigo é crime de omissão de socorro (CP, art. 135).',
+      ],
+      pratica: 'A boate quer abrir no sábado sem a vistoria de prevenção de incêndio? Não pode: locais de reunião de público precisam estar regularizados.',
+    },
+    licenca: [
+      { p: 'A Lei Kiss (Lei 13.425/2017) trata de quê?', ops: ['Direito de família', 'Prevenção e combate a incêndio em locais com público', 'Imposto de renda', 'Trânsito'], c: 1, exp: 'A lei foi criada após a tragédia da boate Kiss (2013) e estabelece diretrizes de prevenção a incêndio em locais de reunião de público.' },
+      { p: 'Quem deve mapear áreas de risco de deslizamento e enchente na cidade?', ops: ['Só a União', 'O município, com apoio do Estado e da União', 'As empresas privadas', 'Ninguém'], c: 1, exp: 'Lei 12.608/2012, art. 8º: compete aos municípios identificar e mapear áreas de risco e vedar novas ocupações nelas.' },
+      { p: 'Ver alguém ferido e ir embora sem ajudar nem chamar socorro, podendo fazê-lo sem risco, é:', ops: ['Permitido', 'Crime de omissão de socorro', 'Só falta de educação', 'Infração administrativa leve'], c: 1, exp: 'CP, art. 135. Ligar para o socorro (192/193) já é uma forma de prestar assistência.' },
+    ],
+  },
+
+  ecoponto: {
+    nome: 'Ecoponto', icone: '♻️', area: 'Resíduos Sólidos', cor: '#2E9E4F',
+    custo: 220, nivel: 1,
+    efeito: { renda: 6, manutencao: 8, pop: 0, felicidade: 5 },
+    aula: {
+      resumo: 'Lixo é responsabilidade de todos: quem fabrica, quem vende, quem consome e o poder público.',
+      pontos: [
+        'A Política Nacional de Resíduos Sólidos (Lei 12.305/2010) cria a responsabilidade compartilhada pelo ciclo de vida dos produtos (art. 30).',
+        'Logística reversa: fabricantes e comerciantes de pilhas, baterias, pneus, óleos lubrificantes, lâmpadas e eletroeletrônicos devem receber esses produtos de volta após o uso (art. 33).',
+        'A ordem de prioridade é: não gerar, reduzir, reutilizar, reciclar, tratar e, por último, dar destinação final adequada (art. 9º).',
+        'É proibido lançar resíduos a céu aberto — os lixões (art. 47, II) — e a lei incentiva a integração de catadores em cooperativas.',
+        'Cores da coleta seletiva: azul papel, vermelho plástico, verde vidro, amarelo metal e marrom orgânico (Resolução CONAMA 275/2001).',
+      ],
+      pratica: 'Pilhas velhas não vão no lixo comum: devolva no comércio que vende pilhas, que é obrigado a recebê-las (logística reversa).',
+    },
+    licenca: [
+      { p: 'Onde descartar corretamente pilhas e baterias usadas?', ops: ['No lixo comum', 'No rio', 'Nos pontos de coleta do comércio/fabricantes (logística reversa)', 'Enterrar no quintal'], c: 2, exp: 'Lei 12.305/2010, art. 33: pilhas e baterias estão sujeitas à logística reversa.' },
+      { p: 'Qual a primeira prioridade na gestão de resíduos?', ops: ['Reciclar', 'Não gerar', 'Queimar', 'Aterrar'], c: 1, exp: 'Art. 9º: não geração, redução, reutilização, reciclagem, tratamento e disposição final adequada, nessa ordem.' },
+      { p: 'Na coleta seletiva, o vidro vai em qual cor de lixeira?', ops: ['Azul', 'Vermelha', 'Verde', 'Amarela'], c: 2, exp: 'Resolução CONAMA 275/2001: verde para vidro (azul papel, vermelho plástico, amarelo metal, marrom orgânico).' },
+    ],
+  },
+
+  cultura: {
+    nome: 'Centro Cultural', icone: '🎭', area: 'Direitos Autorais', cor: '#C2185B',
+    custo: 280, nivel: 2,
+    efeito: { renda: 4, manutencao: 10, pop: 0, felicidade: 8 },
+    aula: {
+      resumo: 'Músicas, livros, filmes e fotos têm dono: o autor decide como sua obra pode ser usada — por um tempo limitado.',
+      pontos: [
+        'A Lei 9.610/1998 protege as obras intelectuais, como músicas, textos, filmes, fotografias e obras de arte.',
+        'Os direitos patrimoniais duram toda a vida do autor e mais 70 anos, contados de 1º de janeiro do ano seguinte à sua morte; depois, a obra cai em domínio público (art. 41).',
+        'Tocar músicas em locais de frequência coletiva — festas, lojas, academias, eventos públicos — exige autorização e pagamento ao ECAD (arts. 68 e 99).',
+        'É livre citar trechos de obras para estudo, crítica ou polêmica, indicando o autor e a origem (art. 46, III).',
+        'Paródias e paráfrases são livres, desde que não sejam reproduções da obra original nem a desacreditem (art. 47).',
+      ],
+      pratica: 'Quer encenar um texto de Machado de Assis, que morreu em 1908? Pode: a obra já está em domínio público.',
+    },
+    licenca: [
+      { p: 'Por quanto tempo, após a morte do autor, a obra continua protegida?', ops: ['10 anos', '30 anos', '70 anos', 'Para sempre'], c: 2, exp: 'Lei 9.610/98, art. 41: 70 anos contados de 1º de janeiro do ano subsequente ao falecimento.' },
+      { p: 'Uma festa aberta ao público vai tocar músicas de sucesso. O que é necessário?', ops: ['Nada, música é livre', 'Autorização e recolhimento ao ECAD', 'Registro na Junta Comercial', 'Autorização da polícia'], c: 1, exp: 'Arts. 68 e 99 da Lei 9.610/98: execução pública em locais de frequência coletiva depende de autorização, e a arrecadação é feita pelo ECAD.' },
+      { p: 'Citar um trecho de um livro num trabalho escolar, com o nome do autor, é:', ops: ['Proibido', 'Permitido (direito de citação)', 'Crime', 'Só com autorização escrita'], c: 1, exp: 'Art. 46, III: é permitida a citação para fins de estudo, crítica ou polêmica, indicando o autor e a origem.' },
+    ],
+  },
+
+  /* ── Enfeites: sem licença, baratos, ajudam a felicidade (bônus total limitado) ── */
+  arvore: {
+    nome: 'Árvore', icone: '🌳', area: 'Enfeite', cor: '#2E7D4F', cat: 'enfeite',
+    custo: 15, nivel: 0, efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 1 },
+  },
+  canteiro: {
+    nome: 'Canteiro de flores', icone: '🌷', area: 'Enfeite', cor: '#E86FB0', cat: 'enfeite',
+    custo: 25, nivel: 0, efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 1 },
+  },
+  praca: {
+    nome: 'Praça', icone: '⛲', area: 'Enfeite', cor: '#8D6E63', cat: 'enfeite',
+    custo: 80, nivel: 0, efeito: { renda: 0, manutencao: 2, pop: 0, felicidade: 3 },
+  },
+  ruaLocal: {
+    nome: 'Rua', icone: '🛣️', area: 'Infraestrutura', cor: '#4E5663', cat: 'enfeite',
+    custo: 25, nivel: 0, efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 0 },
+    bonus: 'Prédios colados na rua rendem +20%.',
+  },
 };
+
+/* Categorias do menu de construção */
+const CATEGORIAS = [
+  { id: 'todos', nome: 'Todos', icone: '✨' },
+  { id: 'moradia', nome: 'Moradia', icone: '🏠' },
+  { id: 'economia', nome: 'Economia', icone: '🏪' },
+  { id: 'servicos', nome: 'Serviços', icone: '🏥' },
+  { id: 'governo', nome: 'Governo', icone: '⚖️' },
+  { id: 'comunidade', nome: 'Comunidade', icone: '🌳' },
+  { id: 'enfeite', nome: 'Enfeites', icone: '🌷' },
+];
+Object.entries({
+  casa: 'moradia', aluguel: 'moradia', condominio: 'moradia',
+  mercado: 'economia', fabrica: 'economia', banco: 'economia', empresa: 'economia', dados: 'economia',
+  escola: 'servicos', saude: 'servicos', inss: 'servicos', bombeiros: 'servicos', delegacia: 'servicos', terminal: 'servicos',
+  camara: 'governo', forum: 'governo', cartorio: 'governo', fazenda: 'governo', prefeitura: 'governo',
+  parque: 'comunidade', ecoponto: 'comunidade', templo: 'comunidade', cultura: 'comunidade',
+}).forEach(([k, c]) => { PREDIOS[k].cat = c; });
 
 /* Títulos do prefeito conforme o "Conhecimento Jurídico" acumulado */
 const NIVEIS = [
@@ -358,6 +570,7 @@ const MISSOES = [
   { id: 'm1', texto: 'Construa suas primeiras Casas', ok: s => conta(s, 'casa') >= 1, xp: 10, din: 50 },
   { id: 'm2', texto: 'Abra um Mercado (Direito do Consumidor)', ok: s => conta(s, 'mercado') >= 1, xp: 10, din: 60 },
   { id: 'm3', texto: 'Crie um Parque (Direito Ambiental)', ok: s => conta(s, 'parque') >= 1, xp: 10, din: 60 },
+  { id: 'me', texto: 'Enfeite a cidade com 3 árvores, canteiros ou praças', ok: s => ['arvore', 'canteiro', 'praca'].reduce((n, k) => n + conta(s, k), 0) >= 3, xp: 10, din: 40 },
   { id: 'm4', texto: 'Resolva 3 casos de cidadãos', ok: s => s.casosResolvidos >= 3, xp: 20, din: 100 },
   { id: 'm5', texto: 'Alcance 50 habitantes', ok: s => s.pop >= 50, xp: 20, din: 100 },
   { id: 'mb', texto: 'Compre um novo bairro para expandir a cidade', ok: s => Object.keys(s.bairros || {}).length >= 2, xp: 25, din: 0 },
@@ -365,7 +578,7 @@ const MISSOES = [
   { id: 'm7', texto: 'Instale Delegacia e Fórum', ok: s => conta(s, 'delegacia') >= 1 && conta(s, 'forum') >= 1, xp: 30, din: 150 },
   { id: 'm8', texto: 'Tenha 8 licenças jurídicas', ok: s => Object.keys(s.licencas).length >= 8, xp: 40, din: 200 },
   { id: 'm9', texto: 'Alcance 150 habitantes e felicidade 70%', ok: s => s.pop >= 150 && s.felicidade >= 70, xp: 50, din: 300 },
-  { id: 'm10', texto: 'Libere todas as áreas do Direito', ok: s => Object.keys(PREDIOS).every(k => s.licencas[k]), xp: 100, din: 500 },
+  { id: 'm10', texto: 'Libere todas as áreas do Direito', ok: s => Object.keys(PREDIOS).every(k => !PREDIOS[k].aula || s.licencas[k]), xp: 100, din: 500 },
   { id: 'm11', texto: 'Compre todos os bairros da cidade', ok: s => BAIRROS.every(b => (s.bairros || {})[b.id]), xp: 120, din: 0 },
 ];
 
@@ -635,7 +848,157 @@ const CASOS = [
     ops: ['Pode, o próximo paga', 'Não: a Lei de Responsabilidade Fiscal proíbe nos últimos 8 meses do mandato', 'Pode, se for obra'], c: 1,
     exp: 'O art. 42 da LRF (LC 101/2000) proíbe, nos dois últimos quadrimestres do mandato, contrair obrigação que não possa ser paga no mesmo período sem disponibilidade de caixa.',
     base: 'LC 101/2000, art. 42' },
+
+  // ── Banco ──
+  { predio: 'banco', titulo: 'Empréstimo fantasma', quem: '👵 Dona Zilda',
+    texto: 'Apareceu um desconto de empréstimo na minha aposentadoria, mas eu nunca pedi empréstimo nenhum! O banco diz que "está no sistema". E agora?',
+    ops: ['Ela tem que pagar, está no sistema', 'O banco deve cancelar, devolver o que descontou (em regra, em dobro) e pode ter de indenizar', 'Só a polícia pode resolver'], c: 1,
+    exp: 'Cobrança indevida dá direito à devolução em dobro do que foi pago, salvo engano justificável (CDC, art. 42, parágrafo único). Fraude na contratação é risco do banco (Súmula 479 do STJ).',
+    base: 'CDC, art. 42; Súmula 479 do STJ' },
+  { predio: 'banco', titulo: 'Dívidas demais', quem: '😰 Marcos',
+    texto: 'Tenho cartão, cheque especial e dois empréstimos. Se eu pagar tudo, não sobra nem para comer. Existe alguma saída legal?',
+    ops: ['Não, tem que pagar tudo de uma vez', 'Pode pedir a repactuação das dívidas pela Lei do Superendividamento, preservando o mínimo existencial', 'Basta parar de pagar e esquecer'], c: 1,
+    exp: 'A Lei 14.181/2021 permite ao consumidor superendividado pedir um processo de repactuação, com plano de pagamento envolvendo todos os credores (CDC, art. 104-A).',
+    base: 'CDC, arts. 54-A e 104-A' },
+  { predio: 'banco', titulo: 'Golpe do cartão clonado', quem: '💳 Bruno',
+    texto: 'Clonaram meu cartão e fizeram compras de R$ 2.000. O banco diz que a culpa é minha. Tenho direito a algo?',
+    ops: ['Não, o cartão é dele', 'Sim: em regra, o banco responde por fraudes de terceiros nas operações bancárias', 'Só se ele tiver seguro'], c: 1,
+    exp: 'Súmula 479 do STJ: as instituições financeiras respondem objetivamente pelos danos gerados por fortuito interno relativo a fraudes e delitos de terceiros.',
+    base: 'Súmula 479 do STJ' },
+
+  // ── INSS ──
+  { predio: 'inss', titulo: 'Nunca contribuí', quem: '👵 Dona Maria, 66 anos',
+    texto: 'Trabalhei a vida toda em casa e nunca paguei INSS. Hoje vivo com quase nada. Tenho direito a algum benefício?',
+    ops: ['Nenhum, porque nunca contribuiu', 'Pode ter direito ao BPC/LOAS, que é assistencial e não exige contribuição', 'Só a aposentadoria por tempo de contribuição'], c: 1,
+    exp: 'O BPC garante 1 salário mínimo ao idoso com 65 anos ou mais que comprove baixa renda familiar, mesmo sem contribuir (CF, art. 203, V; Lei 8.742/93, art. 20).',
+    base: 'CF, art. 203, V; Lei 8.742/1993' },
+  { predio: 'inss', titulo: 'Acidente no começo', quem: '🏍️ Diego, motoboy',
+    texto: 'Comecei a contribuir há 2 meses e sofri um acidente de moto. Fiquei sem poder trabalhar. Como não tenho 12 contribuições, perdi o direito?',
+    ops: ['Perdeu, faltou carência', 'Não: em caso de acidente, a carência do auxílio por incapacidade é dispensada', 'Só recebe depois de 12 meses'], c: 1,
+    exp: 'Lei 8.213/91, art. 26, II: independe de carência o auxílio por incapacidade decorrente de acidente de qualquer natureza.',
+    base: 'Lei 8.213/1991, art. 26, II' },
+  { predio: 'inss', titulo: 'Quando posso me aposentar?', quem: '👩‍🔧 Sônia, 58 anos',
+    texto: 'Comecei a contribuir em 2020, depois da Reforma. Com que idade, em regra, eu poderei me aposentar?',
+    ops: ['Aos 55 anos', 'Aos 62 anos, cumprido o tempo mínimo de contribuição', 'A qualquer idade'], c: 1,
+    exp: 'Para quem entrou no sistema depois da EC 103/2019, a regra geral é 62 anos para mulheres e 65 para homens, com tempo mínimo de contribuição (CF, art. 201, §7º, I).',
+    base: 'CF, art. 201, §7º; EC 103/2019' },
+
+  // ── Condomínio ──
+  { predio: 'condominio', titulo: 'Proibido ter gato', quem: '🐈 Luana, moradora',
+    texto: 'A convenção do prédio proíbe qualquer animal. Meu gato é castrado, fica dentro de casa e não incomoda ninguém. Vou ter que me desfazer dele?',
+    ops: ['Sim, a convenção manda', 'Não: proibição genérica de animais que não causam risco ou incômodo é inválida', 'Só se pagar taxa extra'], c: 1,
+    exp: 'O STJ (REsp 1.783.076/DF) decidiu que a convenção não pode proibir genericamente a criação de animais que não ofereçam risco à segurança, higiene ou sossego.',
+    base: 'STJ, REsp 1.783.076/DF' },
+  { predio: 'condominio', titulo: 'Multa de 10%', quem: '🧾 Síndico',
+    texto: 'Quero cobrar 10% de multa de quem atrasar a taxa de condomínio, para ninguém atrasar mais. Posso?',
+    ops: ['Pode, a assembleia decide', 'Não: o limite legal é 2%, mais juros', 'Pode, se estiver na convenção'], c: 1,
+    exp: 'CC, art. 1.336, §1º: o condômino que não pagar sua contribuição fica sujeito a juros e multa de até 2% sobre o débito.',
+    base: 'CC, art. 1.336, §1º' },
+  { predio: 'condominio', titulo: 'O vizinho do 302', quem: '😤 Assembleia',
+    texto: 'Um morador faz festas toda madrugada, ameaça vizinhos e já foi multado várias vezes. O condomínio pode fazer algo mais?',
+    ops: ['Nada, ele é dono', 'Sim: por comportamento antissocial reiterado, a assembleia pode aplicar multa de até 10 vezes a taxa condominial', 'Pode cortar a água do apartamento'], c: 1,
+    exp: 'CC, art. 1.337, parágrafo único: o condômino antissocial pode ser multado em até o décuplo da contribuição, até ulterior deliberação da assembleia. Cortar água é proibido.',
+    base: 'CC, art. 1.337' },
+
+  // ── Templo ──
+  { predio: 'templo', titulo: 'Reforma com dinheiro público', quem: '🧑‍💼 Assessor',
+    texto: 'O prefeito frequenta o templo da praça e quer pagar a reforma dele com verba da prefeitura. Pode?',
+    ops: ['Pode, é patrimônio da cidade', 'Não: o Estado é laico e não pode subvencionar cultos', 'Pode, se for em ano eleitoral'], c: 1,
+    exp: 'CF, art. 19, I: é vedado ao poder público subvencionar cultos religiosos ou igrejas (ressalvada a colaboração de interesse público, na forma da lei).',
+    base: 'CF, art. 19, I' },
+  { predio: 'templo', titulo: 'Pichação no terreiro', quem: '🙏 Mãe Joana',
+    texto: 'Picharam o muro do nosso terreiro com ofensas à nossa religião. Isso é só vandalismo?',
+    ops: ['Só vandalismo, sem importância', 'É crime de discriminação religiosa, além de dano', 'É liberdade de expressão'], c: 1,
+    exp: 'Praticar, induzir ou incitar discriminação ou preconceito de religião é crime (Lei 7.716/89, art. 20). A pichação também pode configurar crime de dano ou ambiental.',
+    base: 'Lei 7.716/1989, art. 20' },
+  { predio: 'templo', titulo: 'Prova no sábado', quem: '📚 Estudante',
+    texto: 'Minha religião guarda o sábado e a prova da escola foi marcada para sábado. Vou ficar com zero?',
+    ops: ['Sim, regras são regras', 'Não: a lei garante prestação alternativa, como prova em outra data', 'Só se a escola for religiosa'], c: 1,
+    exp: 'LDB, art. 7º-A (Lei 13.796/2019): ao aluno é assegurado, mediante requerimento, ausentar-se de prova marcada em dia de guarda religiosa, com prestação alternativa.',
+    base: 'Lei 9.394/1996, art. 7º-A' },
+
+  // ── Escritórios / Empresarial ──
+  { predio: 'empresa', titulo: 'Sócio espertinho', quem: '📉 Credor',
+    texto: 'A empresa fechou devendo para todo mundo, mas o sócio usava a conta dela para pagar a casa de praia. Só posso cobrar da empresa vazia?',
+    ops: ['Sim, sócio nunca responde', 'Não: havendo confusão patrimonial, o juiz pode desconsiderar a personalidade jurídica e alcançar os bens do sócio', 'Pode tomar a casa sem processo'], c: 1,
+    exp: 'CC, art. 50: em caso de abuso da personalidade jurídica (desvio de finalidade ou confusão patrimonial), os efeitos de obrigações podem ser estendidos aos bens dos sócios.',
+    base: 'CC, art. 50' },
+  { predio: 'empresa', titulo: 'Crise na empresa', quem: '👔 Empresária',
+    texto: 'Minha empresa tem 80 funcionários e está com dívidas, mas o negócio é bom. Existe alternativa à falência?',
+    ops: ['Não, tem que fechar', 'Sim: pedir recuperação judicial para renegociar as dívidas', 'Demitir todos sem pagar'], c: 1,
+    exp: 'A recuperação judicial (Lei 11.101/2005) busca viabilizar a superação da crise econômico-financeira, preservando a empresa, os empregos e os interesses dos credores.',
+    base: 'Lei 11.101/2005, art. 47' },
+  { predio: 'empresa', titulo: 'Empresa de um sócio só', quem: '💡 Thiago',
+    texto: 'Quero abrir uma empresa sozinho, mas não quero arriscar meu apartamento se o negócio der errado. Preciso arrumar um sócio?',
+    ops: ['Sim, limitada exige dois sócios', 'Não: desde 2019 a sociedade limitada pode ter um único sócio, com responsabilidade limitada', 'Não existe responsabilidade limitada no Brasil'], c: 1,
+    exp: 'A Lei 13.874/2019 incluiu o §1º no art. 1.052 do CC: a sociedade limitada pode ser constituída por uma ou mais pessoas.',
+    base: 'CC, art. 1.052, §1º' },
+
+  // ── Bombeiros / Defesa Civil ──
+  { predio: 'bombeiros', titulo: 'Boate sem vistoria', quem: '🎶 Dono da boate',
+    texto: 'Vamos inaugurar a boate no sábado com 500 pessoas. A vistoria de incêndio ainda não saiu, mas é só um detalhe. Posso abrir?',
+    ops: ['Pode, é só um detalhe', 'Não: locais de reunião de público precisam de prevenção de incêndio vistoriada e licenciada', 'Pode, se tiver extintor'], c: 1,
+    exp: 'A Lei 13.425/2017 (Lei Kiss) exige medidas de prevenção e combate a incêndio, com vistoria e licenciamento dos locais de reunião de público.',
+    base: 'Lei 13.425/2017' },
+  { predio: 'bombeiros', titulo: 'Casas na encosta', quem: '⛰️ Agente da Defesa Civil',
+    texto: 'Famílias estão construindo casas numa encosta que desliza quando chove forte. O que a prefeitura deve fazer?',
+    ops: ['Nada, o terreno é deles', 'Mapear a área de risco, vedar novas ocupações e apoiar a realocação das famílias', 'Esperar o deslizamento'], c: 1,
+    exp: 'Lei 12.608/2012, art. 8º: compete ao município identificar e mapear áreas de risco, fiscalizá-las e vedar novas ocupações, promovendo, quando necessário, a intervenção preventiva e a evacuação.',
+    base: 'Lei 12.608/2012, art. 8º' },
+  { predio: 'bombeiros', titulo: 'Passou direto', quem: '🚑 Testemunha',
+    texto: 'Um motorista viu um ciclista caído e machucado na estrada e foi embora sem ajudar nem ligar para ninguém. Ele fez algo errado?',
+    ops: ['Não, não foi ele que causou', 'Sim: omissão de socorro é crime; bastava ligar para o socorro', 'Só se conhecesse a vítima'], c: 1,
+    exp: 'CP, art. 135: deixar de prestar assistência, quando possível fazê-lo sem risco pessoal, ou não pedir socorro da autoridade pública, é crime.',
+    base: 'CP, art. 135' },
+
+  // ── Ecoponto ──
+  { predio: 'ecoponto', titulo: 'Pilhas velhas', quem: '🔋 Seu Raul',
+    texto: 'Tenho uma caixa cheia de pilhas e baterias velhas. Posso jogar no lixo comum?',
+    ops: ['Pode', 'Não: devem voltar ao comércio ou fabricante, que são obrigados a recebê-las (logística reversa)', 'Pode, se embrulhar em jornal'], c: 1,
+    exp: 'Lei 12.305/2010, art. 33: pilhas e baterias estão sujeitas à logística reversa, e o comércio deve receber os produtos usados.',
+    base: 'Lei 12.305/2010, art. 33' },
+  { predio: 'ecoponto', titulo: 'Um lixão mais barato', quem: '🗑️ Secretário de Obras',
+    texto: 'O aterro sanitário é caro. Que tal jogar o lixo da cidade num terreno afastado, a céu aberto?',
+    ops: ['Boa economia!', 'Não: lixão a céu aberto é proibido pela Política Nacional de Resíduos Sólidos', 'Pode, se for longe das casas'], c: 1,
+    exp: 'Lei 12.305/2010, art. 47, II: é proibido o lançamento de resíduos in natura a céu aberto. Além disso, pode configurar crime ambiental (Lei 9.605/98, art. 54).',
+    base: 'Lei 12.305/2010, art. 47' },
+  { predio: 'ecoponto', titulo: 'Os catadores', quem: '♻️ Cooperativa',
+    texto: 'Somos catadores e queremos trabalhar com a prefeitura na coleta seletiva. A lei permite?',
+    ops: ['Não, só empresas grandes', 'Sim: a lei incentiva a integração de cooperativas de catadores, inclusive com contratação dispensada de licitação', 'Só como voluntários'], c: 1,
+    exp: 'A Lei 12.305/2010 prevê a integração dos catadores (art. 7º, XII), e a Lei 14.133/2021 (art. 75, IV, "j") permite contratar suas cooperativas com dispensa de licitação.',
+    base: 'Lei 12.305/2010, art. 7º; Lei 14.133/2021, art. 75' },
+
+  // ── Centro Cultural ──
+  { predio: 'cultura', titulo: 'Música na festa da cidade', quem: '🎤 Produtor cultural',
+    texto: 'A prefeitura vai fazer um show gratuito na praça com músicas famosas. Como é de graça, não precisa pagar nada de direito autoral, certo?',
+    ops: ['Certo, evento gratuito é livre', 'Errado: execução pública de músicas exige autorização e recolhimento ao ECAD, mesmo em evento gratuito', 'Só paga se tiver mais de mil pessoas'], c: 1,
+    exp: 'Lei 9.610/98, arts. 68 e 99: a execução pública em locais de frequência coletiva depende de autorização; o STJ entende que isso vale mesmo sem cobrança de ingresso.',
+    base: 'Lei 9.610/1998, art. 68' },
+  { predio: 'cultura', titulo: 'Machado de Assis no palco', quem: '🎭 Grupo de teatro',
+    texto: 'Queremos encenar "Dom Casmurro", de Machado de Assis, que morreu em 1908. Precisamos pagar direitos autorais?',
+    ops: ['Sim, para os herdeiros', 'Não: a obra já está em domínio público', 'Sim, para o governo'], c: 1,
+    exp: 'Os direitos patrimoniais duram 70 anos após 1º de janeiro do ano seguinte à morte do autor (art. 41). As obras de Machado de Assis estão em domínio público.',
+    base: 'Lei 9.610/1998, art. 41' },
+  { predio: 'cultura', titulo: 'Foto da internet', quem: '📸 Fotógrafa',
+    texto: 'O Centro Cultural usou uma foto minha da internet no cartaz da exposição, sem pedir e sem dar crédito. Isso é permitido?',
+    ops: ['Sim, estava na internet', 'Não: usar a foto exige autorização da autora, e o crédito é obrigatório', 'Sim, se for para cultura'], c: 1,
+    exp: 'A fotografia é obra protegida (Lei 9.610/98, art. 7º, VII). Depende de autorização prévia do autor a reprodução da obra (art. 29), e o nome do autor deve ser indicado (art. 79, §1º).',
+    base: 'Lei 9.610/1998, arts. 7º, 29 e 79' },
 ];
+
+/* Eventos especiais do calendário e do clima: cada um traz uma dica de lei */
+const EVENTOS = {
+  carnaval: { titulo: '🎊 Carnaval na cidade!', texto: 'Os blocos tomaram as ruas e a cidade está animada.',
+    dica: 'Reuniões pacíficas em locais públicos não precisam de autorização, apenas de aviso prévio à autoridade (CF, art. 5º, XVI).' },
+  junina: { titulo: '🎉 Festa Junina na praça!', texto: 'Quadrilha, quentão e fogueira: a felicidade subiu.',
+    dica: 'Tocar músicas em festa pública exige autorização e pagamento ao ECAD, mesmo sem ingresso (Lei 9.610/1998, art. 68).' },
+  eleicao: { titulo: '🗳️ Eleições municipais!', texto: 'A cidade foi às urnas para escolher prefeito(a) e vereadores.',
+    dica: 'Prefeitos podem ser reeleitos para um único período subsequente (CF, art. 14, §5º). O voto é obrigatório dos 18 aos 70 anos e facultativo para analfabetos, maiores de 70 e jovens de 16 e 17 anos (CF, art. 14, §1º).' },
+  temporal: { titulo: '⛈️ Temporal!', texto: 'Uma chuva forte alagou ruas e derrubou árvores.',
+    dica: 'O município deve mapear áreas de risco e manter planos de contingência da Defesa Civil (Lei 12.608/2012, art. 8º).' },
+  auditoria: { titulo: '🔎 Auditoria do Tribunal de Contas', texto: 'Os auditores analisaram as contas da prefeitura.',
+    dica: 'A Câmara Municipal julga as contas do prefeito com parecer prévio do Tribunal de Contas, que só deixa de prevalecer por 2/3 dos vereadores (CF, art. 31, §2º).' },
+};
 
 /* Bairros: áreas de expansão. Só o Centro começa liberado; os demais precisam
    ser comprados quando o caixa juntar o valor. Cada compra ensina Direito Urbanístico.

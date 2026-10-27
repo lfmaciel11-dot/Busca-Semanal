@@ -255,6 +255,19 @@ const Iso = (() => {
       if (gira > .4) ctx.fillText('$', p.x, p.y + 1);
     },
   };
+  // Prédios sem modelo próprio na versão 2.5D: bloco na cor da área com o ícone
+  function modelo(tipo) {
+    if (PREDIOS_ISO[tipo]) return PREDIOS_ISO[tipo];
+    const p = PREDIOS[tipo];
+    if (tipo === 'ruaLocal') return g => poli([pt(g.r, g.c, .01), pt(g.r, g.c + 1, .01), pt(g.r + 1, g.c + 1, .01), pt(g.r + 1, g.c, .01)], cor('#4E5663'));
+    if (tipo === 'arvore') return g => arvore(g.r + .5, g.c + .5, 1.1, 0);
+    return (g, k) => {
+      const b = limites(g, p.cat === 'enfeite' ? .8 : .72), h = (p.cat === 'enfeite' ? .06 : .4) * k;
+      caixa(b.r0, b.c0, b.r1, b.c1, 0, h, p.cor);
+      if (p.cat !== 'enfeite') janelas(b, 0, h, 3, 2, noite);
+    };
+  }
+  const altura = tipo => ALTURAS[tipo] || (PREDIOS[tipo] && PREDIOS[tipo].cat === 'enfeite' ? .15 : .5);
   const ALTURAS = { prefeitura: .75, casa: .52, aluguel: 1.2, mercado: .46, fabrica: 1, escola: .54, saude: .48, parque: .35,
     delegacia: .45, forum: .62, camara: .66, cartorio: .66, dados: .85, terminal: .32, fazenda: .85 };
 
@@ -398,18 +411,18 @@ const Iso = (() => {
     const objs = [];
     s.mapa.forEach((lote, i) => {
       const r = Math.floor(i / LARGURA), c = i % LARGURA;
-      if (lote && PREDIOS_ISO[lote.tipo]) {
+      if (lote && PREDIOS[lote.tipo]) {
         let k = 1;
         if (brotando[i]) {
           const x = Math.min(1, (agora - brotando[i]) / 550);
           k = x >= 1 ? 1 : 1 + 2.2 * Math.pow(x - 1, 3) + 1.2 * Math.pow(x - 1, 2); // easeOutBack
           if (x >= 1) delete brotando[i];
         }
-        objs.push({ d: r + c + 1, f: () => PREDIOS_ISO[lote.tipo]({ r, c }, Math.max(.05, k)) });
+        objs.push({ d: r + c + 1, f: () => modelo(lote.tipo)({ r, c }, Math.max(.05, k)) });
       } else if (!lote) {
         const fantasma = s.selecionado && i === hover;
         if (fantasma) {
-          objs.push({ d: r + c + 1, f: () => { ctx.globalAlpha = .6; PREDIOS_ISO[s.selecionado]({ r, c }, 1); ctx.globalAlpha = 1; } });
+          objs.push({ d: r + c + 1, f: () => { ctx.globalAlpha = .6; modelo(s.selecionado)({ r, c }, 1); ctx.globalAlpha = 1; } });
         } else {
           const h = (i * 37 + 11) % 13;
           if (h < 2) objs.push({ d: r + c + 1, f: () => arvore(r + .5, c + .5, .9, h) });
@@ -437,7 +450,7 @@ const Iso = (() => {
     s.mapa.forEach((lote, i) => {
       if (!lote || !PREDIOS[lote.tipo]) return;
       const r = Math.floor(i / LARGURA), c = i % LARGURA;
-      const a = pt(r + .5, c + .5, ALTURAS[lote.tipo] + .12);
+      const a = pt(r + .5, c + .5, altura(lote.tipo) + .12);
       if (pend[i]) {
         const pulo = reduzido ? 0 : Math.abs(Math.sin(agora / 260)) * TW * .12;
         balao(a.x, a.y - TW * .2 - pulo, '❗', '#FFFFFF', Math.max(12, TW * .3));
@@ -447,7 +460,7 @@ const Iso = (() => {
     });
     if (foco >= 0 && s.mapa[foco] && PREDIOS[s.mapa[foco].tipo]) {
       const r = Math.floor(foco / LARGURA), c = foco % LARGURA, lote = s.mapa[foco];
-      const a = pt(r + .5, c + .5, ALTURAS[lote.tipo] + .3);
+      const a = pt(r + .5, c + .5, altura(lote.tipo) + .3);
       etiqueta(a.x, a.y - TW * .2, `${PREDIOS[lote.tipo].icone} ${PREDIOS[lote.tipo].nome}`);
     }
   }
@@ -476,7 +489,7 @@ const Iso = (() => {
     const ordem = s.mapa.map((l, i) => i).filter(i => s.mapa[i] && PREDIOS[s.mapa[i].tipo])
       .sort((a, b) => (Math.floor(b / LARGURA) + b % LARGURA) - (Math.floor(a / LARGURA) + a % LARGURA));
     for (const i of ordem) {
-      const r = Math.floor(i / LARGURA), c = i % LARGURA, h = ALTURAS[s.mapa[i].tipo];
+      const r = Math.floor(i / LARGURA), c = i % LARGURA, h = altura(s.mapa[i].tipo);
       const base = pt(r + 1, c + 1), topo = pt(r + .5, c + .5, h);
       if (Math.abs(x - base.x) < TW * .34 && y <= base.y && y >= topo.y - TW * .15) return i;
     }
@@ -547,7 +560,7 @@ const Iso = (() => {
     placas: () => mostrarPlacas,
     posTela(i) { // posição (na janela) do topo do lote, para efeitos flutuantes
       const b = cv.getBoundingClientRect(), r = Math.floor(i / LARGURA), c = i % LARGURA;
-      const l = s.mapa[i], h = l && ALTURAS[l.tipo] ? ALTURAS[l.tipo] : .2;
+      const l = s.mapa[i], h = l && PREDIOS[l.tipo] ? altura(l.tipo) : .2;
       const p = pt(r + .5, c + .5, h);
       return { x: b.left + p.x, y: b.top + p.y };
     },

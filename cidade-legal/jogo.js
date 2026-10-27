@@ -13,6 +13,7 @@ const MAX_PENDENTES = 3, PRAZO_CASO = 2;
 
 let s;               // estado do jogo
 let ultimoConstruido = null;
+let categoriaAtual = 'todos';
 let Mapa;           // Cena (3D) ou Iso (2.5D, se o navegador não tiver WebGL)
 
 function novoEstado(nome) {
@@ -46,7 +47,7 @@ const fmt = n => Math.round(n).toLocaleString('pt-BR');
 const embaralhar = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const linha = i => Math.floor(i / LARGURA);
-const ehRua = i => s.mapa[i] && (s.mapa[i].tipo === 'rua' || s.mapa[i].tipo === 'ponte');
+const ehRua = i => s.mapa[i] && ['rua', 'ponte', 'ruaLocal'].includes(s.mapa[i].tipo);
 const beiraRua = i => {
   const r = linha(i), c = i % LARGURA;
   return (r > 0 && ehRua(i - LARGURA)) || (r < ALTURA - 1 && ehRua(i + LARGURA)) ||
@@ -162,12 +163,13 @@ function rendaDoLote(i) {
 }
 
 function calcular() {
-  let manut = 0, popCap = 0, felBonus = 0;
+  let manut = 0, popCap = 0, felBonus = 0, felEnfeites = 0;
   const servicos = {};
   s.mapa.forEach(t => {
     if (!t || !PREDIOS[t.tipo]) return;
     const p = PREDIOS[t.tipo];
-    manut += p.efeito.manutencao; popCap += p.efeito.pop; felBonus += p.efeito.felicidade;
+    manut += p.efeito.manutencao; popCap += p.efeito.pop;
+    if (p.cat === 'enfeite') felEnfeites += p.efeito.felicidade; else felBonus += p.efeito.felicidade;
     if (p.servico) servicos[p.servico] = (servicos[p.servico] || 0) + 1;
   });
   // Serviços públicos insuficientes reduzem a felicidade (cada unidade atende ~60 pessoas)
@@ -175,6 +177,7 @@ function calcular() {
   for (const k in SERVICOS) {
     if (popCap > 30 && (servicos[k] || 0) * 60 < popCap) faltas.push(k);
   }
+  felBonus += Math.min(12, felEnfeites); // enfeites ajudam, mas até um limite
   const fel = Math.round(Math.max(0, Math.min(100, 45 + felBonus + s.reputacao - faltas.length * 6)));
   const pop = Math.round(popCap * Math.min(1, 0.55 + fel / 100));
   s.felicidade = fel; s.pop = pop;
@@ -252,13 +255,14 @@ function renderConstruir(c) {
   let h = `<div class="resumo-financas">
     <span>Receita: <b class="pos">+${fmt(c.renda)}</b>/mês</span>
     <span>Manutenção: <b class="neg">−${fmt(c.manut)}</b>/mês</span>
-  </div><ul class="lista-predios">`;
+  </div><div class="categorias">${CATEGORIAS.map(g => `<button class="chip ${g.id === categoriaAtual ? 'ativo' : ''}" data-cat="${g.id}">${g.icone} ${g.nome}</button>`).join('')}</div><ul class="lista-predios">`;
   for (const k in PREDIOS) {
     if (k === 'prefeitura') continue;
     const p = PREDIOS[k];
+    if (categoriaAtual !== 'todos' && p.cat !== categoriaAtual) continue;
     const bloqueado = p.nivel > n;
     const jaUnico = p.unico && conta(s, k) > 0;
-    const temLicenca = !!s.licencas[k];
+    const temLicenca = !p.aula || !!s.licencas[k];
     const efeitos = [
       p.efeito.renda ? `<i class="ef pos">💰+${p.efeito.renda}</i>` : '',
       p.efeito.manutencao ? `<i class="ef neg">🔧−${p.efeito.manutencao}</i>` : '',
@@ -278,6 +282,7 @@ function renderConstruir(c) {
   h += '</ul>';
   const el = $('aba-construir');
   el.innerHTML = h;
+  el.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { som('clique'); categoriaAtual = b.dataset.cat; render(); });
   el.querySelectorAll('[data-licenca]').forEach(b => b.onclick = () => { som('clique'); abrirAula(b.dataset.licenca, true); });
   el.querySelectorAll('[data-construir]').forEach(b => b.onclick = () => {
     som('clique');
@@ -358,10 +363,12 @@ function renderMissoes() {
 }
 
 function renderVade() {
-  const n = Object.keys(s.licencas).length, total = Object.keys(PREDIOS).length;
+  const comAula = Object.keys(PREDIOS).filter(k => PREDIOS[k].aula);
+  const n = comAula.filter(k => s.licencas[k]).length, total = comAula.length;
   let h = `<p class="intro-vade">Sua coleção de leis: <b>${n}/${total}</b> áreas liberadas. Tudo o que você aprendeu fica aqui para consulta.</p><div class="colecao">`;
   for (const k in PREDIOS) {
     const p = PREDIOS[k];
+    if (!p.aula) continue;
     if (!s.licencas[k]) { h += `<div class="cartao-lei trancado"><span>❔</span> ${p.area}</div>`; continue; }
     h += `<details class="cartao-lei" style="--cor:${p.cor}"><summary><span>${p.icone}</span> ${p.area}</summary>
       <p class="resumo">${p.aula.resumo}</p><ul>${p.aula.pontos.map(x => `<li>${x}</li>`).join('')}</ul>
@@ -503,7 +510,7 @@ function abrirPredio(i) {
   const extra = p.efeito.renda ? `<p class="nota">💰 Este prédio rende <b>${fmt(rendaDoLote(i))}</b>/mês${beiraRua(i) ? ' (inclui +20% por estar na beira da rua)' : ''}.</p>` : '';
   abrirModal(`<div class="cab-modal" style="--cor:${p.cor}"><span class="icone-grande">${p.icone}</span>
       <div><small>${p.area}</small><h2>${p.nome}</h2></div></div>
-    ${htmlAula(p)}${extra}
+    ${p.aula ? htmlAula(p) : `<p class="resumo">Enfeites deixam a cidade mais agradável: cada um soma felicidade (até um limite de +12 no total).${p.bonus ? ' ' + p.bonus : ''}</p>`}${extra}
     <div class="botoes">
       ${tipo !== 'prefeitura' ? `<button class="btn perigo" id="m-demolir">Demolir (+${Math.floor(p.custo / 2)})</button>` : ''}
       <button class="btn primario" id="m-fechar">Fechar</button>
@@ -536,6 +543,7 @@ function proximoMes() {
   s.mes++;
   if (Mapa.passarTempo) Mapa.passarTempo();
   const mesIdx = (s.mes - 1) % 12;
+  sortearClimaEEventos(mesIdx);
   if (mesIdx === 0) registrar(`🎆 Feliz Ano ${anoDe(s.mes)}! Começa o verão na cidade.`);
   if (mesIdx === 5) registrar('🌸 Inverno chegando: os <b>ipês-roxos</b> começaram a florir.');
   if (mesIdx === 7) registrar('🌼 Agosto é época dos <b>ipês-amarelos</b> — repare nas árvores da cidade!');
@@ -565,6 +573,43 @@ function proximoMes() {
     const p = PREDIOS[s.mapa[novo.tile].tipo];
     setTimeout(() => { som('alerta'); toast(`❗ Um cidadão precisa de ajuda em ${p.icone} ${p.nome}`); }, 500);
   }
+}
+
+function sortearClimaEEventos(mesIdx) {
+  // chance de chuva conforme a estação (verão chuvoso, inverno seco)
+  const chance = [11, 0, 1].includes(mesIdx) ? .5 : mesIdx <= 4 ? .3 : mesIdx <= 7 ? .12 : .35;
+  s.chuva = Math.random() < chance;
+  const ev = [];
+  if (mesIdx === 1) ev.push('carnaval');
+  if (mesIdx === 5) ev.push('junina');
+  if (mesIdx === 9 && anoDe(s.mes) % 4 === 0) ev.push('eleicao');
+  if (s.chuva && Math.random() < .4) ev.push('temporal');
+  if (Math.random() < .08) ev.push('auditoria');
+  ev.forEach(id => {
+    const e = EVENTOS[id];
+    let efeito = '';
+    if (id === 'carnaval' || id === 'junina') { s.reputacao = Math.min(30, s.reputacao + 3); efeito = 'Felicidade +3.'; }
+    if (id === 'eleicao') {
+      const venceu = s.felicidade >= 55;
+      if (venceu) { ganharXp(40); s.dinheiro += 200; efeito = `Com ${s.felicidade}% de aprovação, você foi <b>reeleito(a)</b>! +40 XP, +200 💰.`; }
+      else { s.reputacao = Math.max(-30, s.reputacao - 3); efeito = `Com só ${s.felicidade}% de aprovação, você venceu por pouco. Cuide mais da cidade!`; }
+    }
+    if (id === 'temporal') {
+      const temBombeiros = conta(s, 'bombeiros') > 0;
+      const custo = temBombeiros ? 30 : 120;
+      s.dinheiro -= custo;
+      if (!temBombeiros) s.reputacao = Math.max(-30, s.reputacao - 4);
+      efeito = temBombeiros ? `Os Bombeiros agiram rápido: só 💰 ${custo} de estragos.` : `Sem Bombeiros, os estragos custaram 💰 ${custo} e a população ficou insatisfeita.`;
+    }
+    if (id === 'auditoria') {
+      const ok = s.dinheiro >= 0;
+      s.reputacao = Math.max(-30, Math.min(30, s.reputacao + (ok ? 2 : -5)));
+      efeito = ok ? 'Contas aprovadas! Felicidade +2.' : 'Contas no vermelho: parecer pela rejeição. Felicidade −5.';
+    }
+    registrar(`${e.titulo} ${e.texto} ${efeito} <i>⚖️ ${e.dica}</i>`);
+    setTimeout(() => toast(e.titulo, true), 900);
+  });
+  if (s.chuva && !ev.includes('temporal')) registrar('🌧️ Mês chuvoso na cidade.');
 }
 
 function gerarCaso() {
@@ -722,6 +767,10 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-zoom-menos').onclick = () => Mapa.zoom(-.5);
   $('btn-zoom-reset').onclick = () => Mapa.zoom(0);
   $('btn-placas').onclick = () => { Mapa.alternarPlacas(); renderMapa(); };
+  if (Mapa.passeio) {
+    $('btn-passeio').onclick = () => { const on = Mapa.passeio(); $('btn-passeio').classList.toggle('ativo', on); };
+    $('btn-foto').onclick = () => { som('moeda'); Mapa.foto(`${s.nome.replace(/[^\w\-]+/g, '-').toLowerCase() || 'cidade'}.png`); toast('📸 Foto da cidade salva!'); };
+  } else { $('btn-passeio').hidden = true; $('btn-foto').hidden = true; }
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       // provas não podem ser puladas com Esc; aulas, informações e casos ainda não respondidos sim
