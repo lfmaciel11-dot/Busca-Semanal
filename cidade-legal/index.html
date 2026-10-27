@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Cidade Legal — construa sua cidade e aprenda a legislação brasileira de forma simples.">
+<title>Cidade Legal</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<header class="topo">
+  <div class="marca">
+    <span class="marca-icone">🏛️</span>
+    <div>
+      <h1 id="nome-cidade">Cidade Legal</h1>
+      <p class="titulo-prefeito"><span id="titulo">Estudante de Direito</span> · Mês <span id="mes">1</span></p>
+    </div>
+  </div>
+  <div class="stats" aria-live="polite">
+    <div class="stat" title="Orçamento da prefeitura"><span>💰</span><b id="s-din">0</b></div>
+    <div class="stat" title="População"><span>👥</span><b id="s-pop">0</b></div>
+    <div class="stat" title="Felicidade dos cidadãos"><span>😊</span><b id="s-fel">0</b></div>
+    <div class="stat" title="Conhecimento jurídico (XP)"><span>📚</span><b id="s-xp">0</b></div>
+  </div>
+  <div class="acoes-topo">
+    <button id="btn-mes" class="btn primario">Próximo mês ▶</button>
+    <button id="btn-tema" class="btn icone" title="Alternar tema claro/escuro" aria-label="Alternar tema">🌓</button>
+  </div>
+</header>
+
+<div class="barra-xp" title="Progresso até o próximo título"><div id="barra-xp"></div></div>
+
+<main class="jogo">
+  <section class="area-mapa">
+    <div id="dica" class="dica">Escolha um prédio no painel e clique num terreno vazio para construir.</div>
+    <div id="mapa" class="mapa" role="grid" aria-label="Mapa da cidade"></div>
+  </section>
+
+  <aside class="painel">
+    <nav class="abas" role="tablist">
+      <button class="aba ativa" data-aba="construir" role="tab">🏗️ Construir</button>
+      <button class="aba" data-aba="missoes" role="tab">🎯 Missões</button>
+      <button class="aba" data-aba="vade" role="tab">📖 Vade Mecum</button>
+    </nav>
+    <div id="aba-construir" class="conteudo-aba"></div>
+    <div id="aba-missoes" class="conteudo-aba oculto"></div>
+    <div id="aba-vade" class="conteudo-aba oculto"></div>
+  </aside>
+</main>
+
+<section class="diario">
+  <h2>📰 Diário Oficial</h2>
+  <ul id="diario"></ul>
+</section>
+
+<div id="modal" class="modal oculto" role="dialog" aria-modal="true">
+  <div class="modal-caixa" id="modal-caixa"></div>
+</div>
+
+<div id="toast" class="toast oculto"></div>
+
+<footer class="rodape">
+  Conteúdo educativo e simplificado — não substitui orientação jurídica profissional. Legislação conferida em out/2026.
+  <button id="btn-reiniciar" class="link">Reiniciar jogo</button>
+</footer>
+
+<script src="dados.js"></script>
+<script src="jogo.js"></script>
+</body>
+</html>
