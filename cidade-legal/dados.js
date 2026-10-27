@@ -684,6 +684,56 @@ const PREDIOS = {
     custo: 30, nivel: 0, efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 1 },
   },
 
+  /* ── Dispositivos de trânsito: instalados sobre uma rua ── */
+  rotatoria: {
+    nome: 'Rotatória', icone: '🔄', area: 'Trânsito: preferência de passagem', cor: '#00838F', cat: 'transporte', via: true,
+    custo: 90, nivel: 1,
+    efeito: { renda: 0, manutencao: 1, pop: 0, felicidade: 2 },
+    bonus: 'Instale num cruzamento de 3 ou 4 ruas. Substitui o semáforo.',
+    aula: {
+      resumo: 'Na rotatória, quem já está circulando tem a preferência; quem chega espera.',
+      pontos: [
+        'Na rotatória, a preferência é de quem já está circulando por ela (CTB, art. 29, III, "b").',
+        'Em cruzamento sem sinalização, a preferência é de quem vem pela direita (CTB, art. 29, III, "c").',
+        'Antes de mudar de faixa ou sair da rotatória, o motorista deve ligar a seta com antecedência (CTB, art. 35).',
+        'Deixar de dar preferência a quem circula na rotatória é infração grave (CTB, art. 215, I, "a").',
+      ],
+      pratica: 'Chegou à rotatória e vem um carro circulando pela esquerda? Espere ele passar: a preferência é de quem já está na rotatória.',
+    },
+    licenca: [
+      { p: 'Quem tem preferência numa rotatória?', ops: ['Quem está entrando', 'Quem já está circulando nela', 'O veículo maior', 'Quem buzinar primeiro'], c: 1, exp: 'CTB, art. 29, III, "b".' },
+      { p: 'Em cruzamento sem sinalização, quem tem preferência?', ops: ['Quem vem pela esquerda', 'Quem vem pela direita', 'Quem estiver mais rápido', 'Ninguém'], c: 1, exp: 'CTB, art. 29, III, "c".' },
+      { p: 'Antes de sair da rotatória, o motorista deve:', ops: ['Buzinar', 'Ligar a seta, indicando a manobra', 'Acelerar', 'Parar no meio'], c: 1, exp: 'CTB, art. 35: toda manobra de deslocamento lateral deve ser indicada com antecedência pela seta.' },
+    ],
+  },
+  retorno: {
+    nome: 'Retorno permitido', icone: '↩️', area: 'Trânsito: retornos', cor: '#1565C0', cat: 'transporte', via: true,
+    custo: 40, nivel: 1,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 1 },
+    bonus: 'Instale num trecho reto de rua. Não pode em ponte, curva ou cruzamento.',
+    aula: {
+      resumo: 'Retornar só onde é permitido e seguro: a lei proíbe o retorno em pontes, curvas, cruzamentos e onde há placa proibindo.',
+      pontos: [
+        'Nas cidades, o retorno deve ser feito nos locais indicados pela sinalização ou em locais apropriados, com segurança e fluidez (CTB, art. 39).',
+        'É infração gravíssima retornar onde a sinalização proíbe, ou em curvas, aclives, declives, pontes, viadutos e túneis (CTB, art. 206, I e II).',
+        'Também é gravíssimo retornar passando por cima da calçada ou do canteiro central, ou entrando na contramão num cruzamento (CTB, art. 206, III e IV).',
+        'A placa R-5a, com a seta em U cortada por uma faixa vermelha, significa "proibido retornar à esquerda".',
+      ],
+      pratica: 'Perdeu a entrada e pensou em dar meia-volta no meio da ponte? Não pode: siga até um retorno sinalizado ou uma rotatória.',
+    },
+    licenca: [
+      { p: 'Retornar em cima de uma ponte é:', ops: ['Permitido se não vier ninguém', 'Infração gravíssima', 'Infração leve', 'Permitido à noite'], c: 1, exp: 'CTB, art. 206, II.' },
+      { p: 'Onde o retorno deve ser feito na cidade?', ops: ['Em qualquer lugar', 'Nos locais sinalizados ou apropriados, com segurança', 'Só em frente às escolas', 'Nos cruzamentos, entrando na contramão'], c: 1, exp: 'CTB, art. 39.' },
+      { p: 'O que significa a placa com a seta em U cortada em vermelho?', ops: ['Retorno obrigatório', 'Proibido retornar', 'Pista escorregadia', 'Fim da rua'], c: 1, exp: 'É a placa de regulamentação R-5a: proibido retornar à esquerda.' },
+    ],
+  },
+  placaRetorno: {
+    nome: 'Placa "Proibido retornar"', icone: '🚫', area: 'Sinalização', cor: '#C62828', cat: 'transporte', via: true,
+    custo: 15, nivel: 0,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 0 },
+    bonus: 'Coloque em trechos onde o retorno seria perigoso: ninguém faz o retorno ali.',
+  },
+
   /* ── Zona rural ── */
   lavoura: {
     nome: 'Lavoura', icone: '🌾', area: 'Direito Agrário', cor: '#8D7B2A',
@@ -990,6 +1040,7 @@ const MISSOES = [
   { id: 'm12', texto: 'Crie uma zona rural: Lavoura e Fazenda de gado', ok: s => conta(s, 'lavoura') >= 1 && conta(s, 'pecuaria') >= 1, xp: 25, din: 150 },
   { id: 'm13', texto: 'Organize o trânsito: Ponto de táxi, Estacionamento e Terminal de ônibus', ok: s => ['pontoTaxi', 'estacionamento', 'terminal'].every(k => conta(s, k) >= 1), xp: 30, din: 200 },
   { id: 'm14', texto: 'Ligue a cidade ao mundo: construa um Porto ou um Aeroporto', ok: s => conta(s, 'porto') + conta(s, 'aeroporto') >= 1, xp: 60, din: 400 },
+  { id: 'm15', texto: 'Organize o trânsito com uma Rotatória e um Retorno permitido', ok: s => conta(s, 'rotatoria') >= 1 && conta(s, 'retorno') >= 1, xp: 30, din: 150 },
   { id: 'm11', texto: 'Compre todos os bairros da cidade', ok: s => BAIRROS.every(b => (s.bairros || {})[b.id]), xp: 120, din: 0 },
 ];
 
@@ -1557,6 +1608,16 @@ const CASOS = [
     ops: ['Nenhum', 'Alimentação e, se precisar pernoitar, hospedagem e transporte; e posso escolher reacomodação, reembolso ou outro meio de transporte', 'Só reembolso de 10%'], c: 1,
     exp: 'Pela Resolução 400 da ANAC, a assistência material cresce com o tempo de espera, e atraso de mais de 4 horas permite escolher reacomodação, reembolso integral ou outro meio de transporte.',
     base: 'Resolução ANAC 400/2016, arts. 21 e 27' },
+  { predio: 'rotatoria', titulo: 'Batida na rotatória', quem: '🚗 Seu Ricardo',
+    texto: 'Eu estava entrando na rotatória e bati num carro que já circulava por ela. Ele diz que a culpa é minha. Quem tinha a preferência?',
+    ops: ['Eu, porque ele vinha pela minha esquerda', 'Ele, porque já circulava na rotatória', 'Ninguém, foi azar'], c: 1,
+    exp: 'Na rotatória, a preferência é de quem já está circulando. Quem entra deve esperar a vez.',
+    base: 'CTB, art. 29, III, "b"' },
+  { predio: 'retorno', titulo: 'Meia-volta na ponte', quem: '🚙 Dona Cida',
+    texto: 'Fui multada porque dei meia-volta no meio da ponte, mesmo sem nenhum carro vindo. A multa é justa?',
+    ops: ['Não, a rua estava vazia', 'Sim: retornar em ponte é infração gravíssima, mesmo sem movimento', 'Só se tivesse batido'], c: 1,
+    exp: 'Pontes, viadutos, túneis e curvas não têm espaço nem visibilidade para o retorno. O certo é seguir até um retorno sinalizado ou uma rotatória.',
+    base: 'CTB, arts. 39 e 206, II' },
 ];
 
 /* Projetos de lei: chegam à Prefeitura quando há Câmara Municipal. O jogador sanciona
@@ -1734,6 +1795,6 @@ function bairroDe(i) {
 
 function conta(s, tipo) {
   let n = 0;
-  for (const t of s.mapa) if (t && t.tipo === tipo) n++;
+  for (const t of s.mapa) if (t && (t.tipo === tipo || t.via === tipo)) n++;
   return n;
 }

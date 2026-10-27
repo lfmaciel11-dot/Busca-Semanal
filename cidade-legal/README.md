@@ -85,6 +85,18 @@ Também há **enfeites** sem licença (🌳 árvore, 🌷 canteiro, ⛲ praça c
 
 **Zoneamento**: lavoura, gado e cooperativa rendem 30% a mais nas Chácaras do Oeste ou na Serra Norte; centro logístico e indústria, no Distrito Industrial; o porto, na Beira-Rio ou no Distrito Industrial. No trânsito aparecem táxis, ônibus, caminhões, ambulância, caminhão de bombeiros, coleta de lixo e trator, conforme o que a cidade tem. Com porto, um navio de carga sobe o rio; com aeroporto, um avião circula sobre a cidade.
 
+### Ruas, rotatórias e retornos
+
+As ruas locais (🛣️) mudam de forma sozinhas conforme as ruas vizinhas: reta, **curva**, T, cruzamento ou **balão de retorno** na rua sem saída. Carros circulam por elas, fazem as curvas, param no sinal vermelho e dão a volta no balão.
+
+| Dispositivo | Onde pode | O que ensina |
+|---|---|---|
+| 🔄 Rotatória | Cruzamento de 3 ou 4 ruas (substitui o semáforo) | Preferência de quem já circula na rotatória (CTB, art. 29, III, "b"); seta antes de sair (art. 35) |
+| ↩️ Retorno permitido | Trecho reto de rua | Retorno só em local sinalizado e seguro (CTB, art. 39) |
+| 🚫 Placa "Proibido retornar" | Qualquer trecho de rua | Placa R-5a |
+
+O jogo recusa o retorno onde o CTB proíbe e explica o motivo: em ponte ou viaduto e em curva (art. 206, II), e em cruzamento, entrando na contramão (art. 206, IV). Na rotatória, os carros contornam a ilha central e esperam quem já está circulando; no retorno, alguns fazem a meia-volta quando a outra faixa está livre.
+
 ## Mais jeitos de jogar
 
 - **Ampliar prédios** (nível 1 a 3): cada nível soma 50% aos efeitos e deixa o prédio mais alto.

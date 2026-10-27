@@ -28,6 +28,65 @@ Object.entries(ZONA_IDEAL).forEach(([k, zonas]) => {
   const nomes = zonas.map(z => BAIRROS.find(b => b.id === z).nome).join(' ou ');
   PREDIOS[k].bonus = [PREDIOS[k].bonus, `Zoneamento: rende 30% a mais em ${nomes}.`].filter(Boolean).join(' ');
 });
+// ruas ligadas a cada lado do lote: 0 = norte, 1 = leste, 2 = sul, 3 = oeste
+const PASSOS = [[-1, 0], [0, 1], [1, 0], [0, -1]];
+function conexoes(i) {
+  const r = Math.floor(i / LARGURA), c = i % LARGURA, lista = [];
+  PASSOS.forEach(([dr, dc], d) => {
+    const rr = r + dr, cc = c + dc;
+    if (rr >= 0 && rr < ALTURA && cc >= 0 && cc < LARGURA && ehRua(rr * LARGURA + cc)) lista.push(d);
+  });
+  return lista;
+}
+// Dispositivos de trânsito ficam sobre uma rua; as regras de onde podem ficar vêm do CTB
+const DISPOSITIVOS_VIA = Object.keys(PREDIOS).filter(k => PREDIOS[k].via);
+function validarVia(tipo, i) {
+  const l = s.mapa[i];
+  if (!ehRua(i)) return '🛣️ Isso é instalado sobre uma rua: escolha um trecho de rua.';
+  if (l.via) return `Este trecho já tem ${PREDIOS[l.via].icone} ${PREDIOS[l.via].nome}. Clique nele para remover antes.`;
+  const con = conexoes(i), ponte = ['ponte', 'ponteLocal'].includes(l.tipo);
+  const curva = con.length === 2 && (con[0] + 2) % 4 !== con[1];
+  if (tipo === 'rotatoria') {
+    if (ponte) return '🔄 Não cabe rotatória em cima da ponte.';
+    if (con.length < 3) return '🔄 A rotatória organiza cruzamentos: instale onde se encontram 3 ou 4 ruas.';
+  }
+  if (tipo === 'retorno') {
+    if (ponte) return '🚫 Retorno em ponte ou viaduto é infração gravíssima (CTB, art. 206, II).';
+    if (curva) return '🚫 Retorno em curva é infração gravíssima: falta visibilidade (CTB, art. 206, II).';
+    if (con.length >= 3) return '🚫 Retornar no cruzamento, entrando na contramão, é infração gravíssima (CTB, art. 206, IV). Aqui cabe uma rotatória.';
+  }
+  return '';
+}
+function instalarVia(i) {
+  const tipo = s.selecionado, p = PREDIOS[tipo];
+  const erro = validarVia(tipo, i);
+  if (erro) { toast(erro); return; }
+  if (s.dinheiro < p.custo) { toast('💸 Orçamento insuficiente.'); s.selecionado = null; render(); return; }
+  s.dinheiro -= p.custo;
+  s.mapa[i].via = tipo;
+  som('construir');
+  if (conta(s, tipo) === 1) registrar(`🚦 Instalado(a): <b>${p.icone} ${p.nome}</b>.`);
+  if (s.dinheiro < p.custo) s.selecionado = null;
+  verificarMissoes(); render();
+  flutuar(i, `−${p.custo} 💰`, 'neg');
+}
+function abrirVia(i) {
+  const tipo = s.mapa[i].via, p = PREDIOS[tipo];
+  abrirModal(`<div class="cab-modal" style="--cor:${p.cor}"><span class="icone-grande">${p.icone}</span>
+      <div><small>${p.area}</small><h2>${p.nome}</h2></div></div>
+    ${p.aula ? htmlAula(p) : `<p class="resumo">${p.bonus}</p>`}
+    <div class="botoes">
+      <button class="btn perigo" id="m-remover">Remover (+${Math.floor(p.custo / 2)})</button>
+      <button class="btn primario" id="m-fechar">Fechar</button>
+    </div>`, cx => {
+    cx.querySelector('#m-fechar').onclick = fecharModal;
+    cx.querySelector('#m-remover').onclick = () => {
+      delete s.mapa[i].via; s.dinheiro += Math.floor(p.custo / 2);
+      s.pendentes = s.pendentes.filter(x => x.tile !== i);
+      fecharModal(); render();
+    };
+  });
+}
 const naZonaIdeal = i => (ZONA_IDEAL[s.mapa[i].tipo] || []).includes(bairroDe(i).id);
 // vizinhos até uma distância (em lotes) ao redor de i
 function vizinhos(i, raio) {
@@ -218,6 +277,7 @@ function calcular() {
   let manut = 0, popCap = 0, felBonus = 0, felEnfeites = 0;
   const servicos = {};
   s.mapa.forEach(t => {
+    if (t && t.via) { manut += PREDIOS[t.via].efeito.manutencao; felEnfeites += PREDIOS[t.via].efeito.felicidade; }
     if (!t || !PREDIOS[t.tipo]) return;
     const p = PREDIOS[t.tipo];
     const m = multNivel(t);
@@ -301,6 +361,10 @@ function renderMapa() {
 function clicarLote(i) {
   if (!liberado(i)) return abrirBairro(bairroDe(i));
   const t = s.mapa[i];
+  if (s.selecionado && PREDIOS[s.selecionado].via) return instalarVia(i);
+  const caso = s.pendentes.find(p => p.tile === i);
+  if (caso) return abrirCaso(caso);
+  if (t && t.via && !s.selecionado) return abrirVia(i);
   if (!t || (t.tipo === 'agua' && s.selecionado === 'ponteLocal')) return construirEm(i);
   if (t.tipo === 'agua' && s.selecionado) { toast('🌊 Aqui é água: construa uma 🌉 Ponte ou escolha outro terreno.'); return; }
   if (!PREDIOS[t.tipo]) return;
@@ -831,7 +895,10 @@ function gerarCaso() {
   const ocupados = new Set(s.pendentes.map(p => p.tile));
   const emAberto = new Set(s.pendentes.map(p => p.caso));
   const lotes = {};
-  s.mapa.forEach((t, i) => { if (t && PREDIOS[t.tipo] && !ocupados.has(i)) (lotes[t.tipo] = lotes[t.tipo] || []).push(i); });
+  s.mapa.forEach((t, i) => {
+    if (!t || ocupados.has(i)) return;
+    [t.tipo, t.via].forEach(k => { if (k && PREDIOS[k]) (lotes[k] = lotes[k] || []).push(i); });
+  });
   const disponiveis = CASOS.map((c, i) => i).filter(i => lotes[CASOS[i].predio] && !emAberto.has(i));
   let novos = disponiveis.filter(i => !s.casosVistos.includes(i));
   if (!novos.length) {
