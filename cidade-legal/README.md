@@ -6,6 +6,8 @@ Jogo educativo de construção de cidade em que o jogador, como prefeito(a), apr
 
 A cidade é em **3D** (Three.js, em `vendor/`): mapa de 20×14 lotes com duas avenidas, rio e pontes, sombras do sol, carros, nuvens e noite com janelas acesas no tema escuro. Arraste para girar, role para zoom, botão direito (ou dois dedos) para mover. Se o navegador não tiver WebGL, o jogo cai automaticamente para a versão isométrica 2.5D.
 
+O tempo passa de verdade: o sol cruza o céu, entardece e anoitece (janelas e postes acendem), e cada "Próximo mês" mostra um dia acelerado. O calendário (Janeiro · Ano 1) define a estação: as árvores e a grama mudam de cor e os ipês florescem (roxos em junho/julho, amarelos em agosto/setembro). Pedestres caminham nas calçadas conforme a população cresce.
+
 | Arquivo | Função |
 |---|---|
 | `dados.js` | Conteúdo jurídico: prédios, aulas, perguntas, casos, missões |
@@ -20,7 +22,8 @@ A cidade é em **3D** (Three.js, em `vendor/`): mapa de 20×14 lotes com duas av
 2. **Tirar a licença**: quiz de 3 perguntas (precisa acertar 2) para liberar o prédio.
 3. **Construir** no mapa — cada prédio gera renda, população ou felicidade. Prédios colados em rua rendem +20%.
 4. **Avançar o mês**: arrecadação, manutenção e um cidadão aparece com um balão ❗ sobre um prédio — clique para resolver o caso aplicando a lei.
-5. **Subir de título** (Estudante → Estagiário → Bacharel → Advogado → Juiz → Desembargador → Ministro do STF) e liberar áreas mais avançadas.
+5. **Expandir a cidade**: só o Centro começa liberado. Bairro Oeste (💰 600), Vila Norte (💰 900), Jardim Sul (💰 1.300) e Beira-Rio (💰 2.200) ficam bloqueados até o caixa juntar o valor — cada compra ensina Direito Urbanístico (Plano Diretor, desapropriação, loteamento, função social e IPTU progressivo).
+6. **Subir de título** (Estudante → Estagiário → Bacharel → Advogado → Juiz → Desembargador → Ministro do STF) e liberar áreas mais avançadas.
 
 ## Áreas cobertas
 
@@ -47,6 +50,7 @@ A cidade é em **3D** (Three.js, em `vendor/`): mapa de 20×14 lotes com duas av
 Todo o conteúdo jurídico está em `dados.js`:
 
 - **Perguntas de licença** → `PREDIOS.<prédio>.licenca`: `{ p, ops, c, exp }` (`c` = índice da alternativa correta).
+- **Bairros** → `BAIRROS`: `{ id, nome, icone, preco, r0, r1, c0, c1, lei: { titulo, pontos, base } }`.
 - **Casos mensais** → `CASOS`: `{ predio, titulo, quem, texto, ops, c, exp, base }`.
 - **Novo prédio** → nova chave em `PREDIOS` com `custo`, `nivel` (título mínimo), `efeito`, `aula` e `licenca`, mais um modelo em `MODELOS` (`cena3d.js`) e em `PREDIOS_ISO` (`isometrico.js`).
 

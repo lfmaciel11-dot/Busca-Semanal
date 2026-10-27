@@ -28,6 +28,7 @@ function novoEstado(nome) {
     casosVistos: [], casosResolvidos: 0, acertos: 0, aprendidos: [],
     pendentes: [], sequencia: 0, melhorSequencia: 0,
     missoesFeitas: {}, diario: [], selecionado: null, som: true,
+    bairros: { centro: true },
   };
 }
 
@@ -51,6 +52,9 @@ const beiraRua = i => {
   return (r > 0 && ehRua(i - LARGURA)) || (r < ALTURA - 1 && ehRua(i + LARGURA)) ||
     (c > 0 && ehRua(i - 1)) || (c < LARGURA - 1 && ehRua(i + 1));
 };
+const liberado = i => !!s.bairros[bairroDe(i).id];
+const nomeMes = (m, curto) => { const n = MESES[(m - 1) % 12]; return curto ? n.slice(0, 3) : n; };
+const anoDe = m => Math.floor((m - 1) / 12) + 1;
 const rostoFelicidade = f => f >= 80 ? '😄' : f >= 60 ? '🙂' : f >= 40 ? '😐' : f >= 20 ? '😟' : '😡';
 
 function nivelAtual() {
@@ -183,7 +187,7 @@ function calcular() {
 function render() {
   const c = calcular();
   $('nome-cidade').textContent = s.nome;
-  $('mes').textContent = s.mes;
+  $('mes').textContent = `${nomeMes(s.mes)} · Ano ${anoDe(s.mes)}`;
   $('titulo').textContent = NIVEIS[nivelAtual()].titulo;
   animarNumero($('s-din'), s.dinheiro);
   $('s-din').parentElement.classList.toggle('negativo', s.dinheiro < 0);
@@ -202,6 +206,7 @@ function render() {
 
   renderMapa();
   renderConstruir(c);
+  renderBairros();
   renderMissoes();
   renderVade();
   renderDiario();
@@ -234,6 +239,7 @@ function renderMapa() {
 }
 
 function clicarLote(i) {
+  if (!liberado(i)) return abrirBairro(bairroDe(i));
   const t = s.mapa[i];
   if (!t) return construirEm(i);
   if (!PREDIOS[t.tipo]) return;
@@ -281,6 +287,57 @@ function renderConstruir(c) {
   });
 }
 
+function renderBairros() {
+  let h = '<p class="intro-vade">Junte dinheiro no caixa para comprar novos bairros. Cada compra ensina uma regra de <b>Direito Urbanístico</b>.</p><ul class="lista-bairros">';
+  BAIRROS.forEach(b => {
+    const dono = s.bairros[b.id];
+    const pct = dono ? 100 : Math.max(0, Math.min(100, s.dinheiro / b.preco * 100));
+    const lotes = (b.r1 - b.r0 + 1) * (b.c1 - b.c0 + 1);
+    h += `<li class="${dono ? 'comprado' : ''}">
+      <span class="item-icone">${dono ? b.icone : '🔒'}</span>
+      <div class="item-info"><b>${b.nome}</b>
+        <small>${lotes} lotes${b.lei ? ' · ' + b.lei.titulo : ' · bairro inicial'}</small>
+        ${dono ? '<small class="selo ok">✔ Faz parte da cidade</small>' : `<div class="barra-bairro"><div style="width:${pct}%"></div><span>💰 ${fmt(Math.max(0, s.dinheiro))} / ${fmt(b.preco)}</span></div>`}
+      </div>
+      ${dono ? '' : `<button class="btn pequeno ${s.dinheiro >= b.preco ? 'primario' : ''}" data-bairro="${b.id}">${s.dinheiro >= b.preco ? 'Comprar' : 'Ver'}</button>`}
+    </li>`;
+  });
+  h += '</ul>';
+  const el = $('aba-bairros');
+  el.innerHTML = h;
+  el.querySelectorAll('[data-bairro]').forEach(btn => btn.onclick = () => abrirBairro(BAIRROS.find(b => b.id === btn.dataset.bairro)));
+}
+
+function abrirBairro(b) {
+  if (s.bairros[b.id]) return;
+  const pode = s.dinheiro >= b.preco;
+  const pct = Math.max(0, Math.min(100, s.dinheiro / b.preco * 100));
+  som('clique');
+  abrirModal(`<div class="cab-modal" style="--cor:#2E9E4F"><span class="icone-grande">${b.icone}</span>
+      <div><small>Expansão urbana · ${b.lei.titulo}</small><h2>${b.nome}</h2></div></div>
+    <p class="resumo">Para incorporar este bairro, a prefeitura precisa de <b>💰 ${fmt(b.preco)}</b> em caixa.</p>
+    <div class="barra-bairro grande"><div style="width:${pct}%"></div><span>${pode ? 'Valor disponível!' : `Faltam 💰 ${fmt(b.preco - s.dinheiro)}`}</span></div>
+    <h3 class="titulo-lei">📜 ${b.lei.titulo}</h3>
+    <ul class="pontos">${b.lei.pontos.map(x => `<li>${x}</li>`).join('')}</ul>
+    <p class="nota">📌 ${b.lei.base}</p>
+    <div class="botoes">
+      <button class="btn" id="m-fechar">${pode ? 'Agora não' : 'Fechar'}</button>
+      ${pode ? `<button class="btn primario" id="m-comprar">🗺️ Comprar por 💰 ${fmt(b.preco)}</button>` : ''}
+    </div>`, cx => {
+    cx.querySelector('#m-fechar').onclick = fecharModal;
+    const c = cx.querySelector('#m-comprar');
+    if (c) c.onclick = () => {
+      s.dinheiro -= b.preco;
+      s.bairros[b.id] = true;
+      ganharXp(15);
+      registrar(`🗺️ A cidade cresceu: <b>${b.icone} ${b.nome}</b> foi incorporado (${b.lei.titulo} — ${b.lei.base}).`);
+      fecharModal(); confete(90); som('nivel');
+      toast(`🗺️ Novo bairro: ${b.nome}!`, true);
+      verificarMissoes(); render();
+    };
+  });
+}
+
 function renderMissoes() {
   const feitas = MISSOES.filter(m => s.missoesFeitas[m.id]).length;
   let h = `<div class="progresso-missoes"><div style="width:${feitas / MISSOES.length * 100}%"></div><span>${feitas}/${MISSOES.length} missões</span></div><ul class="lista-missoes">`;
@@ -320,7 +377,7 @@ function renderVade() {
 }
 
 function renderDiario() {
-  $('diario').innerHTML = s.diario.slice(0, 12).map(d => `<li><span class="d-mes">Mês ${d.mes}</span> ${d.texto}</li>`).join('');
+  $('diario').innerHTML = s.diario.slice(0, 12).map(d => `<li><span class="d-mes">${nomeMes(d.mes, true)}/${anoDe(d.mes)}</span> ${d.texto}</li>`).join('');
 }
 
 /* ── Modal ────────────────────────────────────────────────────────────────── */
@@ -428,6 +485,7 @@ function construirEm(i) {
   const tipo = s.selecionado;
   if (!tipo) { toast('Escolha primeiro um prédio no painel "Construir".'); return; }
   const p = PREDIOS[tipo];
+  if (!liberado(i)) { abrirBairro(bairroDe(i)); return; }
   if (s.dinheiro < p.custo) { toast('💸 Orçamento insuficiente.'); s.selecionado = null; render(); return; }
   s.dinheiro -= p.custo;
   s.mapa[i] = { tipo };
@@ -476,6 +534,12 @@ function proximoMes() {
 
   s.dinheiro += saldo;
   s.mes++;
+  if (Mapa.passarTempo) Mapa.passarTempo();
+  const mesIdx = (s.mes - 1) % 12;
+  if (mesIdx === 0) registrar(`🎆 Feliz Ano ${anoDe(s.mes)}! Começa o verão na cidade.`);
+  if (mesIdx === 5) registrar('🌸 Inverno chegando: os <b>ipês-roxos</b> começaram a florir.');
+  if (mesIdx === 7) registrar('🌼 Agosto é época dos <b>ipês-amarelos</b> — repare nas árvores da cidade!');
+  if (mesIdx === 8) registrar('🌷 Começa a primavera.');
   registrar(`📅 Balanço do mês: ${saldo >= 0 ? '+' : ''}${fmt(saldo)} · ${fmt(c.pop)} habitantes · ${c.fel}% de felicidade.`);
   if (s.dinheiro < 0) {
     registrar('⚠️ Contas no vermelho! A <b>Lei de Responsabilidade Fiscal (LC 101/2000)</b> exige equilíbrio entre receitas e despesas.');
@@ -619,6 +683,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const salvo = carregar();
   s = salvo || novoEstado();
+  if (!s.bairros) { // jogos salvos antes dos bairros: libera o Centro e onde já houver prédios
+    s.bairros = { centro: true };
+    s.mapa.forEach((l, i) => { if (l && PREDIOS[l.tipo]) s.bairros[bairroDe(i).id] = true; });
+  }
   s.selecionado = null;
   if (window.THREE && Cena.init($('mapa'), clicarLote)) Mapa = Cena;
   else {

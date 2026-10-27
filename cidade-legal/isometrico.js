@@ -331,6 +331,7 @@ const Iso = (() => {
           poli([pt(r + .06, c + .06), pt(r + .06, c + .94), pt(r + .94, c + .94), pt(r + .94, c + .06)], cor('#D9D2C3')); // calçada
         }
       }
+      if (s.bairros && !s.bairros[bairroDe(i).id]) poli(q, 'rgba(14,26,16,.4)'); // bairro ainda não comprado
     }
   }
 

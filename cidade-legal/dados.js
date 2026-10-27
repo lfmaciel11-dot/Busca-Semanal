@@ -360,11 +360,13 @@ const MISSOES = [
   { id: 'm3', texto: 'Crie um Parque (Direito Ambiental)', ok: s => conta(s, 'parque') >= 1, xp: 10, din: 60 },
   { id: 'm4', texto: 'Resolva 3 casos de cidadãos', ok: s => s.casosResolvidos >= 3, xp: 20, din: 100 },
   { id: 'm5', texto: 'Alcance 50 habitantes', ok: s => s.pop >= 50, xp: 20, din: 100 },
+  { id: 'mb', texto: 'Compre um novo bairro para expandir a cidade', ok: s => Object.keys(s.bairros || {}).length >= 2, xp: 25, din: 0 },
   { id: 'm6', texto: 'Garanta escola e posto de saúde', ok: s => conta(s, 'escola') >= 1 && conta(s, 'saude') >= 1, xp: 25, din: 150 },
   { id: 'm7', texto: 'Instale Delegacia e Fórum', ok: s => conta(s, 'delegacia') >= 1 && conta(s, 'forum') >= 1, xp: 30, din: 150 },
   { id: 'm8', texto: 'Tenha 8 licenças jurídicas', ok: s => Object.keys(s.licencas).length >= 8, xp: 40, din: 200 },
   { id: 'm9', texto: 'Alcance 150 habitantes e felicidade 70%', ok: s => s.pop >= 150 && s.felicidade >= 70, xp: 50, din: 300 },
   { id: 'm10', texto: 'Libere todas as áreas do Direito', ok: s => Object.keys(PREDIOS).every(k => s.licencas[k]), xp: 100, din: 500 },
+  { id: 'm11', texto: 'Compre todos os bairros da cidade', ok: s => BAIRROS.every(b => (s.bairros || {})[b.id]), xp: 120, din: 0 },
 ];
 
 /* Casos: dilemas que surgem a cada mês, ligados aos prédios já construídos */
@@ -634,6 +636,60 @@ const CASOS = [
     exp: 'O art. 42 da LRF (LC 101/2000) proíbe, nos dois últimos quadrimestres do mandato, contrair obrigação que não possa ser paga no mesmo período sem disponibilidade de caixa.',
     base: 'LC 101/2000, art. 42' },
 ];
+
+/* Bairros: áreas de expansão. Só o Centro começa liberado; os demais precisam
+   ser comprados quando o caixa juntar o valor. Cada compra ensina Direito Urbanístico.
+   r0..r1 / c0..c1 = linhas e colunas (inclusive) do mapa 20×14. */
+const BAIRROS = [
+  { id: 'centro', nome: 'Centro', icone: '🏛️', preco: 0, r0: 2, r1: 10, c0: 3, c1: 12 },
+  { id: 'oeste', nome: 'Bairro Oeste', icone: '🏡', preco: 600, r0: 2, r1: 10, c0: 0, c1: 2,
+    lei: {
+      titulo: 'Plano Diretor',
+      pontos: [
+        'O Plano Diretor é a lei municipal que organiza o crescimento da cidade: onde pode haver casas, comércio, indústria e áreas verdes.',
+        'Ele é obrigatório para cidades com mais de 20 mil habitantes (CF, art. 182, §1º) e deve ser revisto pelo menos a cada 10 anos (Estatuto da Cidade, Lei 10.257/2001, art. 40, §3º).',
+        'A população deve participar da sua elaboração, com audiências públicas (Estatuto da Cidade, art. 40, §4º).',
+      ],
+      base: 'CF, art. 182; Lei 10.257/2001',
+    } },
+  { id: 'norte', nome: 'Vila Norte', icone: '🏘️', preco: 900, r0: 0, r1: 1, c0: 0, c1: 12,
+    lei: {
+      titulo: 'Desapropriação',
+      pontos: [
+        'O poder público pode tomar um imóvel particular por necessidade ou utilidade pública, ou por interesse social — é a desapropriação.',
+        'O dono deve receber justa e prévia indenização em dinheiro (CF, art. 5º, XXIV), salvo as exceções da própria Constituição.',
+        'As regras do procedimento estão no Decreto-Lei 3.365/1941, e o dono pode discutir o valor na Justiça.',
+      ],
+      base: 'CF, art. 5º, XXIV; DL 3.365/1941',
+    } },
+  { id: 'sul', nome: 'Jardim Sul', icone: '🌻', preco: 1300, r0: 11, r1: 13, c0: 0, c1: 12,
+    lei: {
+      titulo: 'Loteamento e parcelamento do solo',
+      pontos: [
+        'Dividir uma gleba em lotes com abertura de ruas é loteamento, e depende de aprovação da prefeitura (Lei 6.766/1979, art. 12).',
+        'Em regra, cada lote deve ter no mínimo 125 m² e 5 metros de frente (Lei 6.766/1979, art. 4º, II).',
+        'Vender lotes de loteamento não aprovado — o "loteamento clandestino" — é crime (Lei 6.766/1979, art. 50).',
+      ],
+      base: 'Lei 6.766/1979',
+    } },
+  { id: 'rio', nome: 'Beira-Rio', icone: '🌊', preco: 2200, r0: 0, r1: 13, c0: 13, c1: 19,
+    lei: {
+      titulo: 'Função social da propriedade urbana',
+      pontos: [
+        'A propriedade urbana cumpre sua função social quando atende às exigências do Plano Diretor (CF, art. 182, §2º).',
+        'Terreno vazio ou subutilizado pode ser obrigado a ser parcelado ou edificado; se o dono não cumprir, paga IPTU progressivo no tempo (CF, art. 182, §4º).',
+        'O IPTU progressivo pode chegar a 15% do valor do imóvel, por até 5 anos, e depois cabe desapropriação paga com títulos da dívida pública (Estatuto da Cidade, arts. 7º e 8º).',
+      ],
+      base: 'CF, art. 182, §4º; Lei 10.257/2001',
+    } },
+];
+
+const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+function bairroDe(i) {
+  const r = Math.floor(i / LARGURA), c = i % LARGURA;
+  return BAIRROS.find(b => r >= b.r0 && r <= b.r1 && c >= b.c0 && c <= b.c1) || BAIRROS[0];
+}
 
 function conta(s, tipo) {
   let n = 0;
