@@ -9,7 +9,6 @@ const CHAVE_SAVE = 'cidade-legal-v2';
 const LINHA_RUA = 5;
 const RIO = [9, 21, 33, 44, 56, 67, 79, 91]; // terrenos de água (não construíveis)
 const SERVICOS = { educacao: '🏫 Educação', saude: '🏥 Saúde', seguranca: '🚓 Segurança', lazer: '🌳 Lazer', justica: '⚖️ Justiça' };
-const ENFEITES = ['🌼', '🌿', '🌱', '🪨', '🌷', '🍄'];
 const MAX_PENDENTES = 3, PRAZO_CASO = 2;
 
 let s;               // estado do jogo
@@ -107,14 +106,13 @@ function confete(qtd = 70) {
   setTimeout(() => camada.remove(), 3400);
 }
 
-function flutuar(el, texto, classe) {
-  if (!el) return;
-  const r = el.getBoundingClientRect();
+function flutuar(i, texto, classe) {
+  const pos = Iso.posTela(i);
   const f = document.createElement('span');
   f.className = 'flutuante ' + (classe || '');
   f.textContent = texto;
-  f.style.left = (r.left + r.width / 2) + 'px';
-  f.style.top = (r.top + 4) + 'px';
+  f.style.left = pos.x + 'px';
+  f.style.top = pos.y + 'px';
   document.body.appendChild(f);
   setTimeout(() => f.remove(), 1500);
 }
@@ -222,56 +220,16 @@ function renderDica(c) {
 }
 
 function renderMapa() {
-  const m = $('mapa');
-  m.innerHTML = '';
-  m.classList.toggle('construindo', !!s.selecionado);
-  const pend = {};
-  s.pendentes.forEach(p => { pend[p.tile] = p; });
-  s.mapa.forEach((t, i) => {
-    const b = document.createElement('button');
-    b.className = 'lote';
-    b.setAttribute('role', 'gridcell');
-    if (!t) {
-      b.classList.add('vazio');
-      if (beiraRua(i)) b.classList.add('beira');
-      const h = (i * 37 + 11) % 13;
-      if (h < 3) b.innerHTML = `<span class="enfeite">${ENFEITES[(i * 7) % ENFEITES.length]}</span>`;
-      if (s.selecionado) b.dataset.fantasma = PREDIOS[s.selecionado].icone;
-      b.setAttribute('aria-label', 'Terreno vazio');
-      b.onclick = () => construirEm(i);
-    } else if (t.tipo === 'agua' || t.tipo === 'rua' || t.tipo === 'ponte') {
-      b.classList.add(t.tipo); b.disabled = true;
-      if (t.tipo === 'agua') b.innerHTML = '<span class="onda">〰️</span>';
-      b.setAttribute('aria-label', { agua: 'Rio', rua: 'Rua', ponte: 'Ponte' }[t.tipo]);
-    } else {
-      const p = PREDIOS[t.tipo];
-      b.classList.add('predio');
-      if (i === ultimoConstruido) b.classList.add('novo');
-      b.style.setProperty('--cor', p.cor);
-      b.innerHTML = `<span class="icone-predio">${p.icone}</span>`;
-      if (pend[i]) b.innerHTML += '<span class="balao">❗</span>';
-      b.title = `${p.nome} — ${p.area}`;
-      b.setAttribute('aria-label', p.nome + (pend[i] ? ' — cidadão esperando' : ''));
-      b.onclick = () => pend[i] ? abrirCaso(pend[i]) : abrirPredio(i);
-    }
-    b.dataset.i = i;
-    m.appendChild(b);
-  });
-  ultimoConstruido = null;
+  if (ultimoConstruido !== null) { Iso.brotar(ultimoConstruido); ultimoConstruido = null; }
+  $('btn-placas').classList.toggle('ativo', Iso.placas());
+}
 
-  // carros andando pela rua
-  const rua = m.children[LINHA_RUA * LARGURA];
-  const transito = $('transito');
-  transito.style.top = (m.offsetTop + rua.offsetTop) + 'px';
-  transito.style.height = rua.offsetHeight + 'px';
-  const veiculos = ['🚗'];
-  if (s.pop >= 20) veiculos.push('🚕');
-  if (conta(s, 'terminal')) veiculos.push('🚌');
-  if (conta(s, 'delegacia')) veiculos.push('🚓');
-  if (transito.dataset.v !== veiculos.join('')) {
-    transito.dataset.v = veiculos.join('');
-    transito.innerHTML = veiculos.map((v, k) => `<span class="carro" style="animation-delay:${-k * 3.1}s;animation-duration:${9 + k * 1.7}s">${v}</span>`).join('');
-  }
+function clicarLote(i) {
+  const t = s.mapa[i];
+  if (!t) return construirEm(i);
+  if (!PREDIOS[t.tipo]) return;
+  const pend = s.pendentes.find(p => p.tile === i);
+  pend ? abrirCaso(pend) : abrirPredio(i);
 }
 
 function renderConstruir(c) {
@@ -470,7 +428,7 @@ function construirEm(i) {
   if (p.unico || s.dinheiro < p.custo) s.selecionado = null;
   verificarMissoes();
   render();
-  flutuar($('mapa').children[i], `−${p.custo} 💰`, 'neg');
+  flutuar(i, `−${p.custo} 💰`, 'neg');
 }
 
 function abrirPredio(i) {
@@ -500,10 +458,9 @@ function proximoMes() {
   const saldo = c.renda - c.manut;
 
   // dinheiro sobe de cada prédio que rende
-  [...$('mapa').children].forEach((el, k) => {
-    const t = s.mapa[k];
+  s.mapa.forEach((t, k) => {
     if (t && PREDIOS[t.tipo] && PREDIOS[t.tipo].efeito.renda) {
-      setTimeout(() => flutuar(el, `+${fmt(rendaDoLote(k))}`, 'pos'), Math.random() * 400);
+      setTimeout(() => flutuar(k, `+${fmt(rendaDoLote(k))}`, 'pos'), Math.random() * 400);
     }
   });
   som('moeda');
@@ -654,6 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const salvo = carregar();
   s = salvo || novoEstado();
   s.selecionado = null;
+  Iso.init($('mapa'), clicarLote);
   render();
   if (!salvo) boasVindas();
 
@@ -676,7 +634,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.aba').forEach(x => x.classList.toggle('ativa', x === a));
     document.querySelectorAll('.conteudo-aba').forEach(x => x.classList.toggle('oculto', x.id !== 'aba-' + a.dataset.aba));
   });
-  window.addEventListener('resize', () => renderMapa());
+  $('btn-zoom-mais').onclick = () => Iso.zoom(.5);
+  $('btn-zoom-menos').onclick = () => Iso.zoom(-.5);
+  $('btn-zoom-reset').onclick = () => Iso.zoom(0);
+  $('btn-placas').onclick = () => { Iso.alternarPlacas(); renderMapa(); };
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       // provas não podem ser puladas com Esc; aulas, informações e casos ainda não respondidos sim

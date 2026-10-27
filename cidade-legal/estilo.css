@@ -115,63 +115,14 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 600; }
 /* ── Mapa ───────────────────────────────────────────────────────────────── */
 .moldura-mapa {
   position: relative; border-radius: 20px; overflow: hidden; box-shadow: var(--shadow);
-  background: linear-gradient(180deg, var(--ceu1), var(--ceu2) 60px, var(--grama-borda) 60px);
-  padding: 46px 8px 8px; border: 3px solid var(--grama-borda);
+  border: 3px solid var(--border); background: var(--ceu1); line-height: 0;
 }
-.nuvens span {
-  position: absolute; top: 6px; font-size: 26px; opacity: .9; pointer-events: none;
-  animation: nuvem 38s linear infinite;
-}
-.nuvens span:nth-child(2) { top: 14px; font-size: 20px; animation-duration: 52s; animation-delay: -20s; }
-.nuvens span:nth-child(3) { top: 2px; font-size: 32px; animation-duration: 64s; animation-delay: -40s; }
-
-.mapa {
-  display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px;
-  background: var(--grama-borda); border-radius: 12px; position: relative;
-}
-.lote {
-  aspect-ratio: 1; border: 0; border-radius: 6px; padding: 0; cursor: pointer; position: relative;
-  font-size: clamp(14px, 3.3vw, 32px); display: grid; place-items: center;
-  background: var(--grama); transition: transform .12s, box-shadow .12s, background .12s;
-}
-.lote:nth-child(odd).vazio { background: var(--grama2); }
-.lote.vazio:hover { box-shadow: inset 0 0 0 3px var(--accent); }
-.enfeite { font-size: .5em; opacity: .75; pointer-events: none; }
-.mapa.construindo .lote.vazio { box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
-.mapa.construindo .lote.vazio.beira { box-shadow: inset 0 0 0 2px rgba(242,183,5,.75); }
-.mapa.construindo .lote.vazio:hover { background: rgba(255,255,255,.55); box-shadow: inset 0 0 0 3px var(--accent); }
-.mapa.construindo .lote.vazio:hover .enfeite { display: none; }
-.mapa.construindo .lote.vazio:hover::after { content: attr(data-fantasma); opacity: .6; }
-
-.lote.agua { background: linear-gradient(135deg, var(--agua), var(--agua2)); cursor: default; overflow: hidden; }
-.onda { font-size: .45em; opacity: .7; animation: onda 2.4s ease-in-out infinite; }
-.lote.rua, .lote.ponte {
-  cursor: default; border-radius: 0;
-  background: linear-gradient(180deg, transparent 46%, var(--rua-faixa) 46%, var(--rua-faixa) 54%, transparent 54%) center / 50% 100% no-repeat, var(--rua);
-}
-.lote.ponte { background-color: #8A6A48; box-shadow: inset 0 3px 0 #6E5236, inset 0 -3px 0 #6E5236; }
-
-.lote.predio {
-  background: var(--lote-predio); box-shadow: inset 0 -5px 0 var(--cor), var(--shadow-bloco);
-  transform: translateY(-2px);
-}
-.lote.predio:hover { transform: translateY(-5px); box-shadow: inset 0 -5px 0 var(--cor), 0 7px 0 rgba(0,0,0,.18); }
-.icone-predio { display: block; }
-.lote.predio.novo .icone-predio { animation: brotar .55s cubic-bezier(.3,1.6,.5,1); }
-.lote.predio.novo::before {
-  content: '✨'; position: absolute; top: -6px; right: -4px; font-size: .55em; animation: brilho 1s forwards;
-}
-.balao {
-  position: absolute; top: -12px; right: -8px; z-index: 2; font-size: .55em;
-  background: #fff; border-radius: 50%; width: 1.5em; height: 1.5em; display: grid; place-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,.3); animation: quicar .9s ease-in-out infinite;
-}
-
-.transito { position: absolute; left: 8px; right: 8px; pointer-events: none; overflow: hidden; }
-.carro {
-  position: absolute; top: 50%; font-size: clamp(12px, 2.4vw, 24px); line-height: 1;
-  animation: dirigir 10s linear infinite; transform: translateY(-58%);
-}
+.mapa-iso { display: block; width: 100%; touch-action: none; }
+.mapa-iso:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.controles-mapa { position: absolute; right: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 6px; line-height: 1.5; }
+.controles-mapa .btn { width: 38px; height: 38px; padding: 0; font-size: 18px; background: rgba(255,255,255,.9); color: #12233A; }
+.controles-mapa .btn.ativo { background: var(--accent); border-color: #D19D00; }
+.so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ── Painel lateral ─────────────────────────────────────────────────────── */
 .painel {
@@ -350,11 +301,6 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 600; }
 @keyframes pulso { 50% { transform: scale(1.12); } }
 @keyframes chama { to { filter: brightness(1.15); transform: scale(1.04); } }
 @keyframes empurrao { 30% { transform: scale(.94); } 70% { transform: scale(1.05); } }
-@keyframes nuvem { from { left: -60px; } to { left: 100%; } }
-@keyframes onda { 50% { transform: translateX(3px); } }
-@keyframes dirigir { from { left: 100%; } to { left: -40px; } }
-@keyframes brotar { 0% { transform: scale(0) translateY(10px); } 100% { transform: scale(1); } }
-@keyframes brilho { from { opacity: 1; transform: scale(1.4); } to { opacity: 0; transform: scale(.6) rotate(90deg); } }
 @keyframes quicar { 50% { transform: translateY(-5px); } }
 @keyframes falar { 50% { transform: rotate(-4deg); } }
 @keyframes abrir { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -367,7 +313,6 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 600; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
-  .carro, .nuvens { display: none; }
 }
 
 @media (max-width: 560px) {
@@ -379,9 +324,9 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 600; }
   .acoes-topo { width: 100%; }
   .acoes-topo .primario { flex: 1; }
   .jogo { padding: 12px 16px; }
-  .moldura-mapa { padding: 34px 4px 4px; border-radius: 14px; }
-  .mapa { gap: 2px; }
-  .lote { border-radius: 4px; }
+  .moldura-mapa { border-radius: 14px; }
+  .controles-mapa { right: 6px; bottom: 6px; gap: 4px; }
+  .controles-mapa .btn { width: 32px; height: 32px; font-size: 15px; }
   .modal-caixa { padding: 16px; }
   .avatar { width: 48px; height: 48px; font-size: 28px; }
   .cab-modal h2 { font-size: 18px; }

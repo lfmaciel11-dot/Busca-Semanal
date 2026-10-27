@@ -41,9 +41,14 @@
   <section class="area-mapa">
     <div id="dica" class="dica">Escolha um prédio no painel e clique num terreno vazio para construir.</div>
     <div class="moldura-mapa">
-      <div class="nuvens" aria-hidden="true"><span>☁️</span><span>☁️</span><span>☁️</span></div>
-      <div id="mapa" class="mapa" role="grid" aria-label="Mapa da cidade"></div>
-      <div id="transito" class="transito" aria-hidden="true"></div>
+      <canvas id="mapa" class="mapa-iso" tabindex="0" aria-label="Mapa isométrico da cidade. Use as setas para escolher um lote e Enter para agir." aria-describedby="anuncio"></canvas>
+      <div class="controles-mapa">
+        <button id="btn-zoom-mais" class="btn icone" title="Aproximar" aria-label="Aproximar">＋</button>
+        <button id="btn-zoom-menos" class="btn icone" title="Afastar" aria-label="Afastar">－</button>
+        <button id="btn-zoom-reset" class="btn icone" title="Ver a cidade inteira" aria-label="Ver a cidade inteira">⟲</button>
+        <button id="btn-placas" class="btn icone" title="Mostrar/ocultar placas dos prédios" aria-label="Mostrar ou ocultar placas">🏷️</button>
+      </div>
+      <p id="anuncio" class="so-leitor" aria-live="polite"></p>
     </div>
   </section>
 
@@ -76,6 +81,7 @@
 </footer>
 
 <script src="dados.js"></script>
+<script src="isometrico.js"></script>
 <script src="jogo.js"></script>
 </body>
 </html>
