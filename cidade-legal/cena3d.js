@@ -19,6 +19,7 @@ const Cena = (() => {
   const predios = {};      // lote → THREE.Group
   const tiposNoLote = {};  // lote → tipo desenhado (para detectar mudanças)
   const vias = {}, viasNoLote = {}; // dispositivos de trânsito sobre as ruas
+  const acessos = {}, acessosNoLote = {}; // acessibilidade sobre as ruas (vários por trecho)
   const enfeites = {};     // lote → árvore decorativa
   const baloes = {};       // lote → sprite ❗
   const brotando = {};     // lote → instante da construção
@@ -1524,6 +1525,98 @@ const Cena = (() => {
     },
   });
 
+  /* ── Acessibilidade sobre as ruas: ciclofaixa, rampas, piso tátil e semáforo sonoro ── */
+  function criarBicicleta(n) {
+    const g = new THREE.Group(), quadro = mat(['#1565C0', '#C62828', '#2E7D32', '#F9A825'][n % 4], { metalness: .4, roughness: .4 });
+    const rodas = [-.045, .045].map(x => { const r = malha(new THREE.TorusGeometry(.028, .004, 6, 18), mat('#212121'), x, .032, 0); r.castShadow = false; g.add(r); return r; });
+    g.add(caixa(.09, .006, .006, quadro, 0, .045, 0)); g.add(caixa(.006, .03, .006, quadro, -.015, .045, 0));
+    g.add(caixa(.02, .005, .012, '#212121', -.018, .078, 0)); g.add(caixa(.006, .006, .04, '#9E9E9E', .04, .08, 0));
+    const ciclista = criarPessoa(n * 3 + 2, false); ciclista.scale.setScalar(.75); ciclista.position.set(-.012, .012, 0); ciclista.rotation.y = Math.PI / 2;
+    ciclista.userData.br1.rotation.x = ciclista.userData.br2.rotation.x = -1.1; g.add(ciclista);
+    g.userData = { rodas, ciclista };
+    return g;
+  }
+  function criarCadeirante(n) {
+    const g = new THREE.Group(), cadeira = mat('#37474F', { metalness: .4, roughness: .45 });
+    g.add(caixa(.05, .008, .05, cadeira, 0, .05, 0)); g.add(caixa(.05, .05, .006, cadeira, 0, .055, -.025));
+    const rodas = [-.031, .031].map(x => {
+      const w = new THREE.Group(); w.position.set(x, .033, -.004); w.rotation.y = Math.PI / 2;
+      const t = malha(new THREE.TorusGeometry(.03, .0045, 6, 18), mat('#212121')); t.castShadow = false; w.add(t);
+      w.add(caixa(.055, .003, .003, '#B0BEC5', 0, -.0015, 0)); g.add(w); return w;
+    });
+    [-.02, .02].forEach(x => g.add(cilindro(.008, .008, .006, '#212121', x, .002, .025, 8)));
+    const camisa = mat(CAMISAS[n % CAMISAS.length]), pele = mat(PELES[n % PELES.length]);
+    const corpo = malha(new THREE.CapsuleGeometry(.022, .03, 3, 10), camisa, 0, .09, -.006); corpo.castShadow = false; g.add(corpo);
+    const coxas = caixa(.04, .014, .04, '#37474F', 0, .056, .014); g.add(coxas); g.add(caixa(.036, .035, .012, '#37474F', 0, .022, .034));
+    const cabeca = malha(new THREE.SphereGeometry(.02, 14, 10), pele, 0, .142, -.006); cabeca.castShadow = false; g.add(cabeca);
+    g.add(malha(new THREE.SphereGeometry(.0215, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2.1), mat(CABELOS[n % CABELOS.length]), 0, .146, -.008));
+    const alvo = new THREE.Mesh(new THREE.BoxGeometry(.14, .22, .14), new THREE.MeshBasicMaterial({ visible: false }));
+    alvo.position.y = .09; alvo.userData.alvoPessoa = true; g.add(alvo);
+    g.userData = { rodas, cadeirante: true };
+    return g;
+  }
+  let matTatil = null;
+  function pisoTatilMat() {
+    if (matTatil) return matTatil;
+    const t = canvasTex(64, 64, (ctx, W) => {
+      ctx.fillStyle = '#F2C200'; ctx.fillRect(0, 0, W, W);
+      ctx.fillStyle = '#C79A00'; for (let y = 6; y < W; y += 16) ctx.fillRect(0, y, W, 5); // relevo direcional, em linhas
+    });
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(8, 1);
+    return (matTatil = new THREE.MeshStandardMaterial({ map: t, roughness: .7 }));
+  }
+  Object.assign(MODELOS, {
+    ciclovia(g, n, i) {
+      const grp = eixoRua(g, i), bikes = [];
+      [1, -1].forEach((lado, k) => {
+        grp.add(caixa(1, .004, .07, '#C0392B', 0, 0, lado * .335));
+        grp.add(caixa(1, .005, .008, '#F5F5F5', 0, 0, lado * .296));
+        for (let x = -.4; x < .5; x += .4) grp.add(caixa(.06, .005, .02, '#F5F5F5', x, 0, lado * .335)); // símbolo da faixa
+        const b = criarBicicleta(Math.abs(i) + k); b.rotation.y = lado > 0 ? 0 : Math.PI; b.position.z = lado * .335; grp.add(b);
+        bikes.push({ b, lado, fase: (Math.abs(i) * .37 + k * .5) % 1 });
+      });
+      g.userData.tick = t => bikes.forEach(({ b, lado, fase }) => {
+        const u = (t * .22 + fase) % 1;
+        b.position.x = lado * (-.5 + u); b.visible = u > .04 && u < .96;
+        b.userData.rodas.forEach(r => { r.rotation.z = -t * 9; });
+        animarPasso(b.userData.ciclista, t * 10, true);
+      });
+      g.userData.altura = .3;
+    },
+    rampa(g, n, i) {
+      const con = conexoesDe(i) || [0, 1, 2, 3], cinza = mat('#B0BEC5'), alerta = mat('#F2C200');
+      if (con.length >= 3) [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([x, z]) => {
+        const r = caixa(.1, .008, .1, cinza, x * .43, 0, z * .43); r.rotation.y = Math.PI / 4; g.add(r);
+        const a = caixa(.05, .01, .05, alerta, x * .4, 0, z * .4); a.rotation.y = Math.PI / 4; g.add(a);
+      });
+      else {
+        const grp = eixoRua(g, i);
+        [1, -1].forEach(lado => { grp.add(caixa(.26, .008, .1, cinza, 0, 0, lado * .445)); grp.add(caixa(.26, .01, .025, alerta, 0, 0, lado * .405)); });
+      }
+      g.userData.altura = .2;
+    },
+    pisoTatil(g, n, i) {
+      const grp = eixoRua(g, i);
+      [1, -1].forEach(lado => grp.add(caixa(1, .005, .03, pisoTatilMat(), 0, 0, lado * .458)));
+      g.userData.altura = .2;
+    },
+    semaforoSonoro(g, n, i) {
+      const ondas = [];
+      [[.46, .46], [-.46, -.46], [.46, -.46], [-.46, .46]].forEach(([x, z], k) => {
+        g.add(caixa(.03, .05, .025, '#212121', x, .24, z));
+        g.add(caixa(.016, .016, .003, mat('#E53935', { emissive: '#B71C1C', emissiveIntensity: .8 }), x, .265, z + .013));
+        g.add(caixa(.016, .016, .003, mat('#43A047', { emissive: '#1B5E20', emissiveIntensity: .8 }), x, .245, z + .013));
+        g.add(caixa(.03, .04, .02, '#F2C200', x, .14, z)); g.add(cilindro(.007, .007, .003, '#212121', x, .165, z + .011, 10).rotateX(Math.PI / 2));
+        if (k < 2) {
+          const o = new THREE.Mesh(new THREE.TorusGeometry(.03, .003, 6, 20), new THREE.MeshBasicMaterial({ color: '#43A047', transparent: true, depthWrite: false }));
+          o.position.set(x, .26, z); g.add(o); ondas.push(o);
+        }
+      });
+      g.userData.tick = t => ondas.forEach((o, k) => { const f = (t * 1.2 + k * .5) % 1; o.scale.setScalar(1 + f * 2.5); o.material.opacity = .7 * (1 - f); });
+      g.userData.altura = .5;
+    },
+  });
+
   /* ── Trajeto das avenidas: centro de cada lote, com arcos nas curvas e a estrada além da borda ── */
   const centroLote = i => [posX(i % LARGURA), posZ(Math.floor(i / LARGURA))];
   // lados do lote ligados a outro lote da mesma avenida (ruas locais não entram)
@@ -2024,7 +2117,7 @@ const Cena = (() => {
     while (pessoas.length > alvo) scene.remove(pessoas.pop().obj);
     while (pessoas.length < alvo) {
       const n = pessoas.length, horizontal = n % 2 === 0;
-      const obj = criarPessoa(n * 5 + 1, n % 6 === 5); scene.add(obj);
+      const obj = n % 6 === 3 ? criarCadeirante(n) : criarPessoa(n * 5 + 1, n % 6 === 5); scene.add(obj);
       const [a, b] = trechoReto(horizontal ? 'h' : 'v'), centro = horizontal ? posX : posZ;
       const ini = centro(a) - .5, fim = centro(b) + .5;
       pessoas.push({ obj, horizontal, lado: n % 4 < 2 ? 1 : -1, sentido: Math.random() < .5 ? 1 : -1, ini, fim,
@@ -2039,7 +2132,8 @@ const Cena = (() => {
       const calcada = .445 * k.lado + (n % 3 - 1) * .015;
       if (k.horizontal) { k.obj.position.set(k.p, 0, posZ(LINHA_RUA) + calcada); k.obj.rotation.y = k.sentido > 0 ? -Math.PI / 2 : Math.PI / 2; }
       else { k.obj.position.set(posX(COLUNA_RUA) + calcada, 0, k.p); k.obj.rotation.y = k.sentido > 0 ? 0 : Math.PI; }
-      const passo = animarPasso(k.obj, t * 9 + k.fase, true);
+      const passo = k.obj.userData.cadeirante ? 0 : animarPasso(k.obj, t * 9 + k.fase, true);
+      if (k.obj.userData.cadeirante && !reduzido) k.obj.userData.rodas.forEach(w => { w.children[0].rotation.z = t * 6 * k.sentido; });
       k.obj.position.y = Math.abs(passo) * .006;
       // à noite, metade das pessoas está em casa
       k.obj.visible = k.p > k.ini + .05 && k.p < k.fim - .05 && !(luzes > .6 && n % 2);
@@ -2260,7 +2354,7 @@ const Cena = (() => {
     g.add(corpo);
     g.userData.corpo = corpo; g.userData.tick = corpo.userData.tick;
     g.userData.altura = (corpo.userData.altura || 1) * corpo.userData.escalaY;
-    if (!['enfeite'].includes(PREDIOS[tipo].cat) && !PREDIOS[tipo].via && !['ruaLocal', 'ponteLocal', 'parque'].includes(tipo)) {
+    if (!['enfeite'].includes(PREDIOS[tipo].cat) && !ehDispositivo(tipo) && !['ruaLocal', 'ponteLocal', 'parque'].includes(tipo)) {
       matSombraContato = matSombraContato || new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false,
         map: canvasTex(128, 128, (ctx) => {
           const gr = ctx.createRadialGradient(64, 64, 20, 64, 64, 64);
@@ -2309,6 +2403,18 @@ const Cena = (() => {
       }
       viasNoLote[i] = chave;
     });
+    s.mapa.forEach((l, i) => {
+      const lista = l && l.acess ? l.acess.filter(k => MODELOS[k]) : [], chave = lista.length ? lista.join(',') + conexoes(i).join('') : null;
+      if (acessosNoLote[i] === chave) return;
+      if (acessos[i]) { scene.remove(acessos[i]); delete acessos[i]; }
+      if (chave) {
+        const g = new THREE.Group(), ticks = [];
+        lista.forEach(k => { const sub = new THREE.Group(); MODELOS[k](sub, i * 7, i); if (sub.userData.tick) ticks.push(sub.userData.tick); g.add(sub); });
+        g.userData.tick = t => ticks.forEach(f => f(t)); g.userData.altura = .5; g.userData.tile = i;
+        g.position.set(posX(i % LARGURA), .014, posZ(Math.floor(i / LARGURA))); scene.add(g); acessos[i] = g;
+      }
+      acessosNoLote[i] = chave;
+    });
     // árvores decorativas em terrenos vazios; nos bairros ainda não comprados a mata é densa
     s.mapa.forEach((l, i) => {
       if (l || enfeites[i] !== undefined) return;
@@ -2326,7 +2432,7 @@ const Cena = (() => {
     aplicarEstacao((s.mes - 1) % 12);
     // balões ❗ dos cidadãos
     const pend = new Set((s.pendentes || []).map(p => p.tile));
-    const alvo = i => predios[i] || vias[i];
+    const alvo = i => predios[i] || vias[i] || acessos[i];
     Object.keys(baloes).forEach(i => { if (!pend.has(+i) || !alvo(i)) { scene.remove(baloes[i]); delete baloes[i]; } });
     pend.forEach(i => {
       if (baloes[i] || !alvo(i)) return;
@@ -2395,7 +2501,7 @@ const Cena = (() => {
 
   function atualizarFantasma() {
     const sobreAgua = hover >= 0 && s.mapa[hover] && s.mapa[hover].tipo === 'agua';
-    const ehVia = s.selecionado && PREDIOS[s.selecionado].via;
+    const ehVia = ehDispositivo(s.selecionado);
     const livre = hover >= 0 && !!s.bairros[bairroDe(hover).id] && (ehVia ? !validarVia(s.selecionado, hover) : s.selecionado === 'ponteLocal' ? sobreAgua : !s.mapa[hover]);
     const tipo = s.selecionado && livre ? s.selecionado : null;
     if (tipo !== fantasmaTipo) {
@@ -2420,7 +2526,7 @@ const Cena = (() => {
       destaque.position.set(posX(foco % LARGURA), .02, posZ(Math.floor(foco / LARGURA)));
       const l = s.mapa[foco];
       const travado = !s.bairros[bairroDe(foco).id];
-      const podeAqui = s.selecionado && PREDIOS[s.selecionado].via ? !validarVia(s.selecionado, foco) : s.selecionado === 'ponteLocal' ? l && l.tipo === 'agua' : !l;
+      const podeAqui = ehDispositivo(s.selecionado) ? !validarVia(s.selecionado, foco) : s.selecionado === 'ponteLocal' ? l && l.tipo === 'agua' : !l;
       destaque.material.color.set(travado ? '#F2B705' : s.selecionado ? (podeAqui ? (beiraRua(foco) ? '#F2B705' : '#FFFFFF') : '#E53935') : '#FFFFFF');
       destaque.material.opacity = s.selecionado ? .55 : .35;
     }
@@ -2467,7 +2573,7 @@ const Cena = (() => {
       if (g.userData.tick && !reduzido) g.userData.tick(t);
       if (g.userData.gente) moverFrequentadores(g, dt, t, luzes);
     });
-    Object.values(vias).forEach(g => { if (g.userData.tick && !reduzido) g.userData.tick(t); });
+    [...Object.values(vias), ...Object.values(acessos)].forEach(g => { if (g.userData.tick && !reduzido) g.userData.tick(t); });
     moverChuva(dt);
     moverBarcosEPassaros(dt, t);
     moverFolhas(dt, t);

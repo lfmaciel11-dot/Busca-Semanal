@@ -851,6 +851,77 @@ const PREDIOS = {
     ],
   },
 
+  /* ── Acessibilidade: instalada sobre a rua, junto com a sinalização ── */
+  ciclovia: {
+    nome: 'Ciclofaixa', icone: '🚲', area: 'Mobilidade: bicicletas', cor: '#C62828', cat: 'acessibilidade', acess: true,
+    custo: 35, nivel: 1,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 3 },
+    bonus: 'Faixa vermelha dos dois lados, com bicicletas circulando. Só em trecho reto, fora da ponte.',
+    aula: {
+      resumo: 'A bicicleta é um veículo: tem direitos e deveres no trânsito, e a cidade deve dar a ela um espaço seguro.',
+      pontos: [
+        'Onde não há ciclovia ou ciclofaixa, a bicicleta anda no bordo da pista, no mesmo sentido dos carros, e tem preferência sobre os veículos motorizados (CTB, art. 58).',
+        'Ao ultrapassar uma bicicleta, o motorista deve manter 1,5 metro de distância lateral; não manter é infração (CTB, art. 201).',
+        'Andar de bicicleta na calçada só é permitido onde houver sinalização autorizando (CTB, art. 59).',
+        'A Política Nacional de Mobilidade Urbana dá prioridade a quem anda a pé ou de bicicleta (Lei 12.587/2012, art. 6º, II).',
+      ],
+      pratica: 'Vai ultrapassar um ciclista na avenida? Espere a outra faixa liberar e passe a pelo menos 1,5 metro dele.',
+    },
+    licenca: [
+      { p: 'Qual distância lateral o motorista deve manter ao ultrapassar uma bicicleta?', ops: ['30 centímetros', '1,5 metro', '5 metros', 'Nenhuma'], c: 1, exp: 'CTB, art. 201.' },
+      { p: 'Pode andar de bicicleta na calçada?', ops: ['Sempre', 'Só onde houver sinalização autorizando', 'Nunca, nem com placa', 'Só crianças'], c: 1, exp: 'CTB, art. 59.' },
+      { p: 'Sem ciclovia, quem tem preferência: a bicicleta ou o carro?', ops: ['O carro, que é mais rápido', 'A bicicleta, sobre os veículos motorizados', 'Quem buzinar', 'Ninguém'], c: 1, exp: 'CTB, art. 58.' },
+    ],
+  },
+  rampa: {
+    nome: 'Rampa de acessibilidade', icone: '♿', area: 'Acessibilidade: calçadas e travessias', cor: '#1565C0', cat: 'acessibilidade', acess: true,
+    custo: 25, nivel: 0,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 2 },
+    bonus: 'Calçada rebaixada com aviso tátil. Instale num cruzamento ou junto de uma faixa de pedestres.',
+    aula: {
+      resumo: 'A calçada rebaixada com rampa deixa cadeirantes, idosos e quem empurra carrinho atravessar com autonomia.',
+      pontos: [
+        'Acessibilidade é direito: a pessoa com deficiência deve poder viver de forma independente e participar da vida da cidade (Lei 13.146/2015, art. 53).',
+        'Vias, calçadas e travessias devem ser planejadas e construídas de forma acessível (Lei 10.098/2000, art. 3º).',
+        'Nas travessias de pedestres, a calçada deve ter rebaixamento com rampa ou a via deve subir até o nível da calçada (Decreto 5.296/2004, art. 15).',
+        'A norma técnica ABNT NBR 9050 define as medidas da rampa, como a inclinação máxima.',
+      ],
+      pratica: 'Uma cadeirante não consegue atravessar porque a esquina tem degrau? Cabe à prefeitura adaptar a travessia com rampa.',
+    },
+    licenca: [
+      { p: 'Para que serve a calçada rebaixada com rampa?', ops: ['Para os carros subirem', 'Para que cadeirantes e outras pessoas atravessem com autonomia', 'Para escoar a chuva', 'Só para enfeitar'], c: 1, exp: 'Decreto 5.296/2004, art. 15; Lei 13.146/2015, art. 53.' },
+      { p: 'Onde a rampa deve ficar?', ops: ['No meio do quarteirão, longe da travessia', 'Nas travessias de pedestres', 'Dentro das lojas', 'Só em frente à prefeitura'], c: 1, exp: 'Decreto 5.296/2004, art. 15.' },
+      { p: 'Qual lei diz que acessibilidade é um direito da pessoa com deficiência?', ops: ['Lei Brasileira de Inclusão (Lei 13.146/2015)', 'Código Penal', 'Lei do Inquilinato', 'CLT'], c: 0, exp: 'Lei 13.146/2015, art. 53.' },
+    ],
+  },
+  pisoTatil: {
+    nome: 'Piso tátil na calçada', icone: '🦯', area: 'Acessibilidade: deficiência visual', cor: '#F9A825', cat: 'acessibilidade', acess: true,
+    custo: 20, nivel: 0,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 2 },
+    bonus: 'Faixa amarela com relevo nas duas calçadas, para guiar pessoas cegas ou com baixa visão. Só em trecho reto.',
+    aula: {
+      resumo: 'O piso tátil guia pessoas cegas ou com baixa visão: as linhas mostram o caminho, e os pontos avisam perigo ou mudança.',
+      pontos: [
+        'O piso tátil direcional, em linhas, indica o caminho; o de alerta, em pontos, avisa obstáculos, travessias e desníveis (ABNT NBR 16537).',
+        'As cidades que precisam de Plano Diretor devem fazer um plano de rotas acessíveis, ligando os principais serviços (Estatuto da Cidade, art. 41, §3º).',
+        'A pessoa com deficiência visual pode entrar e ficar com o cão-guia em qualquer lugar aberto ao público (Lei 11.126/2005, art. 1º).',
+        'Lixeiras, mesas e placas não podem bloquear a faixa livre da calçada nem o piso tátil.',
+      ],
+      pratica: 'O restaurante colocou mesas em cima do piso tátil? Isso tira a rota de quem não enxerga: a fiscalização deve exigir a calçada livre.',
+    },
+    licenca: [
+      { p: 'O que indicam as linhas em relevo do piso tátil?', ops: ['Perigo', 'O caminho a seguir', 'Lugar para sentar', 'Nada'], c: 1, exp: 'Piso tátil direcional (ABNT NBR 16537).' },
+      { p: 'Um restaurante pode barrar um cliente cego com cão-guia?', ops: ['Sim, cachorro não entra', 'Não, a lei garante a entrada com o cão-guia', 'Só se estiver cheio', 'Só à noite'], c: 1, exp: 'Lei 11.126/2005, art. 1º.' },
+      { p: 'O plano de rotas acessíveis é previsto em qual lei?', ops: ['Estatuto da Cidade', 'Código de Defesa do Consumidor', 'Código Civil', 'Lei de Falências'], c: 0, exp: 'Estatuto da Cidade, art. 41, §3º, incluído pela Lei Brasileira de Inclusão.' },
+    ],
+  },
+  semaforoSonoro: {
+    nome: 'Semáforo sonoro', icone: '🔊', area: 'Acessibilidade: travessias', cor: '#2E7D32', cat: 'acessibilidade', acess: true,
+    custo: 40, nivel: 1,
+    efeito: { renda: 0, manutencao: 1, pop: 0, felicidade: 2 },
+    bonus: 'Botão e sinal sonoro para orientar a travessia de pessoas com deficiência visual (Lei 10.098/2000, art. 9º). Instale num cruzamento com semáforo.',
+  },
+
   /* ── Zona rural ── */
   lavoura: {
     nome: 'Lavoura', icone: '🌾', area: 'Direito Agrário', cor: '#8D7B2A',
@@ -1111,6 +1182,7 @@ const CATEGORIAS = [
   { id: 'industria', nome: 'Indústria', icone: '🏭' },
   { id: 'transporte', nome: 'Transporte', icone: '🚦' },
   { id: 'sinalizacao', nome: 'Sinalização', icone: '🚸' },
+  { id: 'acessibilidade', nome: 'Acessibilidade', icone: '♿' },
   { id: 'infra', nome: 'Infraestrutura', icone: '🔧' },
   { id: 'comunidade', nome: 'Comunidade', icone: '🌳' },
   { id: 'enfeite', nome: 'Enfeites', icone: '🌷' },
@@ -1160,6 +1232,7 @@ const MISSOES = [
   { id: 'm14', texto: 'Ligue a cidade ao mundo: construa um Porto ou um Aeroporto', ok: s => conta(s, 'porto') + conta(s, 'aeroporto') >= 1, xp: 60, din: 400 },
   { id: 'm15', texto: 'Organize o trânsito com uma Rotatória e um Retorno permitido', ok: s => conta(s, 'rotatoria') >= 1 && conta(s, 'retorno') >= 1, xp: 30, din: 150 },
   { id: 'm16', texto: 'Organize o estacionamento: Zona Azul, vaga para pessoa com deficiência e faixa de pedestres', ok: s => ['zonaAzul', 'vagaPcd', 'faixaPedestre'].every(k => conta(s, k) >= 1), xp: 30, din: 150 },
+  { id: 'm17', texto: 'Cidade para todos: Ciclofaixa, Rampa de acessibilidade e Piso tátil', ok: s => ['ciclovia', 'rampa', 'pisoTatil'].every(k => conta(s, k) >= 1), xp: 30, din: 150 },
   { id: 'm11', texto: 'Compre todos os bairros da cidade', ok: s => BAIRROS.every(b => (s.bairros || {})[b.id]), xp: 120, din: 0 },
 ];
 
@@ -1762,6 +1835,21 @@ const CASOS = [
     ops: ['Não, 15 km/h não conta', 'Sim: o excesso foi de 25%, entre 20% e 50%, infração grave', 'Só valeria com um policial'], c: 1,
     exp: 'O CTB gradua a infração pelo percentual de excesso: até 20% média, de 20% a 50% grave, acima de 50% gravíssima.',
     base: 'CTB, art. 218' },
+  { predio: 'ciclovia', titulo: 'Fina no ciclista', quem: '🚴 Ciclista Bruna',
+    texto: 'Um carro me ultrapassou quase raspando no meu guidão. O motorista diz que eu é que estava atrapalhando. Quem está certo?',
+    ops: ['O motorista: bicicleta atrapalha', 'Eu: ele devia manter 1,5 metro de distância ao ultrapassar', 'Ninguém, a rua é de todos'], c: 1,
+    exp: 'A bicicleta pode circular na via e tem preferência sobre os motorizados. Ultrapassar sem 1,5 metro de distância lateral é infração.',
+    base: 'CTB, arts. 58 e 201' },
+  { predio: 'rampa', titulo: 'Esquina sem rampa', quem: '🧑‍🦽 Seu Paulo, cadeirante',
+    texto: 'Na esquina do posto de saúde não tem rampa, e eu não consigo atravessar sozinho. De quem é a obrigação de resolver?',
+    ops: ['Dele mesmo, que peça ajuda', 'Da prefeitura: calçadas e travessias públicas devem ser acessíveis', 'Do dono do posto de gasolina'], c: 1,
+    exp: 'Acessibilidade é direito, e o poder público deve adaptar calçadas e travessias, com rebaixamento e rampa nas travessias.',
+    base: 'Lei 13.146/2015, art. 53; Lei 10.098/2000; Decreto 5.296/2004, art. 15' },
+  { predio: 'pisoTatil', titulo: 'Cão-guia barrado', quem: '🦮 Dona Helena e o cão-guia Tobi',
+    texto: 'O restaurante da praça não me deixou entrar com o Tobi, meu cão-guia. Disseram que cachorro não entra. Eles podem fazer isso?',
+    ops: ['Podem, a casa tem regras', 'Não: a lei garante entrar e permanecer com o cão-guia em locais abertos ao público', 'Só se ela pagar uma taxa'], c: 1,
+    exp: 'A Lei 11.126/2005 garante o acesso com cão-guia a ambientes de uso coletivo; impedir é discriminação e sujeita o estabelecimento a punição.',
+    base: 'Lei 11.126/2005, art. 1º' },
 ];
 
 /* Projetos de lei: chegam à Prefeitura quando há Câmara Municipal. O jogador sanciona
@@ -1939,6 +2027,6 @@ function bairroDe(i) {
 
 function conta(s, tipo) {
   let n = 0;
-  for (const t of s.mapa) if (t && (t.tipo === tipo || t.via === tipo)) n++;
+  for (const t of s.mapa) if (t && (t.tipo === tipo || t.via === tipo || (t.acess && t.acess.includes(tipo)))) n++;
   return n;
 }

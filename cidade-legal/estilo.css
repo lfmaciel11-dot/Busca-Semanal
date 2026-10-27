@@ -573,3 +573,10 @@ html:has(body.tela-jogo), body.tela-jogo { height: 100%; overflow: hidden; }
 /* com uma visão de cobertura ativa, a legenda ocupa o lugar do relógio, da ajuda e da dica */
 .app.com-visao .relogio-mapa, .app.com-visao .ajuda-mapa, .app.com-visao .dica { display: none; }
 @media (min-width: 761px) { .app.com-visao .legenda-visao { bottom: max(var(--gap-hud), env(safe-area-inset-bottom, 0px)); } }
+
+/* trecho de rua com vários dispositivos (sinalização e acessibilidade) */
+.dispositivo { border-top: 1px solid var(--border); padding: 8px 0; }
+.dispositivo:first-of-type { border-top: 0; }
+.dispositivo h3 small { font-weight: 500; color: var(--muted); font-size: 12px; margin-left: 4px; }
+.dispositivo details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin: 4px 0; }
+.dispositivo .btn { margin-top: 6px; }

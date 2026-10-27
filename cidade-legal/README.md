@@ -101,6 +101,19 @@ A aba **🚸 Sinalização** reúne o que é instalado sobre as ruas:
 | 🚸 Faixa de pedestres | Trecho reto | Preferência do pedestre (CTB, arts. 70 e 214); os carros param quando alguém atravessa |
 | 📸 Radar | Trecho reto | Limites de velocidade (CTB, art. 61) e infração pelo excesso (art. 218); os carros reduzem perto dele |
 
+### Acessibilidade
+
+A aba **♿ Acessibilidade** traz itens que podem ficar no mesmo trecho que a sinalização (por exemplo, rampa junto da faixa de pedestres, ou semáforo sonoro no cruzamento):
+
+| Item | Onde pode | O que ensina |
+|---|---|---|
+| 🚲 Ciclofaixa | Trecho reto, fora da ponte; não junto de vagas | Bicicleta como veículo (CTB, arts. 58 e 59), 1,5 m na ultrapassagem (art. 201) |
+| ♿ Rampa de acessibilidade | Cruzamento ou faixa de pedestres | Acessibilidade como direito (Lei 13.146/2015, art. 53; Lei 10.098/2000; Decreto 5.296/2004, art. 15) |
+| 🦯 Piso tátil | Trecho reto | Piso direcional e de alerta, rotas acessíveis (Estatuto da Cidade, art. 41, §3º), cão-guia (Lei 11.126/2005) |
+| 🔊 Semáforo sonoro | Cruzamento com semáforo | Lei 10.098/2000, art. 9º |
+
+Bicicletas circulam nas ciclofaixas, e há pedestres cadeirantes nas calçadas.
+
 ### Ruas, rotatórias e retornos
 
 As ruas locais (🛣️) mudam de forma sozinhas conforme as ruas vizinhas: reta, **curva**, T, cruzamento ou **balão de retorno** na rua sem saída. Carros circulam por elas, fazem as curvas, param no sinal vermelho e dão a volta no balão.

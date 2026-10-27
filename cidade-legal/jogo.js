@@ -65,17 +65,34 @@ function conexoes(i) {
 // Dispositivos de trânsito ficam sobre uma rua; as regras de onde podem ficar vêm do CTB
 const DISPOSITIVOS_VIA = Object.keys(PREDIOS).filter(k => PREDIOS[k].via);
 const VAGAS = ['zonaAzul', 'vagaPcd', 'vagaIdoso'];
+// sinalização (um item por trecho) e acessibilidade (vários por trecho) convivem na mesma rua
+const ehDispositivo = k => !!(k && PREDIOS[k] && (PREDIOS[k].via || PREDIOS[k].acess));
+const dispositivos = l => (l ? [l.via, ...(l.acess || [])].filter(Boolean) : []);
 function validarVia(tipo, i) {
   const l = s.mapa[i];
   if (!ehRua(i)) return '🛣️ Isso é instalado sobre uma rua: escolha um trecho de rua.';
-  if (l.via) return `Este trecho já tem ${PREDIOS[l.via].icone} ${PREDIOS[l.via].nome}. Clique nele para remover antes.`;
   const con = conexoes(i), ponte = ['ponte', 'ponteLocal'].includes(l.tipo);
-  const curva = con.length === 2 && (con[0] + 2) % 4 !== con[1];
+  const curva = con.length === 2 && (con[0] + 2) % 4 !== con[1], reto = con.length === 2 && !curva;
+  const acess = l.acess || [];
+  const vagasECiclo = '🚲 Ciclofaixa e vagas no mesmo trecho não combinam: a porta do carro estacionado pode abrir na frente do ciclista. Escolha outro trecho.';
+  if (PREDIOS[tipo].acess) {
+    if (acess.includes(tipo)) return `Este trecho já tem ${PREDIOS[tipo].icone} ${PREDIOS[tipo].nome}.`;
+    if (tipo === 'ciclovia') {
+      if (!reto || ponte) return '🚲 A ciclofaixa vai num trecho reto de rua, fora da ponte.';
+      if (VAGAS.includes(l.via)) return vagasECiclo;
+    }
+    if (tipo === 'rampa' && con.length < 3 && l.via !== 'faixaPedestre') return '♿ A rampa fica onde as pessoas atravessam: num cruzamento ou junto de uma faixa de pedestres.';
+    if (tipo === 'pisoTatil' && (!reto || ponte)) return '🦯 O piso tátil vai nas calçadas de um trecho reto de rua, fora da ponte.';
+    if (tipo === 'semaforoSonoro' && (con.length < 3 || l.via === 'rotatoria')) return '🔊 O semáforo sonoro fica num cruzamento com semáforo (sem rotatória).';
+    return '';
+  }
+  if (l.via) return `Este trecho já tem ${PREDIOS[l.via].icone} ${PREDIOS[l.via].nome}. Clique nele para remover antes.`;
+  if (VAGAS.includes(tipo) && acess.includes('ciclovia')) return vagasECiclo;
+  if (tipo === 'rotatoria' && acess.includes('semaforoSonoro')) return '🔄 Este cruzamento tem semáforo sonoro, e a rotatória tiraria o semáforo. Remova o semáforo sonoro antes.';
   if (tipo === 'rotatoria') {
     if (ponte) return '🔄 Não cabe rotatória em cima da ponte.';
     if (con.length < 3) return '🔄 A rotatória organiza cruzamentos: instale onde se encontram 3 ou 4 ruas.';
   }
-  const reto = con.length === 2 && !curva;
   if (VAGAS.includes(tipo)) {
     if (ponte) return '🚫 Estacionar em ponte, viaduto ou túnel é proibido (CTB, art. 181, XIV).';
     if (con.length >= 3) return '🚫 Estacionar no cruzamento é proibido (CTB, art. 181, XII).';
@@ -97,7 +114,7 @@ function instalarVia(i) {
   if (erro) { toast(erro); return; }
   if (s.dinheiro < p.custo) { toast('💸 Orçamento insuficiente.'); s.selecionado = null; render(); return; }
   s.dinheiro -= p.custo;
-  s.mapa[i].via = tipo;
+  if (p.acess) (s.mapa[i].acess = s.mapa[i].acess || []).push(tipo); else s.mapa[i].via = tipo;
   som('construir');
   if (conta(s, tipo) === 1) registrar(`🚦 Instalado(a): <b>${p.icone} ${p.nome}</b>.`);
   if (s.dinheiro < p.custo) s.selecionado = null;
@@ -105,20 +122,24 @@ function instalarVia(i) {
   flutuar(i, `−${p.custo} 💰`, 'neg');
 }
 function abrirVia(i) {
-  const tipo = s.mapa[i].via, p = PREDIOS[tipo];
-  abrirModal(`<div class="cab-modal" style="--cor:${p.cor}"><span class="icone-grande">${p.icone}</span>
-      <div><small>${p.area}</small><h2>${p.nome}</h2></div></div>
-    ${p.aula ? htmlAula(p) : `<p class="resumo">${p.bonus}</p>`}
-    <div class="botoes">
-      <button class="btn perigo" id="m-remover">Remover (+${Math.floor(p.custo / 2)})</button>
-      <button class="btn primario" id="m-fechar">Fechar</button>
-    </div>`, cx => {
+  const l = s.mapa[i], lista = dispositivos(l);
+  const p0 = PREDIOS[lista[0]], varios = lista.length > 1;
+  abrirModal(`<div class="cab-modal" style="--cor:${p0.cor}"><span class="icone-grande">${varios ? '🛣️' : p0.icone}</span>
+      <div><small>${varios ? 'Neste trecho de rua' : p0.area}</small><h2>${varios ? lista.map(k => PREDIOS[k].icone).join(' ') : p0.nome}</h2></div></div>
+    ${lista.map(k => { const p = PREDIOS[k]; return `<div class="dispositivo">
+      ${varios ? `<h3>${p.icone} ${p.nome} <small>${p.area}</small></h3>` : ''}
+      ${p.aula ? (varios ? `<details><summary>Ver a aula</summary>${htmlAula(p)}</details>` : htmlAula(p)) : `<p class="resumo">${p.bonus}</p>`}
+      <button class="btn perigo pequeno" data-remover="${k}">Remover ${varios ? p.nome : ''} (+${Math.floor(p.custo / 2)})</button></div>`; }).join('')}
+    <div class="botoes"><button class="btn primario" id="m-fechar">Fechar</button></div>`, cx => {
     cx.querySelector('#m-fechar').onclick = fecharModal;
-    cx.querySelector('#m-remover').onclick = () => {
-      delete s.mapa[i].via; s.dinheiro += Math.floor(p.custo / 2);
-      s.pendentes = s.pendentes.filter(x => x.tile !== i);
+    cx.querySelectorAll('[data-remover]').forEach(b => b.onclick = () => {
+      const k = b.dataset.remover;
+      if (l.via === k) delete l.via; else l.acess = (l.acess || []).filter(x => x !== k);
+      if (l.acess && !l.acess.length) delete l.acess;
+      s.dinheiro += Math.floor(PREDIOS[k].custo / 2);
+      if (!dispositivos(l).length) s.pendentes = s.pendentes.filter(x => x.tile !== i);
       fecharModal(); render();
-    };
+    });
   });
 }
 const naZonaIdeal = i => (ZONA_IDEAL[s.mapa[i].tipo] || []).includes(bairroDe(i).id);
@@ -310,7 +331,7 @@ function calcular() {
   let manut = 0, popCap = 0, felBonus = 0, felEnfeites = 0;
   const servicos = {};
   s.mapa.forEach(t => {
-    if (t && t.via) { manut += PREDIOS[t.via].efeito.manutencao; felEnfeites += PREDIOS[t.via].efeito.felicidade; }
+    dispositivos(t).forEach(k => { manut += PREDIOS[k].efeito.manutencao; felEnfeites += PREDIOS[k].efeito.felicidade; });
     if (!t || !PREDIOS[t.tipo]) return;
     const p = PREDIOS[t.tipo];
     const m = multNivel(t);
@@ -331,7 +352,7 @@ function calcular() {
   s.felicidade = fel; s.pop = pop;
   let renda = 0;
   s.mapa.forEach((t, i) => { if (t && PREDIOS[t.tipo] && PREDIOS[t.tipo].efeito.renda) renda += rendaDoLote(i); });
-  s.mapa.forEach(t => { if (t && t.via && PREDIOS[t.via].efeito.renda) renda += PREDIOS[t.via].efeito.renda; }); // tarifa da Zona Azul
+  s.mapa.forEach(t => dispositivos(t).forEach(k => { renda += PREDIOS[k].efeito.renda; })); // tarifa da Zona Azul
   return { renda: Math.round(renda), manut: Math.round(manut), pop, fel, faltas };
 }
 
@@ -395,10 +416,10 @@ function renderMapa() {
 function clicarLote(i) {
   if (!liberado(i)) return abrirBairro(bairroDe(i));
   const t = s.mapa[i];
-  if (s.selecionado && PREDIOS[s.selecionado].via) return instalarVia(i);
+  if (ehDispositivo(s.selecionado)) return instalarVia(i);
   const caso = s.pendentes.find(p => p.tile === i);
   if (caso) return abrirCaso(caso);
-  if (t && t.via && !s.selecionado) return abrirVia(i);
+  if (dispositivos(t).length && !s.selecionado) return abrirVia(i);
   if (!t || (t.tipo === 'agua' && s.selecionado === 'ponteLocal')) return construirEm(i);
   if (t.tipo === 'agua' && s.selecionado) { toast('🌊 Aqui é água: construa uma 🌉 Ponte ou escolha outro terreno.'); return; }
   if (!PREDIOS[t.tipo]) return;
@@ -931,7 +952,7 @@ function gerarCaso() {
   const lotes = {};
   s.mapa.forEach((t, i) => {
     if (!t || ocupados.has(i)) return;
-    [t.tipo, t.via].forEach(k => { if (k && PREDIOS[k]) (lotes[k] = lotes[k] || []).push(i); });
+    [t.tipo, ...dispositivos(t)].forEach(k => { if (k && PREDIOS[k]) (lotes[k] = lotes[k] || []).push(i); });
   });
   const disponiveis = CASOS.map((c, i) => i).filter(i => lotes[CASOS[i].predio] && !emAberto.has(i));
   let novos = disponiveis.filter(i => !s.casosVistos.includes(i));
