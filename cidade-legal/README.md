@@ -101,6 +101,18 @@ A aba **🚸 Sinalização** reúne o que é instalado sobre as ruas:
 | 🚸 Faixa de pedestres | Trecho reto | Preferência do pedestre (CTB, arts. 70 e 214); os carros param quando alguém atravessa |
 | 📸 Radar | Trecho reto | Limites de velocidade (CTB, art. 61) e infração pelo excesso (art. 218); os carros reduzem perto dele |
 
+### Pistas, emendas e transporte coletivo acessível
+
+- **Avenidas com duas faixas em cada sentido**: faixa dupla amarela no meio e linha branca tracejada entre as faixas. Ônibus e caminhões andam pela direita; os mais rápidos, pela esquerda (CTB, art. 29, IV). Onde há vagas, a baia de estacionamento funciona como uma terceira faixa, sem tirar espaço de quem circula.
+- **Ruas locais de mão dupla**, com faixa amarela tracejada.
+- **Emendas**: onde uma rua local chega à avenida, a calçada se abre e a rua ganha placa **PARE** (R-1) e linha de retenção. Os carros param, esperam um espaço e entram na avenida virando à direita; depois saem por outra rua. Semáforo fica só no cruzamento das avenidas e nos cruzamentos de ruas locais.
+- **Ônibus acessíveis**: piso baixo, símbolo de acessibilidade e rampa na porta; param nos pontos e terminais à sua direita e baixam a rampa.
+
+| Item | O que ensina |
+|---|---|
+| 🚌 Ponto de ônibus acessível (plataforma, piso tátil, abrigo, mapa em braile) | Transporte acessível (Lei 13.146/2015, art. 46; Lei 10.098/2000, art. 16), passe livre (Lei 8.899/1994), gratuidade para idosos |
+| 🚍 Faixa exclusiva de ônibus (só em avenida) | Faixas da direita para os lentos (CTB, art. 29, IV), espaço exclusivo (Lei 12.587/2012, art. 23, IV), infração gravíssima (CTB, art. 184, III) |
+
 ### Acessibilidade
 
 A aba **♿ Acessibilidade** traz itens que podem ficar no mesmo trecho que a sinalização (por exemplo, rampa junto da faixa de pedestres, ou semáforo sonoro no cruzamento):

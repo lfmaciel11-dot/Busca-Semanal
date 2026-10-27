@@ -65,6 +65,15 @@ function conexoes(i) {
 // Dispositivos de trânsito ficam sobre uma rua; as regras de onde podem ficar vêm do CTB
 const DISPOSITIVOS_VIA = Object.keys(PREDIOS).filter(k => PREDIOS[k].via);
 const VAGAS = ['zonaAzul', 'vagaPcd', 'vagaIdoso'];
+// lotes das avenidas; cruzamento de avenidas tem semáforo, mas rua local que chega à avenida tem placa PARE
+const lotesAvenida = () => new Set([...caminhoAvenida('h'), ...caminhoAvenida('v')]);
+function temSemaforo(i) {
+  const l = s.mapa[i];
+  if (!l || !['rua', 'ruaLocal'].includes(l.tipo) || l.via === 'rotatoria' || conexoes(i).length < 3) return false;
+  if (l.tipo === 'ruaLocal') return true;
+  const av = lotesAvenida();
+  return conexoes(i).filter(d => { const j = (Math.floor(i / LARGURA) + PASSOS[d][0]) * LARGURA + i % LARGURA + PASSOS[d][1]; return av.has(j); }).length >= 3;
+}
 // sinalização (um item por trecho) e acessibilidade (vários por trecho) convivem na mesma rua
 const ehDispositivo = k => !!(k && PREDIOS[k] && (PREDIOS[k].via || PREDIOS[k].acess));
 const dispositivos = l => (l ? [l.via, ...(l.acess || [])].filter(Boolean) : []);
@@ -83,7 +92,7 @@ function validarVia(tipo, i) {
     }
     if (tipo === 'rampa' && con.length < 3 && l.via !== 'faixaPedestre') return '♿ A rampa fica onde as pessoas atravessam: num cruzamento ou junto de uma faixa de pedestres.';
     if (tipo === 'pisoTatil' && (!reto || ponte)) return '🦯 O piso tátil vai nas calçadas de um trecho reto de rua, fora da ponte.';
-    if (tipo === 'semaforoSonoro' && (con.length < 3 || l.via === 'rotatoria')) return '🔊 O semáforo sonoro fica num cruzamento com semáforo (sem rotatória).';
+    if (tipo === 'semaforoSonoro' && !temSemaforo(i)) return '🔊 O semáforo sonoro fica num cruzamento com semáforo (sem rotatória).';
     return '';
   }
   if (l.via) return `Este trecho já tem ${PREDIOS[l.via].icone} ${PREDIOS[l.via].nome}. Clique nele para remover antes.`;
@@ -100,6 +109,7 @@ function validarVia(tipo, i) {
     if (con.some(d => { const [dr, dc] = PASSOS[d], j = (Math.floor(i / LARGURA) + dr) * LARGURA + i % LARGURA + dc; return conexoes(j).length >= 3; }))
       return '🚫 A menos de 5 metros da esquina não pode estacionar (CTB, art. 181, I). Escolha um trecho mais longe do cruzamento.';
   }
+  if (tipo === 'faixaOnibus' && (l.tipo !== 'rua' || !reto)) return '🚍 A faixa exclusiva vai num trecho reto de avenida, que tem duas faixas em cada sentido.';
   if (['faixaPedestre', 'radar'].includes(tipo) && (!reto || ponte)) return `${PREDIOS[tipo].icone} Instale num trecho reto de rua, fora da ponte.`;
   if (tipo === 'retorno') {
     if (ponte) return '🚫 Retorno em ponte ou viaduto é infração gravíssima (CTB, art. 206, II).';

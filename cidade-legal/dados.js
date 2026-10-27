@@ -922,6 +922,48 @@ const PREDIOS = {
     bonus: 'Botão e sinal sonoro para orientar a travessia de pessoas com deficiência visual (Lei 10.098/2000, art. 9º). Instale num cruzamento com semáforo.',
   },
 
+  pontoAcessivel: {
+    nome: 'Ponto de ônibus acessível', icone: '🚌', area: 'Transporte coletivo acessível', cor: '#0D7896', cat: 'transporte',
+    custo: 120, nivel: 1,
+    efeito: { renda: 0, manutencao: 3, pop: 0, felicidade: 5 },
+    bonus: 'Plataforma no nível do ônibus, piso tátil, abrigo e mapa em braile. Construa ao lado da avenida: os ônibus param e baixam a rampa.',
+    aula: {
+      resumo: 'Transporte coletivo acessível é direito: ônibus, pontos e terminais devem atender quem tem deficiência ou mobilidade reduzida.',
+      pontos: [
+        'A pessoa com deficiência tem direito ao transporte e à mobilidade em igualdade de oportunidades, sem barreiras (Lei 13.146/2015, art. 46).',
+        'Fazem parte do serviço, e devem ser acessíveis, os veículos, os terminais, as estações e os pontos de parada (Lei 13.146/2015, art. 46, §1º; Lei 10.098/2000, art. 16).',
+        'Pessoas com deficiência de baixa renda têm passe livre no transporte coletivo interestadual (Lei 8.899/1994).',
+        'Quem tem mais de 65 anos não paga o ônibus urbano (Estatuto da Pessoa Idosa, art. 39).',
+      ],
+      pratica: 'O ônibus chegou com o elevador quebrado e o motorista seguiu sem levar o cadeirante? A empresa descumpriu o dever de acessibilidade, e a prefeitura, que concede o serviço, deve fiscalizar.',
+    },
+    licenca: [
+      { p: 'O que deve ser acessível no transporte coletivo?', ops: ['Só o ônibus', 'Os veículos, os terminais, as estações e os pontos de parada', 'Só o terminal', 'Nada'], c: 1, exp: 'Lei 13.146/2015, art. 46, §1º.' },
+      { p: 'Quem tem passe livre no ônibus interestadual?', ops: ['Qualquer pessoa', 'Pessoas com deficiência de baixa renda', 'Só servidores públicos', 'Turistas'], c: 1, exp: 'Lei 8.899/1994.' },
+      { p: 'A partir de que idade o ônibus urbano é gratuito?', ops: ['60 anos', '65 anos', '70 anos', '80 anos'], c: 1, exp: 'Estatuto da Pessoa Idosa, art. 39.' },
+    ],
+  },
+  faixaOnibus: {
+    nome: 'Faixa exclusiva de ônibus', icone: '🚍', area: 'Trânsito: transporte coletivo', cor: '#B23A2E', cat: 'sinalizacao', via: true,
+    custo: 45, nivel: 2,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 3 },
+    bonus: 'Pinta de vermelho as faixas da direita da avenida: só ônibus andam nelas, e os carros mudam para a faixa da esquerda. Só em trecho reto de avenida.',
+    aula: {
+      resumo: 'A faixa exclusiva dá prioridade ao ônibus, que leva muito mais gente do que os carros.',
+      pontos: [
+        'Em vias com várias faixas no mesmo sentido, as da direita são para os veículos mais lentos e maiores, e as da esquerda para ultrapassagem e os mais rápidos (CTB, art. 29, IV).',
+        'O Município pode reservar espaço exclusivo nas vias para o transporte coletivo e para bicicletas e pedestres (Lei 12.587/2012, art. 23, IV).',
+        'Transitar com carro na faixa exclusiva de ônibus é infração gravíssima (CTB, art. 184, III).',
+      ],
+      pratica: 'O trânsito parou e a faixa de ônibus está livre? Não é atalho: entrar nela com o carro é infração gravíssima.',
+    },
+    licenca: [
+      { p: 'Andar de carro na faixa exclusiva de ônibus é:', ops: ['Permitido se ela estiver vazia', 'Infração gravíssima', 'Infração leve', 'Permitido à noite'], c: 1, exp: 'CTB, art. 184, III.' },
+      { p: 'Numa avenida com várias faixas no mesmo sentido, por onde andam os veículos mais lentos?', ops: ['Pela faixa da direita', 'Pela faixa da esquerda', 'Pelo meio', 'Pela calçada'], c: 0, exp: 'CTB, art. 29, IV.' },
+      { p: 'Quem pode criar faixas exclusivas de ônibus na cidade?', ops: ['O Município', 'Os motoristas de ônibus', 'Os comerciantes', 'Ninguém'], c: 0, exp: 'Lei 12.587/2012, art. 23, IV.' },
+    ],
+  },
+
   /* ── Zona rural ── */
   lavoura: {
     nome: 'Lavoura', icone: '🌾', area: 'Direito Agrário', cor: '#8D7B2A',
@@ -1233,6 +1275,7 @@ const MISSOES = [
   { id: 'm15', texto: 'Organize o trânsito com uma Rotatória e um Retorno permitido', ok: s => conta(s, 'rotatoria') >= 1 && conta(s, 'retorno') >= 1, xp: 30, din: 150 },
   { id: 'm16', texto: 'Organize o estacionamento: Zona Azul, vaga para pessoa com deficiência e faixa de pedestres', ok: s => ['zonaAzul', 'vagaPcd', 'faixaPedestre'].every(k => conta(s, k) >= 1), xp: 30, din: 150 },
   { id: 'm17', texto: 'Cidade para todos: Ciclofaixa, Rampa de acessibilidade e Piso tátil', ok: s => ['ciclovia', 'rampa', 'pisoTatil'].every(k => conta(s, k) >= 1), xp: 30, din: 150 },
+  { id: 'm18', texto: 'Transporte para todos: Ponto de ônibus acessível e Faixa exclusiva de ônibus', ok: s => conta(s, 'pontoAcessivel') >= 1 && conta(s, 'faixaOnibus') >= 1, xp: 30, din: 200 },
   { id: 'm11', texto: 'Compre todos os bairros da cidade', ok: s => BAIRROS.every(b => (s.bairros || {})[b.id]), xp: 120, din: 0 },
 ];
 
@@ -1850,6 +1893,16 @@ const CASOS = [
     ops: ['Podem, a casa tem regras', 'Não: a lei garante entrar e permanecer com o cão-guia em locais abertos ao público', 'Só se ela pagar uma taxa'], c: 1,
     exp: 'A Lei 11.126/2005 garante o acesso com cão-guia a ambientes de uso coletivo; impedir é discriminação e sujeita o estabelecimento a punição.',
     base: 'Lei 11.126/2005, art. 1º' },
+  { predio: 'pontoAcessivel', titulo: 'Elevador quebrado', quem: '🧑‍🦽 Seu Paulo, cadeirante',
+    texto: 'O ônibus chegou com o elevador para cadeira de rodas quebrado, e o motorista seguiu sem me levar. Isso pode acontecer?',
+    ops: ['Pode, ele espera o próximo', 'Não: o transporte coletivo deve ser acessível, e a prefeitura deve fiscalizar e cobrar a empresa', 'Só se o ônibus estivesse cheio'], c: 1,
+    exp: 'Veículos, terminais e pontos devem ser acessíveis. A empresa concessionária responde pela falha, e o Município, que concede o serviço, fiscaliza.',
+    base: 'Lei 13.146/2015, arts. 46 e 48' },
+  { predio: 'faixaOnibus', titulo: 'Atalho pela faixa de ônibus', quem: '🚗 Motorista atrasado',
+    texto: 'O trânsito estava parado e a faixa de ônibus vazia, então eu fui por ela. Levei multa. Mas ela estava livre!',
+    ops: ['A multa é injusta, a faixa estava vazia', 'A multa é correta: carro na faixa exclusiva de ônibus é infração gravíssima', 'Só valeria se tivesse um ônibus atrás'], c: 1,
+    exp: 'A faixa exclusiva garante que o ônibus, que leva muita gente, ande mesmo com trânsito. Usá-la com carro é infração gravíssima.',
+    base: 'CTB, art. 184, III' },
 ];
 
 /* Projetos de lei: chegam à Prefeitura quando há Câmara Municipal. O jogador sanciona
