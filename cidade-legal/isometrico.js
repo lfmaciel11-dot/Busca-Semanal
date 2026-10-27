@@ -432,8 +432,9 @@ const Iso = (() => {
     });
     sincronizarCarros();
     carros.forEach(k => {
-      if (!reduzido) { k.c += k.v * .016; if (k.c > LARGURA + 1) k.c = -1; if (k.c < -1) k.c = LARGURA + 1; }
-      if (k.c > .3 && k.c < LARGURA - .3) objs.push({ d: LINHA_RUA + (k.ida ? .68 : .32) + k.c, f: () => desenharCarro(k) });
+      const [ini, fim] = trechoReto('h'); // carros só no trecho reto da avenida
+      if (!reduzido) { k.c += k.v * .016; if (k.c > fim + 1) k.c = ini; if (k.c < ini) k.c = fim + 1; }
+      if (k.c > ini + .3 && k.c < fim + .7) objs.push({ d: LINHA_RUA + (k.ida ? .68 : .32) + k.c, f: () => desenharCarro(k) });
     });
 
     // destaque do lote sob o mouse/cursor (antes dos objetos, no chão)

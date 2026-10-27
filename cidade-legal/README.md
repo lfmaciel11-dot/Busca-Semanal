@@ -85,6 +85,22 @@ Também há **enfeites** sem licença (🌳 árvore, 🌷 canteiro, ⛲ praça c
 
 **Zoneamento**: lavoura, gado e cooperativa rendem 30% a mais nas Chácaras do Oeste ou na Serra Norte; centro logístico e indústria, no Distrito Industrial; o porto, na Beira-Rio ou no Distrito Industrial. No trânsito aparecem táxis, ônibus, caminhões, ambulância, caminhão de bombeiros, coleta de lixo e trator, conforme o que a cidade tem. Com porto, um navio de carga sobe o rio; com aeroporto, um avião circula sobre a cidade.
 
+### Avenidas, estacionamento e sinalização
+
+As duas avenidas principais fazem **curvas** ao sair da cidade (Serra Norte, Vila Esperança, Chácaras e Distrito Industrial) e seguem como estradas até o horizonte; os carros acompanham as curvas. Jogos salvos ganham o novo traçado se os lotes estiverem livres; se não, as avenidas continuam retas.
+
+A aba **🚸 Sinalização** reúne o que é instalado sobre as ruas:
+
+| Item | Onde pode | O que ensina |
+|---|---|---|
+| 🚙 Zona Azul | Trecho reto, longe da esquina, fora da ponte; rende tarifa | Estacionamento rotativo (CTB, art. 24, X); esquina, ponte e cruzamento (art. 181, I, XII e XIV) |
+| ♿ Vaga para pessoa com deficiência | Como a Zona Azul | 2% das vagas e credencial (Lei 13.146/2015, art. 47); infração gravíssima (CTB, art. 181, XX) |
+| 👵 Vaga para idoso | Como a Zona Azul | 5% das vagas (Estatuto da Pessoa Idosa, art. 41) |
+| ⛔ Proibido estacionar (R-6a) | Qualquer trecho | Diferença entre parar e estacionar (CTB, Anexo I; art. 181, XVIII) |
+| ❌ Proibido parar e estacionar (R-6c) | Qualquer trecho | CTB, art. 181, XIX |
+| 🚸 Faixa de pedestres | Trecho reto | Preferência do pedestre (CTB, arts. 70 e 214); os carros param quando alguém atravessa |
+| 📸 Radar | Trecho reto | Limites de velocidade (CTB, art. 61) e infração pelo excesso (art. 218); os carros reduzem perto dele |
+
 ### Ruas, rotatórias e retornos
 
 As ruas locais (🛣️) mudam de forma sozinhas conforme as ruas vizinhas: reta, **curva**, T, cruzamento ou **balão de retorno** na rua sem saída. Carros circulam por elas, fazem as curvas, param no sinal vermelho e dão a volta no balão.

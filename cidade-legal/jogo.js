@@ -6,7 +6,31 @@
 
 const LARGURA = 32, ALTURA = 24;
 const CHAVE_SAVE = 'cidade-legal-v3';
-const LINHA_RUA = 11, COLUNA_RUA = 14;   // avenidas horizontal e vertical
+const LINHA_RUA = 11, COLUNA_RUA = 14;   // avenidas horizontal e vertical (trecho reto que cruza o centro)
+// Caminho de cada avenida, de borda a borda, por pontos de virada [linha, coluna]: nos bairros de fora
+// elas fazem curvas. Jogos antigos que já ocupavam esses lotes continuam com as avenidas retas.
+const AVENIDAS = {
+  curvas: { h: [[9, 0], [9, 4], [11, 4], [11, 27], [13, 27], [13, 31]], v: [[0, 12], [3, 12], [3, 14], [20, 14], [20, 16], [23, 16]] },
+  retas: { h: [[11, 0], [11, 31]], v: [[0, 14], [23, 14]] },
+};
+function caminhoAvenida(eixo, modo) {
+  const pontos = AVENIDAS[modo || (s && s.avenidas) || 'curvas'][eixo], lotes = [];
+  for (let k = 1; k < pontos.length; k++) {
+    let [r, c] = pontos[k - 1];
+    const [r1, c1] = pontos[k];
+    while (r !== r1 || c !== c1) { lotes.push(r * LARGURA + c); r += Math.sign(r1 - r); c += Math.sign(c1 - c); }
+  }
+  const [rf, cf] = pontos[pontos.length - 1];
+  lotes.push(rf * LARGURA + cf);
+  return lotes;
+}
+// trecho reto da avenida em volta do centro (onde andam os pedestres e os carros da versão 2.5D)
+function trechoReto(eixo) {
+  const lotes = caminhoAvenida(eixo), linha = i => eixo === 'h' ? Math.floor(i / LARGURA) === LINHA_RUA : i % LARGURA === COLUNA_RUA;
+  const pos = lotes.filter(linha).map(i => eixo === 'h' ? i % LARGURA : Math.floor(i / LARGURA));
+  const ini = Math.min(...pos), fim = Math.max(...pos), ultimo = (eixo === 'h' ? LARGURA : ALTURA) - 1;
+  return [ini > 0 ? ini + 1 : ini, fim < ultimo ? fim - 1 : fim]; // sem os lotes de curva
+}
 const CURSO_RIO = [22, 22, 21, 21, 21, 21, 21, 20, 20, 20, 21, 21, 22, 22, 21, 21, 20, 20, 20, 20, 19, 19, 20, 20]; // coluna do rio em cada linha
 // córrego que sai da lagoa do Bairro Oeste e deságua no rio; represa da Serra Norte: [linha, coluna]
 const CORREGO = [[15, 7], [16, 7], [17, 7], [18, 7], [18, 8], [17, 8], [17, 9], [17, 10], [16, 10], [16, 11], [16, 12], [16, 13], [16, 14], [16, 15],
@@ -40,6 +64,7 @@ function conexoes(i) {
 }
 // Dispositivos de trânsito ficam sobre uma rua; as regras de onde podem ficar vêm do CTB
 const DISPOSITIVOS_VIA = Object.keys(PREDIOS).filter(k => PREDIOS[k].via);
+const VAGAS = ['zonaAzul', 'vagaPcd', 'vagaIdoso'];
 function validarVia(tipo, i) {
   const l = s.mapa[i];
   if (!ehRua(i)) return '🛣️ Isso é instalado sobre uma rua: escolha um trecho de rua.';
@@ -50,6 +75,15 @@ function validarVia(tipo, i) {
     if (ponte) return '🔄 Não cabe rotatória em cima da ponte.';
     if (con.length < 3) return '🔄 A rotatória organiza cruzamentos: instale onde se encontram 3 ou 4 ruas.';
   }
+  const reto = con.length === 2 && !curva;
+  if (VAGAS.includes(tipo)) {
+    if (ponte) return '🚫 Estacionar em ponte, viaduto ou túnel é proibido (CTB, art. 181, XIV).';
+    if (con.length >= 3) return '🚫 Estacionar no cruzamento é proibido (CTB, art. 181, XII).';
+    if (!reto) return '🅿️ Vagas ficam em trecho reto: na curva, o carro parado tira a visão de quem vem.';
+    if (con.some(d => { const [dr, dc] = PASSOS[d], j = (Math.floor(i / LARGURA) + dr) * LARGURA + i % LARGURA + dc; return conexoes(j).length >= 3; }))
+      return '🚫 A menos de 5 metros da esquina não pode estacionar (CTB, art. 181, I). Escolha um trecho mais longe do cruzamento.';
+  }
+  if (['faixaPedestre', 'radar'].includes(tipo) && (!reto || ponte)) return `${PREDIOS[tipo].icone} Instale num trecho reto de rua, fora da ponte.`;
   if (tipo === 'retorno') {
     if (ponte) return '🚫 Retorno em ponte ou viaduto é infração gravíssima (CTB, art. 206, II).';
     if (curva) return '🚫 Retorno em curva é infração gravíssima: falta visibilidade (CTB, art. 206, II).';
@@ -114,8 +148,7 @@ function adicionarAguas(mapa) {
 
 function novoMapa() {
   const mapa = Array(LARGURA * ALTURA).fill(null);
-  for (let c = 0; c < LARGURA; c++) mapa[LINHA_RUA * LARGURA + c] = { tipo: 'rua' };
-  for (let r = 0; r < ALTURA; r++) mapa[r * LARGURA + COLUNA_RUA] = { tipo: 'rua' };
+  ['h', 'v'].forEach(e => caminhoAvenida(e, 'curvas').forEach(i => { mapa[i] = { tipo: 'rua' }; }));
   const rio = (r, c) => { const i = r * LARGURA + c; mapa[i] = { tipo: mapa[i] ? 'ponte' : 'agua' }; };
   CURSO_RIO.forEach((c, r) => { rio(r, c); if (r && CURSO_RIO[r - 1] !== c) rio(r, CURSO_RIO[r - 1]); });
   return mapa;
@@ -131,7 +164,7 @@ function novoEstado(nome) {
     casosVistos: [], casosResolvidos: 0, acertos: 0, aprendidos: [],
     pendentes: [], sequencia: 0, melhorSequencia: 0,
     missoesFeitas: {}, diario: [], selecionado: null, som: true,
-    bairros: { centro: true }, aguasV2: true,
+    bairros: { centro: true }, aguasV2: true, avenidas: 'curvas',
   };
 }
 
@@ -298,6 +331,7 @@ function calcular() {
   s.felicidade = fel; s.pop = pop;
   let renda = 0;
   s.mapa.forEach((t, i) => { if (t && PREDIOS[t.tipo] && PREDIOS[t.tipo].efeito.renda) renda += rendaDoLote(i); });
+  s.mapa.forEach(t => { if (t && t.via && PREDIOS[t.via].efeito.renda) renda += PREDIOS[t.via].efeito.renda; }); // tarifa da Zona Azul
   return { renda: Math.round(renda), manut: Math.round(manut), pop, fel, faltas };
 }
 
@@ -1323,11 +1357,25 @@ function ampliarMapa() {
   (s.pendentes || []).forEach(p => { p.tile = nova(p.tile); });
   (s.cidadaos || []).forEach(c => { if (c.casa >= 0) c.casa = nova(c.casa); });
   s.aguasV2 = true;
+  s.avenidas = 'curvas';
+}
+
+// Jogos salvos com as avenidas retas ganham as curvas, se os lotes do novo traçado estiverem livres
+function curvarAvenidas() {
+  const novas = new Set([...caminhoAvenida('h', 'curvas'), ...caminhoAvenida('v', 'curvas')]);
+  const velhas = [...caminhoAvenida('h', 'retas'), ...caminhoAvenida('v', 'retas')].filter(i => !novas.has(i));
+  const conflito = [...novas].some(i => s.mapa[i] && !['rua', 'ponte', 'agua'].includes(s.mapa[i].tipo)) ||
+    velhas.some(i => s.mapa[i] && (s.mapa[i].tipo !== 'rua' || s.mapa[i].via));
+  if (conflito) { s.avenidas = 'retas'; return; }
+  velhas.forEach(i => { s.mapa[i] = null; });
+  novas.forEach(i => { if (!s.mapa[i]) s.mapa[i] = { tipo: 'rua' }; else if (s.mapa[i].tipo === 'agua') s.mapa[i] = { tipo: 'ponte' }; });
+  s.avenidas = 'curvas';
 }
 
 function migrarEstado() {
   if (s.mapa.length === MAPA_ANTIGO.largura * MAPA_ANTIGO.altura) ampliarMapa();
   if (!s.aguasV2) { adicionarAguas(s.mapa); s.aguasV2 = true; }
+  if (!s.avenidas) curvarAvenidas();
   if (!s.bairros) { // jogos salvos antes dos bairros: libera o Centro e onde já houver prédios
     s.bairros = { centro: true };
     s.mapa.forEach((l, i) => { if (l && PREDIOS[l.tipo]) s.bairros[bairroDe(i).id] = true; });

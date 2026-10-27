@@ -1340,23 +1340,26 @@ const Cena = (() => {
       const horizontal = i % 2 === 0, sentido = i % 4 < 2 ? 1 : -1;
       const obj = criarVeiculo(tipo, CORES_CARRO[i % CORES_CARRO.length]);
       scene.add(obj);
-      const lim = (horizontal ? LARGURA / 2 : ALTURA / 2) + 10; // seguem pela estrada além da cidade
       const v = { onibus: .6, trator: .35, caminhao: .75, lixo: .55, bombeiro: 1.1, ambulancia: 1.1 }[tipo] || .9 + Math.random() * .6;
-      carros[i] = { tipo, obj, horizontal, sentido, lim, comp: COMPRIMENTO[tipo] || .34, p: (Math.random() * 2 - 1) * lim, v };
+      // a posição é a distância percorrida no trajeto da avenida, que segue pela estrada além da cidade
+      carros[i] = { tipo, obj, horizontal, sentido, comp: COMPRIMENTO[tipo] || .34, p: Math.random() * trajetoAvenida(horizontal ? 'h' : 'v').len, v };
     });
   }
   // dispositivos instalados nas avenidas, como posições ao longo de cada eixo
   function posicionarCarro(k, faixa) {
-    const x = k.horizontal ? k.p : posX(COLUNA_RUA) - faixa, z = k.horizontal ? posZ(LINHA_RUA) + faixa : k.p;
+    const [px, pz, tx, tz] = pontoNoTrajeto(trajetoAvenida(k.horizontal ? 'h' : 'v'), k.p);
+    const x = px - tz * faixa, z = pz + tx * faixa; // faixa > 0: à direita de quem anda no sentido do trajeto
     const dx = x - k.obj.position.x, dz = z - k.obj.position.z;
     if (Math.hypot(dx, dz) > 1e-4 && Math.hypot(dx, dz) < .5) k.obj.rotation.y = Math.atan2(-dz, dx);
-    else if (Math.hypot(dx, dz) >= .5) k.obj.rotation.y = k.horizontal ? (k.sentido > 0 ? 0 : Math.PI) : (k.sentido > 0 ? -Math.PI / 2 : Math.PI / 2);
+    else if (Math.hypot(dx, dz) >= .5) k.obj.rotation.y = Math.atan2(-tz * k.sentido, tx * k.sentido);
     k.obj.position.set(x, 0, z);
   }
   function viasNasAvenidas() {
-    const v = { h: { rot: [], ret: [] }, v: { rot: [], ret: [] } };
-    for (let c = 0; c < LARGURA; c++) { const l = s.mapa[LINHA_RUA * LARGURA + c]; if (l && l.via === 'rotatoria') v.h.rot.push(posX(c)); if (l && l.via === 'retorno') v.h.ret.push(posX(c)); }
-    for (let r = 0; r < ALTURA; r++) { const l = s.mapa[r * LARGURA + COLUNA_RUA]; if (l && l.via === 'rotatoria') v.v.rot.push(posZ(r)); if (l && l.via === 'retorno') v.v.ret.push(posZ(r)); }
+    const v = { h: { rot: [], ret: [], faixa: [], radar: [] }, v: { rot: [], ret: [], faixa: [], radar: [] } };
+    ['h', 'v'].forEach(e => { const tr = trajetoAvenida(e); tr.lotes.forEach(i => {
+      const l = s.mapa[i]; if (l && l.via === 'rotatoria') v[e].rot.push(tr.tileS[i]); if (l && l.via === 'retorno') v[e].ret.push(tr.tileS[i]);
+      if (l && l.via === 'faixaPedestre') v[e].faixa.push({ s: tr.tileS[i], i }); if (l && l.via === 'radar') v[e].radar.push(tr.tileS[i]);
+    }); });
     return v;
   }
   function moverCarros(dt, sinal) {
@@ -1374,13 +1377,18 @@ const Cena = (() => {
       }
       let passo = reduzido ? 0 : k.v * k.sentido * dt;
       // para antes da faixa quando o sinal do seu eixo não está verde; com rotatória, cede a vez a quem já está nela
-      const centro = k.horizontal ? posX(COLUNA_RUA) : posZ(LINHA_RUA);
+      const CRUZ = LINHA_RUA * LARGURA + COLUNA_RUA, centroDe = o => trajetoAvenida(o.horizontal ? 'h' : 'v').tileS[CRUZ];
+      const centro = centroDe(k);
       const retencao = centro - k.sentido * .66;
       const ate = (retencao - k.p) * k.sentido;
       if (cruzRot) {
-        const naRotatoria = carros.some(o => o.horizontal !== k.horizontal && Math.abs(o.p - (o.horizontal ? posX(COLUNA_RUA) : posZ(LINHA_RUA))) < .5);
+        const naRotatoria = carros.some(o => o.horizontal !== k.horizontal && Math.abs(o.p - centroDe(o)) < .5);
         if (naRotatoria && ate >= 0 && ate < .3) passo = 0;
       } else if (sinal[eixo] !== 'verde' && ate >= 0 && ate < .3) passo = 0;
+      // perto do radar todos reduzem; na faixa, param enquanto alguém atravessa
+      if (vias[eixo].radar.some(r => Math.abs(r - k.p) < 1.6)) passo *= .55;
+      const agora = relogio();
+      vias[eixo].faixa.forEach(f => { const a = ((f.s - k.sentido * .55) - k.p) * k.sentido; if (a >= 0 && a < .3 && travessia(f.i, agora) >= 0) passo = 0; });
       // e não encosta no carro da frente
       carros.forEach(o => {
         if (o === k || o.horizontal !== k.horizontal || o.sentido !== k.sentido) return;
@@ -1394,15 +1402,171 @@ const Cena = (() => {
         k.p = ret; k.volta = { c: ret, f: 0, s0: k.sentido }; return;
       }
       k.p += passo;
-      if (k.p > k.lim + .5) k.p = -k.lim - .5;
-      if (k.p < -k.lim - .5) k.p = k.lim + .5;
+      const comp = trajetoAvenida(eixo).len;
+      if (k.p > comp) k.p -= comp;
+      if (k.p < 0) k.p += comp;
       // na rotatória o carro contorna a ilha central pela direita
       let desvio = 0;
       vias[eixo].rot.forEach(c => { const d = k.p - c; if (Math.abs(d) < .5) desvio = Math.max(desvio, .17 * (1 + Math.cos(Math.PI * d / .5)) / 2); });
       posicionarCarro(k, k.sentido * (.2 + desvio));
-      k.obj.visible = Math.abs(k.p) < k.lim - .1;
+      k.obj.visible = k.p > .15 && k.p < comp - .15;
       if (k.obj.userData.sirene) k.obj.userData.sirene.emissiveIntensity = Math.floor(relogio() * 4) % 2 ? 1.6 : .1;
     });
+  }
+
+  /* ── Estacionamento e sinalização sobre as ruas ── */
+  const cacheSinal = {};
+  function texSinal(tipo) {
+    if (cacheSinal[tipo]) return cacheSinal[tipo];
+    const cadeirante = (ctx, cor, W) => {
+      ctx.fillStyle = cor; ctx.strokeStyle = cor; ctx.lineWidth = W * .07; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(W * .44, W * .2, W * .07, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(W * .42, W * .32); ctx.lineTo(W * .42, W * .55); ctx.lineTo(W * .62, W * .55); ctx.lineTo(W * .72, W * .76); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(W * .42, W * .42); ctx.lineTo(W * .58, W * .42); ctx.stroke();
+      ctx.beginPath(); ctx.arc(W * .44, W * .66, W * .17, .35 * Math.PI, 1.85 * Math.PI); ctx.stroke();
+    };
+    const circulo = (ctx, W, fundo, aro) => {
+      ctx.fillStyle = fundo; ctx.beginPath(); ctx.arc(W / 2, W / 2, W * .47, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = aro; ctx.lineWidth = W * .09; ctx.beginPath(); ctx.arc(W / 2, W / 2, W * .42, 0, Math.PI * 2); ctx.stroke();
+    };
+    const texto = (ctx, W, t, cor, tam, y = .5) => { ctx.fillStyle = cor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `900 ${W * tam}px Nunito, "Segoe UI", sans-serif`; ctx.fillText(t, W / 2, W * y); };
+    return (cacheSinal[tipo] = canvasTex(256, 256, (ctx, W) => {
+      if (tipo === 'r6a' || tipo === 'r6b') { // proibido estacionar / estacionamento regulamentado
+        circulo(ctx, W, '#FFFFFF', '#D32F2F'); texto(ctx, W, 'E', '#111111', .5, .53);
+        if (tipo === 'r6a') { ctx.strokeStyle = '#D32F2F'; ctx.lineWidth = W * .09; ctx.beginPath(); ctx.moveTo(W * .2, W * .2); ctx.lineTo(W * .8, W * .8); ctx.stroke(); }
+      } else if (tipo === 'r6c') { // proibido parar e estacionar
+        circulo(ctx, W, '#1565C0', '#D32F2F');
+        ctx.strokeStyle = '#D32F2F'; ctx.lineWidth = W * .09;
+        ctx.beginPath(); ctx.moveTo(W * .22, W * .22); ctx.lineTo(W * .78, W * .78); ctx.moveTo(W * .78, W * .22); ctx.lineTo(W * .22, W * .78); ctx.stroke();
+      } else if (tipo === 'vel60' || tipo === 'vel30') {
+        circulo(ctx, W, '#FFFFFF', '#D32F2F'); texto(ctx, W, tipo.slice(3), '#111111', .36, .5); texto(ctx, W, 'km/h', '#111111', .1, .72);
+      } else if (tipo === 'pcd' || tipo === 'pedestre') {
+        ctx.fillStyle = '#1565C0'; ctx.fillRect(0, 0, W, W); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 8; ctx.strokeRect(10, 10, W - 20, W - 20);
+        if (tipo === 'pcd') cadeirante(ctx, '#FFFFFF', W);
+        else { // pedestre na faixa
+          ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.moveTo(W * .5, W * .12); ctx.lineTo(W * .9, W * .85); ctx.lineTo(W * .1, W * .85); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#111111'; ctx.beginPath(); ctx.arc(W * .5, W * .36, W * .05, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#111111'; ctx.lineWidth = W * .05; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(W * .5, W * .43); ctx.lineTo(W * .48, W * .6); ctx.lineTo(W * .4, W * .75); ctx.moveTo(W * .48, W * .6); ctx.lineTo(W * .58, W * .75); ctx.moveTo(W * .4, W * .5); ctx.lineTo(W * .6, W * .52); ctx.stroke();
+          for (let k = 0; k < 4; k++) { ctx.fillStyle = '#111111'; ctx.fillRect(W * (.3 + k * .11), W * .78, W * .07, W * .04); }
+        }
+      } else if (tipo === 'zona' || tipo === 'idoso') {
+        ctx.fillStyle = '#1565C0'; ctx.fillRect(0, 0, W, W); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 8; ctx.strokeRect(10, 10, W - 20, W - 20);
+        if (tipo === 'zona') { texto(ctx, W, 'E', '#FFFFFF', .42, .38); texto(ctx, W, 'ZONA AZUL', '#FFFFFF', .13, .76); }
+        else { texto(ctx, W, '60+', '#FFFFFF', .34, .4); texto(ctx, W, 'IDOSO', '#FFFFFF', .15, .76); }
+      } else if (tipo === 'chaoPcd') { ctx.clearRect(0, 0, W, W); cadeirante(ctx, 'rgba(250,250,250,.95)', W); }
+      else if (tipo === 'chaoIdoso') { ctx.clearRect(0, 0, W, W); texto(ctx, W, 'IDOSO', 'rgba(250,250,250,.95)', .22); }
+    }));
+  }
+  function placaSinal(g, tipo, x, z) {
+    g.add(cilindro(.009, .009, .4, '#455A64', x, 0, z, 6));
+    const cinza = mat('#90A4AE'), face = new THREE.MeshStandardMaterial({ map: texSinal(tipo), transparent: ['r6a', 'r6b', 'r6c', 'vel60', 'vel30'].includes(tipo), roughness: .6 });
+    g.add(caixa(.13, .13, .008, [cinza, cinza, cinza, cinza, face, cinza], x, .33, z + .01));
+  }
+  function eixoRua(g, i) {
+    const grp = new THREE.Group(), con = conexoesDe(i) || [1, 3];
+    if (con.includes(0) || con.includes(2)) grp.rotation.y = Math.PI / 2;
+    g.add(grp); return grp; // dentro do grupo, a rua corre ao longo de x
+  }
+  // baias na beira da rua (sobre a calçada), com carros estacionados que mudam a cada mês
+  function baias(grp, i, lados, especial) {
+    lados.forEach(lado => {
+      grp.add(caixa(.84, .004, .12, matAsfalto(), 0, 0, lado * .445));
+      [-.42, 0, .42].forEach(x => grp.add(caixa(.012, .006, .11, '#F5F5F5', x, 0, lado * .445)));
+      [-.21, .21].forEach((x, k) => {
+        const reservada = especial && lado === 1 && k === 0;
+        if (reservada) {
+          grp.add(caixa(.4, .005, .1, '#1E63B5', x, 0, lado * .445));
+          const m = new THREE.Mesh(new THREE.PlaneGeometry(.1, .1), new THREE.MeshStandardMaterial({ map: texSinal(especial === 'pcd' ? 'chaoPcd' : 'chaoIdoso'), transparent: true, depthWrite: false }));
+          m.rotation.x = -Math.PI / 2; m.position.set(x, .008, lado * .445); grp.add(m);
+        }
+        const h = (Math.abs(i) * 7 + k * 13 + (lado + 1) * 5 + (s.mes || 1) * 3) % 10;
+        if (h < (reservada ? 3 : 6)) {
+          const c = criarVeiculo('carro', CORES_CARRO[h % CORES_CARRO.length]);
+          c.scale.setScalar(.85); c.position.set(x, 0, lado * .44); c.rotation.y = lado > 0 ? 0 : Math.PI; grp.add(c);
+        }
+      });
+    });
+  }
+  // travessia na faixa de pedestres: de tempos em tempos alguém atravessa (0 a 1), senão −1
+  function travessia(i, t) {
+    const f = (t + (Math.abs(i) * 1.37) % 10) % 10;
+    return f < 3.2 ? f / 3.2 : -1;
+  }
+  const linhaAmarela = grp => [-.38, .38].forEach(z => grp.add(caixa(.98, .005, .03, '#F2C200', 0, 0, z)));
+  Object.assign(MODELOS, {
+    zonaAzul(g, n, i) { baias(eixoRua(g, i), i, [1, -1]); placaSinal(g, 'zona', .47, .47); g.userData.altura = .5; },
+    vagaPcd(g, n, i) { baias(eixoRua(g, i), i, [1], 'pcd'); placaSinal(g, 'pcd', .47, .47); g.userData.altura = .5; },
+    vagaIdoso(g, n, i) { baias(eixoRua(g, i), i, [1], 'idoso'); placaSinal(g, 'idoso', .47, .47); g.userData.altura = .5; },
+    proibidoEstacionar(g, n, i) { linhaAmarela(eixoRua(g, i)); placaSinal(g, 'r6a', .47, .47); g.userData.altura = .5; },
+    proibidoParar(g, n, i) { linhaAmarela(eixoRua(g, i)); placaSinal(g, 'r6c', .47, .47); g.userData.altura = .5; },
+    faixaPedestre(g, n, i) {
+      const grp = eixoRua(g, i);
+      for (let z = -.33; z <= .34; z += .11) grp.add(caixa(.24, .005, .06, '#F5F5F5', 0, 0, z));
+      placaSinal(g, 'pedestre', .47, .47);
+      const p = criarPessoa(Math.abs(i) * 3 + 1, false); p.visible = false; grp.add(p);
+      g.userData.tick = t => {
+        const u = travessia(i, t);
+        p.visible = u >= 0;
+        if (u < 0) return;
+        const ida = Math.floor((t + (Math.abs(i) * 1.37) % 10) / 10) % 2 ? 1 : -1;
+        p.position.set(-.05, 0, ida * (-.47 + .94 * u)); p.rotation.y = ida > 0 ? 0 : Math.PI;
+        animarPasso(p, t * 9, true);
+      };
+      g.userData.altura = .5;
+    },
+    radar(g, n, i) {
+      g.add(cilindro(.014, .016, .55, '#455A64', .47, 0, .47, 8));
+      g.add(caixa(.22, .016, .016, '#455A64', .37, .5, .47));
+      g.add(caixa(.07, .05, .05, '#37474F', .27, .44, .47)); g.add(cilindro(.014, .014, .012, '#1C2836', .27, .455, .5, 10).rotateX(Math.PI / 2));
+      placaSinal(g, i >= 0 && s.mapa[i] && s.mapa[i].tipo === 'rua' ? 'vel60' : 'vel30', -.47, .47);
+      g.userData.altura = .6;
+    },
+  });
+
+  /* ── Trajeto das avenidas: centro de cada lote, com arcos nas curvas e a estrada além da borda ── */
+  const centroLote = i => [posX(i % LARGURA), posZ(Math.floor(i / LARGURA))];
+  // lados do lote ligados a outro lote da mesma avenida (ruas locais não entram)
+  function ligacoesAvenida(i) {
+    const av = new Set([...caminhoAvenida('h'), ...caminhoAvenida('v')]);
+    if (!av.has(i)) return conexoes(i);
+    return [0, 1, 2, 3].filter(d => { const j = vizinhoNa(i, d); return j >= 0 && av.has(j); })
+      .concat(['h', 'v'].flatMap(e => { const t = caminhoAvenida(e); return [t[0], t[t.length - 1]].includes(i) ? [ladoBorda(i)] : []; }));
+  }
+  function ladoBorda(i) { const r = Math.floor(i / LARGURA), c = i % LARGURA; return r === 0 ? 0 : c === LARGURA - 1 ? 1 : r === ALTURA - 1 ? 2 : 3; }
+  // ponto na borda do mapa onde cada ponta de avenida vira estrada, e a direção para fora
+  function saidasAvenidas() {
+    return ['h', 'v'].flatMap(e => { const t = caminhoAvenida(e); return [t[0], t[t.length - 1]]; }).map(i => {
+      const [dx, dz] = DIRV[ladoBorda(i)], [x, z] = centroLote(i);
+      return { x: x + dx * .5, z: z + dz * .5, dx, dz };
+    });
+  }
+  const trajetos = {};
+  function trajetoAvenida(eixo) {
+    const chave = eixo + (s.avenidas || 'curvas');
+    if (trajetos[chave]) return trajetos[chave];
+    const lotes = caminhoAvenida(eixo), pts = [], tileS = {}, FORA = 10.5;
+    const acum = [0], soma = () => { const k = pts.length - 1; if (k > 0) acum.push(acum[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1])); };
+    const add = p => { pts.push(p); soma(); };
+    const [x0, z0] = centroLote(lotes[0]), [dx0, dz0] = DIRV[ladoBorda(lotes[0])];
+    add([x0 + dx0 * FORA, z0 + dz0 * FORA]);
+    lotes.forEach((i, k) => {
+      const c = centroLote(i), ant = k ? centroLote(lotes[k - 1]) : null, prox = k < lotes.length - 1 ? centroLote(lotes[k + 1]) : null;
+      const curva = ant && prox && (ant[0] - c[0]) * (prox[0] - c[0]) + (ant[1] - c[1]) * (prox[1] - c[1]) === 0;
+      if (!curva) { add(c); tileS[i] = acum[acum.length - 1]; return; }
+      const E = [(ant[0] + c[0]) / 2, (ant[1] + c[1]) / 2], X = [(prox[0] + c[0]) / 2, (prox[1] + c[1]) / 2];
+      for (let n = 0; n <= 8; n++) { const u = n / 8, a = 1 - u; add([a * a * E[0] + 2 * a * u * c[0] + u * u * X[0], a * a * E[1] + 2 * a * u * c[1] + u * u * X[1]]); if (n === 4) tileS[i] = acum[acum.length - 1]; }
+    });
+    const ul = lotes[lotes.length - 1], [x1, z1] = centroLote(ul), [dx1, dz1] = DIRV[ladoBorda(ul)];
+    add([x1 + dx1 * FORA, z1 + dz1 * FORA]);
+    return (trajetos[chave] = { pts, acum, len: acum[acum.length - 1], tileS, lotes });
+  }
+  // ponto e direção do trajeto na distância p
+  function pontoNoTrajeto(tr, p) {
+    let a = 0, b = tr.acum.length - 1;
+    while (b - a > 1) { const m = (a + b) >> 1; if (tr.acum[m] < p) a = m; else b = m; }
+    const P = tr.pts[a], Q = tr.pts[b], seg = (tr.acum[b] - tr.acum[a]) || 1, u = Math.max(0, Math.min(1, (p - tr.acum[a]) / seg));
+    return [P[0] + (Q[0] - P[0]) * u, P[1] + (Q[1] - P[1]) * u, (Q[0] - P[0]) / seg, (Q[1] - P[1]) / seg];
   }
 
   /* ── Carros nas ruas locais: seguem curvas, giram na rotatória e retornam onde é permitido ── */
@@ -1464,6 +1628,7 @@ const Cena = (() => {
     carrosLocais.forEach(c => {
       if (c.tile < 0 || !ehLocal(c.tile)) { reposicionar(c); return; }
       let passo = reduzido ? 0 : c.v * dt;
+      if (s.mapa[c.tile].via === 'radar') passo *= .55;
       // não encosta no carro da frente no mesmo trajeto
       carrosLocais.forEach(o => { if (o !== c && o.tile === c.tile && o.ent === c.ent && o.s > c.s && o.s - c.s < .32) passo = 0; });
       if (c.s + passo >= c.tr.len) {
@@ -1472,7 +1637,8 @@ const Cena = (() => {
         const ent = (c.sai + 2) % 4, lp = s.mapa[prox], eixo = c.sai % 2 ? 'h' : 'v';
         const ocupado = carrosLocais.some(o => o !== c && o.tile === prox && (lp.via === 'rotatoria' || (o.ent === ent && o.s < .3)));
         const semaforo = lp.via !== 'rotatoria' && conexoes(prox).length >= 3 && sinal[eixo] !== 'verde';
-        if (ocupado || semaforo) passo = Math.max(0, c.tr.len - c.s - .001); // espera: preferência de quem está na rotatória / sinal fechado
+        const pedestre = lp.via === 'faixaPedestre' && travessia(prox, relogio()) >= 0;
+        if (ocupado || semaforo || pedestre) passo = Math.max(0, c.tr.len - c.s - .001); // espera: preferência de quem está na rotatória / sinal fechado
         else { const resto = c.s + passo - c.tr.len; entrarNoLote(c, prox, ent); c.s = resto; passo = 0; }
       }
       c.s += passo;
@@ -1491,6 +1657,9 @@ const Cena = (() => {
     const matriz = new THREE.Object3D();
     const lotes = { grama: [], agua: [], rua: [], ponte: [] };
     s.mapa.forEach((l, i) => lotes[l && lotes[l.tipo] ? l.tipo : 'grama'].push(i));
+    // curvas das avenidas: o lote recebe grama por baixo e o asfalto em arco por cima
+    const curvasAv = lotes.rua.filter(i => { const d = ligacoesAvenida(i); return d.length === 2 && (d[0] + 2) % 4 !== d[1]; });
+    lotes.rua = lotes.rua.filter(i => !curvasAv.includes(i)); lotes.grama.push(...curvasAv);
 
     // grama: uma só superfície com coordenadas de textura do mundo (sem repetição lote a lote);
     // barrancos de terra nas bordas da ilha e nas margens do rio
@@ -1538,17 +1707,21 @@ const Cena = (() => {
     // ruas: asfalto, calçadas de piso, meio-fio e pintura; girada nos trechos verticais
     matRua = materialRua(false); matCruz = materialRua(true);
     materiaisReflexo.push(matRua, matCruz);
-    const ruas = lotes.rua.filter(i => !(Math.floor(i / LARGURA) === LINHA_RUA && i % LARGURA === COLUNA_RUA));
+    const cruzamentos = lotes.rua.filter(i => ligacoesAvenida(i).length >= 3);
+    const ruas = lotes.rua.filter(i => !cruzamentos.includes(i));
     const rua = new THREE.InstancedMesh(new THREE.BoxGeometry(1, .1, 1), matRua, ruas.length);
     rua.receiveShadow = true;
     ruas.forEach((i, n) => {
-      const r = Math.floor(i / LARGURA);
-      matriz.position.set(posX(i % LARGURA), -.05, posZ(r)); matriz.rotation.set(0, r === LINHA_RUA ? 0 : Math.PI / 2, 0); matriz.updateMatrix();
+      const r = Math.floor(i / LARGURA), d = ligacoesAvenida(i);
+      matriz.position.set(posX(i % LARGURA), -.05, posZ(r)); matriz.rotation.set(0, d.includes(1) || d.includes(3) ? 0 : Math.PI / 2, 0); matriz.updateMatrix();
       rua.setMatrixAt(n, matriz.matrix);
     });
     scene.add(rua);
-    const cruz = caixa(1, .1, 1, matCruz, posX(COLUNA_RUA), -.1, posZ(LINHA_RUA));
-    cruz.castShadow = false; scene.add(cruz);
+    cruzamentos.forEach(i => { const cruz = caixa(1, .1, 1, matCruz, posX(i % LARGURA), -.1, posZ(Math.floor(i / LARGURA))); cruz.castShadow = false; scene.add(cruz); });
+    curvasAv.forEach(i => {
+      const g = new THREE.Group(); curvaRua(g, ligacoesAvenida(i));
+      g.position.set(posX(i % LARGURA), 0, posZ(Math.floor(i / LARGURA))); scene.add(g);
+    });
     montarArredores(matAgua);
 
     // pontes de madeira com guarda-corpo
@@ -1570,8 +1743,11 @@ const Cena = (() => {
       g.add(malha(new THREE.SphereGeometry(.045, 8, 6), lampada, 0, .57, 0));
       g.position.set(x, 0, z); scene.add(g); postes.push(g);
     };
-    for (let c = 1; c < LARGURA; c += 3) if (c !== COLUNA_RUA && !(s.mapa[LINHA_RUA * LARGURA + c].tipo === 'ponte')) poste(posX(c), posZ(LINHA_RUA) - .46);
-    for (let r = 1; r < ALTURA; r += 3) if (r !== LINHA_RUA) poste(posX(COLUNA_RUA) + .46, posZ(r));
+    ['h', 'v'].forEach(e => caminhoAvenida(e).forEach((i, k) => {
+      const d = ligacoesAvenida(i), horizontal = d.includes(1) && d.includes(3), vertical = d.includes(0) && d.includes(2);
+      if (k % 3 !== 1 || s.mapa[i].tipo === 'ponte' || horizontal === vertical) return; // só em trecho reto
+      poste(posX(i % LARGURA) + (vertical ? .46 : 0), posZ(Math.floor(i / LARGURA)) - (horizontal ? .46 : 0));
+    }));
 
     // plano invisível para descobrir o lote clicado
     plano = new THREE.Mesh(new THREE.PlaneGeometry(LARGURA, ALTURA), new THREE.MeshBasicMaterial({ visible: false }));
@@ -1587,15 +1763,18 @@ const Cena = (() => {
     // rios que entram e saem do mapa: [z da borda, sentido, x na borda, meandro]
     const canais = [
       [-MZ, -1, posX(CURSO_RIO[0]), t => 4 * Math.sin(t * .07)],
-      [MZ, 1, posX(CURSO_RIO[ALTURA - 1]), t => 4 * Math.sin(t * .06 + .5)],
+      [MZ, 1, posX(CURSO_RIO[ALTURA - 1]), t => 3 + 3 * Math.sin(t * .06 + .5)], // afasta-se da estrada do sul
       ...CORREGO.filter(([r]) => r === ALTURA - 1).slice(0, 1).map(([, c]) => [MZ, 1, posX(c), t => -3 * Math.sin(t * .08)]),
     ];
     const distCanal = (x, z) => Math.min(...canais.map(([z0, sentido, x0, meandro]) => {
       const t = (z - z0) * sentido;
       return t < 0 ? Infinity : Math.abs(x - (x0 + suave(0, 10, t) * meandro(t)));
     }));
-    const zRua = posZ(LINHA_RUA), xRua = posX(COLUNA_RUA);
-    const distRua = (x, z) => Math.min(Math.abs(x) > MX ? Math.abs(z - zRua) : Infinity, Math.abs(z) > MZ ? Math.abs(x - xRua) : Infinity);
+    const saidas = saidasAvenidas();
+    const distRua = (x, z) => Math.min(...saidas.map(o => {
+      const t = (x - o.x) * o.dx + (z - o.z) * o.dz;
+      return t < 0 ? Infinity : Math.abs((x - o.x) * o.dz - (z - o.z) * o.dx);
+    }));
     const altura = (x, z) => {
       const morro = Math.max(0, 1.1 + Math.sin(x * .11 + 1.3) * Math.cos(z * .09 - .7) * 1.7 + Math.sin(x * .23 + z * .17) * .6);
       let h = -.004 + suave(6, 30, distMapa(x, z)) * morro * (1 + distMapa(x, z) * .03);
@@ -1632,8 +1811,7 @@ const Cena = (() => {
 
     // estradas: as avenidas seguem para fora da cidade
     const trechos = [];
-    for (let x = MX + .5; x < R - 1; x++) trechos.push([x, zRua, 0], [-x, zRua, 0]);
-    for (let z = MZ + .5; z < R - 1; z++) trechos.push([xRua, z, 1], [xRua, -z, 1]);
+    saidas.forEach(o => { for (let d = .5; d < R - 1 - MX; d++) trechos.push([o.x + o.dx * d, o.z + o.dz * d, o.dz !== 0 ? 1 : 0]); });
     const estrada = new THREE.InstancedMesh(new THREE.BoxGeometry(1, .1, 1), matRua, trechos.length);
     const o = new THREE.Object3D();
     trechos.forEach(([x, z, vert], n) => { o.position.set(x, -.045, z); o.rotation.set(0, vert ? Math.PI / 2 : 0, 0); o.updateMatrix(); estrada.setMatrixAt(n, o.matrix); });
@@ -1847,23 +2025,24 @@ const Cena = (() => {
     while (pessoas.length < alvo) {
       const n = pessoas.length, horizontal = n % 2 === 0;
       const obj = criarPessoa(n * 5 + 1, n % 6 === 5); scene.add(obj);
-      const lim = horizontal ? LARGURA / 2 : ALTURA / 2;
-      pessoas.push({ obj, horizontal, lado: n % 4 < 2 ? 1 : -1, sentido: Math.random() < .5 ? 1 : -1, lim,
-        p: (Math.random() * 2 - 1) * lim, v: .12 + Math.random() * .1, fase: Math.random() * 6 });
+      const [a, b] = trechoReto(horizontal ? 'h' : 'v'), centro = horizontal ? posX : posZ;
+      const ini = centro(a) - .5, fim = centro(b) + .5;
+      pessoas.push({ obj, horizontal, lado: n % 4 < 2 ? 1 : -1, sentido: Math.random() < .5 ? 1 : -1, ini, fim,
+        p: ini + Math.random() * (fim - ini), v: .12 + Math.random() * .1, fase: Math.random() * 6 });
     }
   }
   function moverPessoas(dt, t, luzes) {
     pessoas.forEach((k, n) => {
       if (!reduzido) k.p += k.v * k.sentido * dt;
-      if (k.p > k.lim) k.p = -k.lim;
-      if (k.p < -k.lim) k.p = k.lim;
+      if (k.p > k.fim) k.p = k.ini;
+      if (k.p < k.ini) k.p = k.fim;
       const calcada = .445 * k.lado + (n % 3 - 1) * .015;
       if (k.horizontal) { k.obj.position.set(k.p, 0, posZ(LINHA_RUA) + calcada); k.obj.rotation.y = k.sentido > 0 ? -Math.PI / 2 : Math.PI / 2; }
       else { k.obj.position.set(posX(COLUNA_RUA) + calcada, 0, k.p); k.obj.rotation.y = k.sentido > 0 ? 0 : Math.PI; }
       const passo = animarPasso(k.obj, t * 9 + k.fase, true);
       k.obj.position.y = Math.abs(passo) * .006;
       // à noite, metade das pessoas está em casa
-      k.obj.visible = Math.abs(k.p) < k.lim - .05 && !(luzes > .6 && n % 2);
+      k.obj.visible = k.p > k.ini + .05 && k.p < k.fim - .05 && !(luzes > .6 && n % 2);
     });
   }
 
@@ -2120,7 +2299,7 @@ const Cena = (() => {
     });
     // rotatórias, retornos e placas ficam sobre a rua (o desenho depende das ruas ligadas)
     s.mapa.forEach((l, i) => {
-      const via = l && l.via && MODELOS[l.via] ? l.via : null, chave = via && via + conexoes(i).join('');
+      const via = l && l.via && MODELOS[l.via] ? l.via : null, chave = via && via + conexoes(i).join('') + (VAGAS.includes(via) ? ':' + s.mes : '');
       if (viasNoLote[i] === chave) return;
       if (vias[i]) { scene.remove(vias[i]); delete vias[i]; }
       if (via) {
@@ -2288,6 +2467,7 @@ const Cena = (() => {
       if (g.userData.tick && !reduzido) g.userData.tick(t);
       if (g.userData.gente) moverFrequentadores(g, dt, t, luzes);
     });
+    Object.values(vias).forEach(g => { if (g.userData.tick && !reduzido) g.userData.tick(t); });
     moverChuva(dt);
     moverBarcosEPassaros(dt, t);
     moverFolhas(dt, t);

@@ -686,7 +686,7 @@ const PREDIOS = {
 
   /* ── Dispositivos de trânsito: instalados sobre uma rua ── */
   rotatoria: {
-    nome: 'Rotatória', icone: '🔄', area: 'Trânsito: preferência de passagem', cor: '#00838F', cat: 'transporte', via: true,
+    nome: 'Rotatória', icone: '🔄', area: 'Trânsito: preferência de passagem', cor: '#00838F', cat: 'sinalizacao', via: true,
     custo: 90, nivel: 1,
     efeito: { renda: 0, manutencao: 1, pop: 0, felicidade: 2 },
     bonus: 'Instale num cruzamento de 3 ou 4 ruas. Substitui o semáforo.',
@@ -707,7 +707,7 @@ const PREDIOS = {
     ],
   },
   retorno: {
-    nome: 'Retorno permitido', icone: '↩️', area: 'Trânsito: retornos', cor: '#1565C0', cat: 'transporte', via: true,
+    nome: 'Retorno permitido', icone: '↩️', area: 'Trânsito: retornos', cor: '#1565C0', cat: 'sinalizacao', via: true,
     custo: 40, nivel: 1,
     efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 1 },
     bonus: 'Instale num trecho reto de rua. Não pode em ponte, curva ou cruzamento.',
@@ -728,10 +728,127 @@ const PREDIOS = {
     ],
   },
   placaRetorno: {
-    nome: 'Placa "Proibido retornar"', icone: '🚫', area: 'Sinalização', cor: '#C62828', cat: 'transporte', via: true,
+    nome: 'Placa "Proibido retornar"', icone: '🚫', area: 'Sinalização', cor: '#C62828', cat: 'sinalizacao', via: true,
     custo: 15, nivel: 0,
     efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 0 },
     bonus: 'Coloque em trechos onde o retorno seria perigoso: ninguém faz o retorno ali.',
+  },
+
+  zonaAzul: {
+    nome: 'Zona Azul (vagas na rua)', icone: '🚙', area: 'Trânsito: estacionamento', cor: '#1565C0', cat: 'sinalizacao', via: true,
+    custo: 50, nivel: 1,
+    efeito: { renda: 6, manutencao: 0, pop: 0, felicidade: 1 },
+    bonus: 'Vagas dos dois lados da rua; rende a tarifa do estacionamento rotativo. Só em trecho reto, longe da esquina e fora da ponte.',
+    aula: {
+      resumo: 'O estacionamento rotativo (Zona Azul) faz as vagas girarem: cada carro fica um tempo limitado, e mais gente consegue parar.',
+      pontos: [
+        'Cabe ao Município implantar, manter e operar o estacionamento rotativo pago nas vias (CTB, art. 24, X).',
+        'Estacionar em desacordo com as regras da vaga, como passar do tempo pago, é infração grave (CTB, art. 181, XVII).',
+        'É proibido estacionar a menos de 5 metros da esquina (CTB, art. 181, I) e em pontes, viadutos e túneis (CTB, art. 181, XIV).',
+        'Estacionar na calçada ou sobre a faixa de pedestres também é infração (CTB, art. 181, VIII).',
+      ],
+      pratica: 'Pagou uma hora de Zona Azul e ficou três? Pode ser multado: o tempo de permanência faz parte da regra da vaga.',
+    },
+    licenca: [
+      { p: 'Quem implanta o estacionamento rotativo pago nas ruas?', ops: ['A União', 'O Município', 'O Detran', 'O dono da loja em frente'], c: 1, exp: 'CTB, art. 24, X.' },
+      { p: 'Pode estacionar colado na esquina?', ops: ['Sim', 'Não, é preciso ficar a pelo menos 5 metros', 'Só à noite', 'Só com pisca-alerta'], c: 1, exp: 'CTB, art. 181, I.' },
+      { p: 'Estacionar em cima de uma ponte é:', ops: ['Permitido', 'Infração de trânsito', 'Permitido se for rápido', 'Obrigatório nos feriados'], c: 1, exp: 'CTB, art. 181, XIV: nos viadutos, pontes e túneis.' },
+    ],
+  },
+  vagaPcd: {
+    nome: 'Vaga para pessoa com deficiência', icone: '♿', area: 'Acessibilidade no trânsito', cor: '#1565C0', cat: 'sinalizacao', via: true,
+    custo: 30, nivel: 1,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 2 },
+    bonus: 'Vaga reservada na beira da rua, com placa e símbolo pintado no chão.',
+    aula: {
+      resumo: 'Vagas reservadas garantem acesso a quem tem mais dificuldade de locomoção: usar sem credencial é infração gravíssima.',
+      pontos: [
+        'Em estacionamentos de uso público, 2% das vagas são reservadas a veículos que transportem pessoa com deficiência, com no mínimo uma vaga (Lei 13.146/2015, art. 47).',
+        'Para idosos, a reserva é de 5% das vagas (Estatuto da Pessoa Idosa, Lei 10.741/2003, art. 41).',
+        'Para usar a vaga, o veículo precisa exibir a credencial emitida pelo órgão de trânsito do Município (Lei 13.146/2015, art. 47, §2º).',
+        'Estacionar em vaga reservada sem credencial é infração gravíssima, com remoção do veículo (CTB, art. 181, XX).',
+      ],
+      pratica: 'Parou na vaga de pessoa com deficiência "só por cinco minutinhos"? É infração gravíssima, e o carro pode ser guinchado.',
+    },
+    licenca: [
+      { p: 'Que parte das vagas é reservada a pessoas com deficiência?', ops: ['2%, com no mínimo uma vaga', '10%', 'Nenhuma', '50%'], c: 0, exp: 'Lei 13.146/2015, art. 47.' },
+      { p: 'O que é preciso para usar a vaga reservada?', ops: ['Nada', 'Credencial do órgão de trânsito à vista no carro', 'Pagar o dobro', 'Ser amigo do prefeito'], c: 1, exp: 'Lei 13.146/2015, art. 47, §2º.' },
+      { p: 'Estacionar na vaga reservada sem credencial é:', ops: ['Permitido por 5 minutos', 'Infração gravíssima', 'Infração leve', 'Permitido se ninguém estiver usando'], c: 1, exp: 'CTB, art. 181, XX.' },
+    ],
+  },
+  vagaIdoso: {
+    nome: 'Vaga para idoso', icone: '👵', area: 'Sinalização', cor: '#1565C0', cat: 'sinalizacao', via: true,
+    custo: 30, nivel: 1,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 2 },
+    bonus: 'Vaga reservada a idosos com credencial: 5% das vagas (Estatuto da Pessoa Idosa, art. 41). Usar sem credencial é infração gravíssima (CTB, art. 181, XX).',
+  },
+  proibidoEstacionar: {
+    nome: 'Placa "Proibido estacionar"', icone: '⛔', area: 'Trânsito: parada e estacionamento', cor: '#C62828', cat: 'sinalizacao', via: true,
+    custo: 15, nivel: 1,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 0 },
+    bonus: 'Placa R-6a e pintura amarela no meio-fio: pode parar para embarque e desembarque, mas não estacionar.',
+    aula: {
+      resumo: 'Parar e estacionar são coisas diferentes, e cada placa diz o que é permitido.',
+      pontos: [
+        'Parada é ficar parado só o tempo de embarcar ou desembarcar passageiros; estacionamento é ficar parado por mais tempo que isso (CTB, Anexo I).',
+        'A placa R-6a, "Proibido estacionar", deixa parar para embarque e desembarque, mas não estacionar. Desobedecer é infração média (CTB, art. 181, XVIII).',
+        'A placa R-6c, "Proibido parar e estacionar", não permite nem a parada rápida. Estacionar ali é infração grave (CTB, art. 181, XIX).',
+        'A pintura amarela junto ao meio-fio reforça a proibição.',
+      ],
+      pratica: 'Dá para deixar um passageiro em frente à escola onde há placa "Proibido estacionar"? Sim, a parada rápida pode. Onde a placa é "Proibido parar e estacionar", não.',
+    },
+    licenca: [
+      { p: 'Qual a diferença entre parar e estacionar?', ops: ['Nenhuma', 'Parar é só para embarque e desembarque; estacionar é ficar mais tempo', 'Parar é à noite', 'Estacionar é com o motor ligado'], c: 1, exp: 'CTB, Anexo I (conceitos de parada e estacionamento).' },
+      { p: 'Com a placa "Proibido estacionar", pode parar para alguém descer?', ops: ['Sim, a parada rápida é permitida', 'Não, nunca', 'Só táxis', 'Pode ficar uma hora com pisca-alerta'], c: 0, exp: 'A R-6a proíbe estacionar, não a parada para embarque e desembarque.' },
+      { p: 'O que a placa "Proibido parar e estacionar" proíbe?', ops: ['Só estacionar', 'Parar e estacionar', 'Só buzinar', 'Só caminhões'], c: 1, exp: 'Placa R-6c; estacionar ali é infração grave (CTB, art. 181, XIX).' },
+    ],
+  },
+  proibidoParar: {
+    nome: 'Placa "Proibido parar e estacionar"', icone: '❌', area: 'Sinalização', cor: '#C62828', cat: 'sinalizacao', via: true,
+    custo: 15, nivel: 1,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 0 },
+    bonus: 'Placa R-6c: no trecho não se pode nem parar rapidinho. Estacionar ali é infração grave (CTB, art. 181, XIX).',
+  },
+  faixaPedestre: {
+    nome: 'Faixa de pedestres', icone: '🚸', area: 'Trânsito: pedestres', cor: '#F9A825', cat: 'sinalizacao', via: true,
+    custo: 20, nivel: 0,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 2 },
+    bonus: 'Pedestres atravessam de tempos em tempos, e os carros param para eles. Só em trecho reto, fora da ponte.',
+    aula: {
+      resumo: 'Na faixa, o pedestre tem preferência: o motorista deve parar e esperar a travessia.',
+      pontos: [
+        'Onde há faixa de pedestres sem semáforo, quem está atravessando tem preferência, e o motorista deve parar (CTB, art. 70).',
+        'Deixar de dar preferência ao pedestre na faixa é infração gravíssima (CTB, art. 214, I).',
+        'O pedestre também tem deveres: deve atravessar na faixa quando houver uma a até 50 metros (CTB, art. 69).',
+        'Estacionar sobre a faixa de pedestres é infração (CTB, art. 181, VIII).',
+      ],
+      pratica: 'Uma senhora já começou a atravessar na faixa e não há semáforo? Pare e espere: a preferência é dela.',
+    },
+    licenca: [
+      { p: 'Na faixa sem semáforo, quem tem preferência?', ops: ['O carro', 'O pedestre', 'Quem chegar primeiro', 'O ônibus'], c: 1, exp: 'CTB, art. 70.' },
+      { p: 'Deixar de parar para o pedestre na faixa é:', ops: ['Infração gravíssima', 'Permitido com pressa', 'Infração leve', 'Nada'], c: 0, exp: 'CTB, art. 214, I.' },
+      { p: 'Havendo faixa a até 50 metros, o pedestre deve:', ops: ['Atravessar onde quiser', 'Usar a faixa', 'Correr', 'Esperar um carro parar no meio da rua'], c: 1, exp: 'CTB, art. 69.' },
+    ],
+  },
+  radar: {
+    nome: 'Radar de velocidade', icone: '📸', area: 'Trânsito: velocidade', cor: '#455A64', cat: 'sinalizacao', via: true,
+    custo: 60, nivel: 2,
+    efeito: { renda: 0, manutencao: 2, pop: 0, felicidade: 1 },
+    bonus: 'Os carros reduzem a velocidade perto dele. Vem com a placa de velocidade máxima. Só em trecho reto.',
+    aula: {
+      resumo: 'Os limites de velocidade protegem vidas; o radar fiscaliza, e a infração cresce com o excesso.',
+      pontos: [
+        'Sem placa, a velocidade máxima nas cidades é de 80 km/h nas vias de trânsito rápido, 60 nas arteriais, 40 nas coletoras e 30 nas locais (CTB, art. 61, §1º, I).',
+        'Passar até 20% do limite é infração média; de 20% a 50%, grave; mais de 50%, gravíssima, com suspensão do direito de dirigir (CTB, art. 218).',
+        'O trecho com radar deve ter placa indicando a velocidade máxima permitida (Resolução Contran 798/2020).',
+      ],
+      pratica: 'A placa marca 60 km/h e o carro passou a 75? O excesso foi de 25%: infração grave.',
+    },
+    licenca: [
+      { p: 'Sem placa, qual é o limite numa avenida arterial?', ops: ['40 km/h', '60 km/h', '80 km/h', '110 km/h'], c: 1, exp: 'CTB, art. 61, §1º, I, "b".' },
+      { p: 'Passar mais de 50% do limite é infração:', ops: ['Leve', 'Média', 'Grave', 'Gravíssima, com suspensão do direito de dirigir'], c: 3, exp: 'CTB, art. 218, III.' },
+      { p: 'O que o trecho com radar precisa ter?', ops: ['Nada', 'Placa indicando a velocidade máxima', 'Um policial escondido', 'Um semáforo'], c: 1, exp: 'Resolução Contran 798/2020.' },
+    ],
   },
 
   /* ── Zona rural ── */
@@ -993,6 +1110,7 @@ const CATEGORIAS = [
   { id: 'rural', nome: 'Rural', icone: '🌾' },
   { id: 'industria', nome: 'Indústria', icone: '🏭' },
   { id: 'transporte', nome: 'Transporte', icone: '🚦' },
+  { id: 'sinalizacao', nome: 'Sinalização', icone: '🚸' },
   { id: 'infra', nome: 'Infraestrutura', icone: '🔧' },
   { id: 'comunidade', nome: 'Comunidade', icone: '🌳' },
   { id: 'enfeite', nome: 'Enfeites', icone: '🌷' },
@@ -1041,6 +1159,7 @@ const MISSOES = [
   { id: 'm13', texto: 'Organize o trânsito: Ponto de táxi, Estacionamento e Terminal de ônibus', ok: s => ['pontoTaxi', 'estacionamento', 'terminal'].every(k => conta(s, k) >= 1), xp: 30, din: 200 },
   { id: 'm14', texto: 'Ligue a cidade ao mundo: construa um Porto ou um Aeroporto', ok: s => conta(s, 'porto') + conta(s, 'aeroporto') >= 1, xp: 60, din: 400 },
   { id: 'm15', texto: 'Organize o trânsito com uma Rotatória e um Retorno permitido', ok: s => conta(s, 'rotatoria') >= 1 && conta(s, 'retorno') >= 1, xp: 30, din: 150 },
+  { id: 'm16', texto: 'Organize o estacionamento: Zona Azul, vaga para pessoa com deficiência e faixa de pedestres', ok: s => ['zonaAzul', 'vagaPcd', 'faixaPedestre'].every(k => conta(s, k) >= 1), xp: 30, din: 150 },
   { id: 'm11', texto: 'Compre todos os bairros da cidade', ok: s => BAIRROS.every(b => (s.bairros || {})[b.id]), xp: 120, din: 0 },
 ];
 
@@ -1618,6 +1737,31 @@ const CASOS = [
     ops: ['Não, a rua estava vazia', 'Sim: retornar em ponte é infração gravíssima, mesmo sem movimento', 'Só se tivesse batido'], c: 1,
     exp: 'Pontes, viadutos, túneis e curvas não têm espaço nem visibilidade para o retorno. O certo é seguir até um retorno sinalizado ou uma rotatória.',
     base: 'CTB, arts. 39 e 206, II' },
+  { predio: 'zonaAzul', titulo: 'Tempo vencido', quem: '🧾 Fiscal da Zona Azul',
+    texto: 'Um motorista pagou uma hora de Zona Azul e deixou o carro o dia inteiro na vaga. Ele diz que pagou e pronto. Cabe multa?',
+    ops: ['Não, ele pagou', 'Sim: ficar além do tempo é estacionar em desacordo com a regulamentação da vaga, infração grave', 'Só se a vaga fosse de idoso'], c: 1,
+    exp: 'O rotativo existe para as vagas girarem. Passar do tempo pago descumpre a regra da sinalização.',
+    base: 'CTB, art. 181, XVII' },
+  { predio: 'vagaPcd', titulo: 'Só cinco minutinhos', quem: '♿ Dona Marta, cadeirante',
+    texto: 'Toda vez que chego ao mercado, tem um carro sem credencial na vaga reservada. O dono diz que é rapidinho. O que a lei diz?',
+    ops: ['Rapidinho pode', 'É infração gravíssima, com remoção do veículo: a fiscalização pode multar e guinchar', 'Só a Dona Marta pode reclamar com o dono'], c: 1,
+    exp: 'A vaga reservada só pode ser usada com credencial. Ocupá-la, mesmo por pouco tempo, tira o acesso de quem precisa.',
+    base: 'CTB, art. 181, XX; Lei 13.146/2015, art. 47' },
+  { predio: 'proibidoEstacionar', titulo: 'Parar ou estacionar?', quem: '🚗 Pai de aluno',
+    texto: 'Em frente à escola tem placa "Proibido estacionar". Posso parar rapidinho para meu filho descer?',
+    ops: ['Não, nem por um segundo', 'Pode: parar só para embarque e desembarque é permitido; estacionar não', 'Pode deixar o carro lá a manhã toda'], c: 1,
+    exp: 'Parada é a imobilização só pelo tempo de embarque ou desembarque. A placa R-6a proíbe estacionar; a R-6c proibiria também a parada.',
+    base: 'CTB, Anexo I; art. 181, XVIII' },
+  { predio: 'faixaPedestre', titulo: 'Não parou na faixa', quem: '🧓 Seu Benedito',
+    texto: 'Eu estava atravessando na faixa e um carro passou direto, quase me pegou. O motorista cometeu alguma infração?',
+    ops: ['Não, o pedestre deve esperar', 'Sim: deixar de dar preferência ao pedestre na faixa é infração gravíssima', 'Só se tivesse atropelado'], c: 1,
+    exp: 'Na faixa sem semáforo, o pedestre tem preferência. O motorista que não para comete infração gravíssima.',
+    base: 'CTB, arts. 70 e 214, I' },
+  { predio: 'radar', titulo: 'Multa do radar', quem: '🏎️ Motorista apressado',
+    texto: 'Fui multado a 75 km/h na avenida onde a placa marca 60 km/h. Foi só um pouquinho a mais. A multa está certa?',
+    ops: ['Não, 15 km/h não conta', 'Sim: o excesso foi de 25%, entre 20% e 50%, infração grave', 'Só valeria com um policial'], c: 1,
+    exp: 'O CTB gradua a infração pelo percentual de excesso: até 20% média, de 20% a 50% grave, acima de 50% gravíssima.',
+    base: 'CTB, art. 218' },
 ];
 
 /* Projetos de lei: chegam à Prefeitura quando há Câmara Municipal. O jogador sanciona
