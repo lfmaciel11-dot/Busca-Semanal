@@ -55,7 +55,16 @@ O tempo passa de verdade: o sol cruza o céu, entardece e anoitece (janelas e po
 | ♻️ Ecoponto | Resíduos sólidos (logística reversa, cores da coleta seletiva) |
 | 🎭 Centro Cultural | Direitos autorais (70 anos, ECAD, citação, paródia) |
 
-Também há **enfeites** sem licença (🌳 árvore, 🌷 canteiro, ⛲ praça com calçadão de pedra portuguesa e 🛣️ rua — prédios colados em rua rendem +20%) e um menu de construção por categorias.
+| 💧 Estação de Água | Saneamento: Novo Marco (metas de 2033), titularidade municipal, serviço essencial |
+| 🚽 Estação de Esgoto | Saneamento: ligação obrigatória à rede, fossas, poluição de rios |
+| 🔆 Usina Solar | Energia: competência da União, ANEEL, geração distribuída (Lei 14.300/2022) |
+| 💡 Iluminação Pública | Contribuição do art. 149-A e Súmula Vinculante 41 |
+| 📡 Torre de Telecom | Marco Civil da Internet: neutralidade, registros de conexão, não suspensão |
+| 🌀 Piscinão | Drenagem urbana (Lei 11.445/2007, art. 36) e APP de margens de rios |
+
+A partir de 60 habitantes, a cidade precisa de **água, esgoto e energia** (cada estação atende cerca de 150 pessoas). O mapa tem rio, córrego e lagoa; o jogador pode construir 🌉 pontes sobre a água. Os cruzamentos ganham **semáforos** automáticos e os carros param no vermelho.
+
+Também há **enfeites** sem licença (🌳 árvore, 🌷 canteiro, ⛲ praça com calçadão de pedra portuguesa, 🏞️ lagoa com patos e 🚏 ponto de ônibus; e, na infraestrutura, 🛣️ rua e 🌉 ponte — prédios colados em rua rendem +20%) e um menu de construção por categorias.
 
 ## Texturas
 

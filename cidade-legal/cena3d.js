@@ -576,6 +576,192 @@ const Cena = (() => {
     },
   });
 
+
+  /* ── Infraestrutura, saneamento e enfeites com água ─────────────────────── */
+  const matAguaLimpa = () => mat('#3FA7DE', { roughness: .08, metalness: .15 });
+  function orientacaoPonte(i) {
+    const r = Math.floor(i / LARGURA), c = i % LARGURA;
+    const agua = j => j >= 0 && j < LARGURA * ALTURA && s.mapa[j] && ['agua', 'ponte', 'ponteLocal'].includes(s.mapa[j].tipo);
+    const v = (r > 0 && agua(i - LARGURA)) || (r < ALTURA - 1 && agua(i + LARGURA));
+    const h = (c > 0 && agua(i - 1)) || (c < LARGURA - 1 && agua(i + 1));
+    return v && !h ? 'h' : h && !v ? 'v' : orientacaoRua(i) === 'v' ? 'v' : 'h'; // a ponte atravessa a água
+  }
+  Object.assign(MODELOS, {
+    estacaoAgua(g) {
+      calcada(g);
+      const concreto = IMG.concreto_cor ? pbr('concreto', 1, 1, { color: '#E0E0E0' }) : mat('#BDBDBD');
+      [[-.2, .15], [.2, .15]].forEach(([x, z]) => {
+        g.add(caixa(.34, .12, .3, concreto, x, .03, z));
+        g.add(caixa(.3, .01, .26, matAguaLimpa(), x, .13, z));
+      });
+      g.add(caixa(.36, .3, .26, fachada('#E3F2FD', 3, 1, { parede: 'concreto' }), -.18, .03, -.26));
+      [[.16, -.14], [.36, -.14], [.16, -.34], [.36, -.34]].forEach(([x, z]) => g.add(cilindro(.012, .012, .42, '#78909C', x, .03, z, 6)));
+      g.add(cilindro(.13, .13, .22, '#ECEFF1', .26, .45, -.24, 20));
+      g.add(cilindro(.135, .135, .04, '#1E88E5', .26, .58, -.24, 20));
+      g.add(malha(new THREE.ConeGeometry(.14, .07, 20), mat('#B0BEC5'), .26, .7, -.24));
+      const cano = cilindro(.025, .025, .4, '#1E88E5', 0, 0, 0, 10); cano.rotation.z = Math.PI / 2; cano.position.set(0, .1, -.02); g.add(cano);
+      g.userData.altura = .8;
+    },
+    esgoto(g) {
+      g.add(caixa(.96, .04, .96, IMG.concreto_cor ? pbr('concreto', 1, 1, { color: '#CFCFCF' }) : mat('#BDBDBD')));
+      const bracos = [];
+      [[-.2, .18], [.22, -.16]].forEach(([x, z]) => {
+        g.add(cilindro(.21, .22, .12, '#B0BEC5', x, .04, z, 28));
+        g.add(cilindro(.19, .19, .01, mat('#6B7B3A', { roughness: .3 }), x, .155, z, 28));
+        g.add(cilindro(.03, .03, .05, '#607D8B', x, .15, z, 10));
+        const braco = new THREE.Group(); braco.add(caixa(.4, .02, .04, '#FFB300', 0, 0, 0)); braco.position.set(x, .18, z); g.add(braco); bracos.push(braco);
+      });
+      g.add(caixa(.3, .26, .24, fachada('#DCE775', 2, 1, { parede: 'concreto' }), .24, .04, .26));
+      g.userData.tick = t => bracos.forEach((b, k) => { b.rotation.y = t * (.5 + k * .2); });
+      g.userData.altura = .5;
+    },
+    usina(g) {
+      g.add(caixa(.96, .03, .96, '#9E9E8E'));
+      const celulas = canvasTex(128, 128, (ctx) => {
+        const gr = ctx.createLinearGradient(0, 0, 128, 128); gr.addColorStop(0, '#2B4C8C'); gr.addColorStop(1, '#122650');
+        ctx.fillStyle = gr; ctx.fillRect(0, 0, 128, 128);
+        ctx.strokeStyle = 'rgba(200,220,255,.45)'; ctx.lineWidth = 2;
+        for (let k = 0; k <= 128; k += 21) { ctx.beginPath(); ctx.moveTo(k, 0); ctx.lineTo(k, 128); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, k); ctx.lineTo(128, k); ctx.stroke(); }
+      });
+      const painel = new THREE.MeshStandardMaterial({ map: celulas, roughness: .22, metalness: .5 });
+      materiaisReflexo.push(painel);
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+        const x = -.3 + c * .3, z = -.3 + r * .27;
+        const p = caixa(.26, .012, .17, [mat('#90A4AE'), mat('#90A4AE'), painel, mat('#455A64'), mat('#90A4AE'), mat('#90A4AE')], 0, 0, 0);
+        p.rotation.x = -.45; p.position.set(x, .13, z); g.add(p);
+        g.add(caixa(.02, .1, .02, '#78909C', x, .03, z + .04));
+      }
+      g.add(caixa(.12, .14, .08, '#ECEFF1', .38, .03, .42));
+      g.userData.altura = .45;
+    },
+    iluminacao(g) {
+      calcada(g, .7);
+      const lamp = new THREE.MeshStandardMaterial({ color: '#FFF6D0', emissive: '#FFD27A', emissiveIntensity: 0 });
+      materiaisNoturnos.push(lamp); lamp.userData = { farol: true };
+      [[-.22, -.22], [.22, .22], [-.22, .22], [.22, -.22]].forEach(([x, z]) => {
+        g.add(cilindro(.014, .02, .7, '#263238', x, .03, z, 8));
+        g.add(cilindro(.06, .03, .05, '#263238', x, .72, z, 10));
+        g.add(malha(new THREE.SphereGeometry(.035, 10, 8), lamp, x, .7, z));
+      });
+      g.add(caixa(.24, .05, .07, IMG.madeira_cor ? pbr('madeira', 1) : mat('#8D6E63'), 0, .08, 0));
+      g.userData.altura = .9;
+    },
+    telecom(g) {
+      g.add(caixa(.6, .03, .6, '#B0BEC5'));
+      const trelica = (cor, y, h, rb, rt) => {
+        const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 4, 5, true), new THREE.MeshBasicMaterial({ color: cor, wireframe: true }));
+        m.position.set(0, y + h / 2, 0); m.rotation.y = Math.PI / 4; g.add(m);
+      };
+      trelica('#E53935', .03, .6, .16, .11); trelica('#ECEFF1', .63, .6, .11, .07); trelica('#E53935', 1.23, .6, .07, .03);
+      [0, Math.PI / 2, Math.PI, -Math.PI / 2].forEach(a => { const ant = caixa(.03, .12, .015, '#ECEFF1', Math.cos(a) * .06, 1.5, Math.sin(a) * .06); ant.rotation.y = -a; g.add(ant); });
+      const luz = luzPiscante('#FF1744'); g.add(malha(new THREE.SphereGeometry(.025, 8, 6), luz, 0, 1.86, 0));
+      g.add(caixa(.18, .14, .14, '#CFD8DC', .2, .03, .2));
+      g.userData.tick = t => { luz.emissiveIntensity = Math.floor(t * 1.5) % 2 ? 2 : .1; };
+      g.userData.altura = 1.9;
+    },
+    piscinao(g) {
+      const concreto = IMG.concreto_cor ? pbr('concreto', 1, 1, { color: '#D6D6D6' }) : mat('#BDBDBD');
+      g.add(caixa(.96, .02, .96, concreto));
+      [[0, -.45, .96, .06], [0, .45, .96, .06], [-.45, 0, .06, .84], [.45, 0, .06, .84]].forEach(([x, z, w, d]) => g.add(caixa(w, .14, d, concreto, x, .02, z)));
+      const agua = caixa(.84, .01, .84, mat('#4E8A8A', { roughness: .15, metalness: .1 }), 0, .06, 0); agua.castShadow = false; g.add(agua);
+      for (let k = 0; k < 5; k++) g.add(caixa(.12, .02, .04, concreto, .34, .03 + k * .025, -.3 + k * .04));
+      for (let k = 0; k < 6; k++) g.add(cilindro(.008, .008, .12, '#455A64', -.46 + k * .184, .16, .48, 5));
+      g.add(caixa(.94, .01, .01, '#455A64', 0, .26, .48));
+      g.userData.tick = t => { agua.position.y = .055 + Math.sin(t * .4) * .015; };
+      g.userData.altura = .35;
+    },
+    ponteLocal(g, n, i) {
+      const o = orientacaoPonte(i);
+      const deck = new THREE.Group();
+      deck.add(caixa(1, .06, .8, IMG.madeira_cor ? pbr('madeira', 1) : mat('#A0774F'), 0, -.02));
+      const pista = caixa(1, .012, .62, matRua, 0, .04); pista.castShadow = false; deck.add(pista);
+      deck.add(caixa(1, .1, .03, '#ECEFF1', 0, .04, .4)); deck.add(caixa(1, .1, .03, '#ECEFF1', 0, .04, -.4));
+      [-.3, .3].forEach(x => [-.32, .32].forEach(z => deck.add(cilindro(.03, .03, .16, '#9E9E9E', x, -.18, z, 8))));
+      deck.rotation.y = o === 'v' ? Math.PI / 2 : 0; g.add(deck);
+      g.userData.altura = .25;
+    },
+    lagoa(g, n) {
+      g.add(cilindro(.47, .47, .015, '#D7C49E', 0, 0, 0, 32));
+      const espelho = cilindro(.4, .4, .012, matAguaLimpa(), 0, .006, 0, 32); espelho.castShadow = false; g.add(espelho);
+      for (let k = 0; k < 10; k++) {
+        const a = k / 10 * Math.PI * 2 + n;
+        if (k % 3 === 0) { const junco = malha(new THREE.ConeGeometry(.02, .16, 5), FOLHAS.pinho, Math.cos(a) * .43, .08, Math.sin(a) * .43); junco.castShadow = false; g.add(junco); }
+        if (k % 4 === 1) { const folha = cilindro(.045, .045, .004, '#4CAF50', Math.cos(a) * .22, .02, Math.sin(a) * .22, 12); folha.castShadow = false; g.add(folha); }
+      }
+      const patos = [0, 1].map(k => {
+        const p = new THREE.Group();
+        p.add(malha(new THREE.SphereGeometry(.035, 10, 8), mat(k ? '#FFFFFF' : '#FFD54F'), 0, .03, 0));
+        p.add(malha(new THREE.SphereGeometry(.02, 8, 6), mat(k ? '#FFFFFF' : '#FFD54F'), .03, .065, 0));
+        p.add(malha(new THREE.ConeGeometry(.008, .02, 6), mat('#FF8F00'), .052, .065, 0)).children.slice(-1)[0].rotation.z = -Math.PI / 2;
+        g.add(p); return p;
+      });
+      g.userData.tick = t => patos.forEach((p, k) => {
+        const a = t * (.35 + k * .1) + k * Math.PI;
+        p.position.set(Math.cos(a) * (.18 + k * .08), .015 + Math.sin(t * 3 + k) * .004, Math.sin(a) * (.18 + k * .08));
+        p.rotation.y = -a - Math.PI / 2;
+      });
+      g.userData.altura = .3;
+    },
+    pontoOnibus(g) {
+      calcada(g, .8);
+      const vidro = mat('#B3E5FC', { transparent: true, opacity: .45, roughness: .1, metalness: .2 });
+      g.add(caixa(.5, .3, .02, vidro, 0, .03, -.18));
+      g.add(caixa(.56, .03, .22, '#0D7896', 0, .34, -.1));
+      [-.26, .26].forEach(x => g.add(cilindro(.012, .012, .32, '#455A64', x, .03, -.18, 6)));
+      g.add(caixa(.36, .04, .08, IMG.madeira_cor ? pbr('madeira', 1) : mat('#8D6E63'), 0, .1, -.12));
+      g.add(cilindro(.01, .01, .45, '#455A64', .34, .03, .2, 6));
+      const placa = caixa(.12, .12, .01, [mat('#1565C0'), mat('#1565C0'), mat('#1565C0'), mat('#1565C0'), new THREE.MeshStandardMaterial({ map: texEmoji('🚏', '#1565C0') }), mat('#1565C0')], .34, .4, .2);
+      g.add(placa);
+      g.userData.altura = .55;
+    },
+  });
+
+  /* ── Semáforos nos cruzamentos ──────────────────────────────────────────── */
+  // ciclo de 14 s: avenida horizontal verde → amarelo → todos vermelhos → vertical verde → amarelo
+  function estadoSemaforo(t) {
+    const p = t % 14;
+    return {
+      h: p < 5.5 ? 'verde' : p < 7 ? 'amarelo' : 'vermelho',
+      v: p >= 7.5 && p < 12.5 ? 'verde' : p >= 12.5 ? 'amarelo' : 'vermelho',
+    };
+  }
+  const LUZES = {};
+  ['h', 'v'].forEach(eixo => {
+    LUZES[eixo] = {};
+    [['vermelho', '#FF1744'], ['amarelo', '#FFC400'], ['verde', '#00E676']].forEach(([nome, cor]) => {
+      LUZES[eixo][nome] = new THREE.MeshStandardMaterial({ color: cor, emissive: cor, emissiveIntensity: .05 });
+    });
+  });
+  const semaforos = {};
+  function criarSemaforo(i) {
+    const g = new THREE.Group();
+    const cabeca = (eixo, x, z, rot) => {
+      g.add(cilindro(.012, .014, .5, '#37474F', x, 0, z, 6));
+      const c = new THREE.Group();
+      c.add(caixa(.05, .15, .045, '#212121', 0, 0, 0));
+      ['vermelho', 'amarelo', 'verde'].forEach((nome, k) => {
+        const l = malha(new THREE.SphereGeometry(.015, 10, 8), LUZES[eixo][nome], 0, .122 - k * .045, .024); l.castShadow = false; c.add(l);
+      });
+      c.position.set(x, .44, z); c.rotation.y = rot; g.add(c);
+    };
+    cabeca('h', -.46, .46, -Math.PI / 2); cabeca('h', .46, -.46, Math.PI / 2);
+    cabeca('v', .46, .46, 0); cabeca('v', -.46, -.46, Math.PI);
+    g.position.set(posX(i % LARGURA), 0, posZ(Math.floor(i / LARGURA)));
+    return g;
+  }
+  function sincronizarSemaforos() {
+    const tipoRua = j => s.mapa[j] && ['rua', 'ruaLocal'].includes(s.mapa[j].tipo);
+    const quer = new Set();
+    s.mapa.forEach((l, i) => { if (tipoRua(i) && orientacaoRua(i) === 'x') quer.add(i); });
+    Object.keys(semaforos).forEach(i => { if (!quer.has(+i)) { scene.remove(semaforos[i]); delete semaforos[i]; } });
+    quer.forEach(i => { if (!semaforos[i]) { semaforos[i] = criarSemaforo(i); scene.add(semaforos[i]); } });
+  }
+  function acenderSemaforos(t) {
+    const e = estadoSemaforo(t);
+    ['h', 'v'].forEach(eixo => Object.entries(LUZES[eixo]).forEach(([nome, m]) => { m.emissiveIntensity = e[eixo] === nome ? 2.2 : .04; }));
+    return e;
+  }
+
   /* ── Veículos ───────────────────────────────────────────────────────────── */
   const CORES_CARRO = ['#E53935', '#1E88E5', '#FDD835', '#43A047', '#FB8C00', '#8E24AA', '#ECEFF1'];
   function criarVeiculo(tipo, cor = '#E53935') {
@@ -614,9 +800,21 @@ const Cena = (() => {
       carros[i] = { tipo, obj, horizontal, sentido, lim, p: (Math.random() * 2 - 1) * lim, v: (tipo === 'onibus' ? .6 : .9 + Math.random() * .6) };
     });
   }
-  function moverCarros(dt) {
+  function moverCarros(dt, sinal) {
     carros.forEach(k => {
-      if (!reduzido) k.p += k.v * k.sentido * dt;
+      let passo = reduzido ? 0 : k.v * k.sentido * dt;
+      // para antes da faixa quando o sinal do seu eixo não está verde
+      const centro = k.horizontal ? posX(COLUNA_RUA) : posZ(LINHA_RUA);
+      const retencao = centro - k.sentido * .66;
+      const ate = (retencao - k.p) * k.sentido;
+      if (sinal[k.horizontal ? 'h' : 'v'] !== 'verde' && ate >= 0 && ate < .3) passo = 0;
+      // e não encosta no carro da frente
+      carros.forEach(o => {
+        if (o === k || o.horizontal !== k.horizontal || o.sentido !== k.sentido) return;
+        const folga = (o.p - k.p) * k.sentido;
+        if (folga > 0 && folga < (k.tipo === 'onibus' || o.tipo === 'onibus' ? .62 : .46)) passo = 0;
+      });
+      k.p += passo;
       if (k.p > k.lim + .5) k.p = -k.lim - .5;
       if (k.p < -k.lim - .5) k.p = k.lim + .5;
       const faixa = .2 * k.sentido;
@@ -837,6 +1035,7 @@ const Cena = (() => {
     parque: { n: 5, criancas: 2, raio: .33 }, praca: { n: 3, raio: .28 }, escola: { n: 4, criancas: 4, raio: .44 },
     mercado: { n: 2, raio: .47 }, terminal: { n: 3, parados: true }, banco: { n: 3, fila: true }, inss: { n: 3, fila: true },
     templo: { n: 2, raio: .47 }, cultura: { n: 3, raio: .47 }, condominio: { n: 2, raio: .47 }, saude: { n: 2, fila: true },
+    lagoa: { n: 3, criancas: 1, raio: .47 }, pontoOnibus: { n: 2, parados: true }, iluminacao: { n: 2, raio: .33 },
   };
   function criarFrequentadores(g, tipo, semente) {
     const f = FREQUENTADORES[tipo];
@@ -1029,7 +1228,7 @@ const Cena = (() => {
     if (!scene || !pronto) return;
     s.mapa.forEach((l, i) => {
       const tipo = l && MODELOS[l.tipo] ? l.tipo : null;
-      const chave = tipo === 'ruaLocal' ? tipo + orientacaoRua(i) : tipo;
+      const chave = tipo === 'ruaLocal' ? tipo + orientacaoRua(i) : tipo === 'ponteLocal' ? tipo + orientacaoPonte(i) : tipo;
       if (tiposNoLote[i] === chave) return;
       if (predios[i]) { scene.remove(predios[i]); delete predios[i]; }
       if (tipo) {
@@ -1050,6 +1249,7 @@ const Cena = (() => {
       } else enfeites[i] = null;
     });
     sincronizarBairros();
+    sincronizarSemaforos();
     aplicarEstacao((s.mes - 1) % 12);
     // balões ❗ dos cidadãos
     const pend = new Set((s.pendentes || []).map(p => p.tile));
@@ -1065,7 +1265,8 @@ const Cena = (() => {
   }
 
   function atualizarFantasma() {
-    const livre = hover >= 0 && !s.mapa[hover] && !!s.bairros[bairroDe(hover).id];
+    const sobreAgua = hover >= 0 && s.mapa[hover] && s.mapa[hover].tipo === 'agua';
+    const livre = hover >= 0 && !!s.bairros[bairroDe(hover).id] && (s.selecionado === 'ponteLocal' ? sobreAgua : !s.mapa[hover]);
     const tipo = s.selecionado && livre ? s.selecionado : null;
     if (tipo !== fantasmaTipo) {
       if (fantasma) scene.remove(fantasma);
@@ -1089,7 +1290,8 @@ const Cena = (() => {
       destaque.position.set(posX(foco % LARGURA), .02, posZ(Math.floor(foco / LARGURA)));
       const l = s.mapa[foco];
       const travado = !s.bairros[bairroDe(foco).id];
-      destaque.material.color.set(travado ? '#F2B705' : s.selecionado ? (!l ? (beiraRua(foco) ? '#F2B705' : '#FFFFFF') : '#E53935') : '#FFFFFF');
+      const podeAqui = s.selecionado === 'ponteLocal' ? l && l.tipo === 'agua' : !l;
+      destaque.material.color.set(travado ? '#F2B705' : s.selecionado ? (podeAqui ? (beiraRua(foco) ? '#F2B705' : '#FFFFFF') : '#E53935') : '#FFFFFF');
       destaque.material.opacity = s.selecionado ? .55 : .35;
     }
   }
@@ -1113,7 +1315,8 @@ const Cena = (() => {
     const hh = Math.floor(hora), mm = Math.floor((hora % 1) * 60);
     relogioEl.textContent = `${hora >= 6 && hora < 19 ? '☀️' : '🌙'} ${String(hh).padStart(2, '0')}:${String(mm - mm % 10).padStart(2, '0')}`;
 
-    sincronizarCarros(); moverCarros(dt);
+    const sinal = acenderSemaforos(t);
+    sincronizarCarros(); moverCarros(dt, sinal);
     sincronizarPessoas(); moverPessoas(dt, t, luzes);
     if (!reduzido) {
       texAgua.forEach((tx, k) => tx.offset.set(t * (k ? -.03 : .05), t * (k ? .04 : .03)));

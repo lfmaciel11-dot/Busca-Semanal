@@ -8,13 +8,28 @@ const LARGURA = 20, ALTURA = 14;
 const CHAVE_SAVE = 'cidade-legal-v3';
 const LINHA_RUA = 6, COLUNA_RUA = 8;   // avenidas horizontal e vertical
 const CURSO_RIO = [15, 15, 14, 14, 14, 15, 15, 16, 16, 15, 15, 14, 14, 14]; // coluna do rio em cada linha
-const SERVICOS = { educacao: '🏫 Educação', saude: '🏥 Saúde', seguranca: '🚓 Segurança', lazer: '🌳 Lazer', justica: '⚖️ Justiça' };
+// córrego do Jardim Sul (deságua no rio) e lagoa natural do Bairro Oeste: [linha, coluna]
+const CORREGO = [[13, 1], [13, 2], [12, 2], [12, 3], [12, 4], [11, 4], [11, 5], [11, 6], [11, 7], [11, 8], [11, 9], [12, 9], [12, 10], [12, 11], [13, 11], [13, 12], [13, 13]];
+const LAGOA = [[8, 0], [8, 1], [9, 0], [9, 1], [7, 0]];
+const SERVICOS = { educacao: '🏫 Educação', saude: '🏥 Saúde', seguranca: '🚓 Segurança', lazer: '🌳 Lazer', justica: '⚖️ Justiça',
+  agua: '💧 Água', esgoto: '🚽 Esgoto', energia: '⚡ Energia' };
+// água, esgoto e energia passam a fazer falta quando a cidade cresce; cada unidade atende mais gente
+const INFRA_BASICA = { agua: 150, esgoto: 150, energia: 140 };
 const MAX_PENDENTES = 3, PRAZO_CASO = 2;
 
 let s;               // estado do jogo
 let ultimoConstruido = null;
 let categoriaAtual = 'todos';
 let Mapa;           // Cena (3D) ou Iso (2.5D, se o navegador não tiver WebGL)
+
+// Córrego e lagoa: só ocupam lotes vazios (jogos salvos antigos ganham as águas onde não há prédio)
+function adicionarAguas(mapa) {
+  CORREGO.concat(LAGOA).forEach(([r, c]) => {
+    const i = r * LARGURA + c, l = mapa[i];
+    if (!l) mapa[i] = { tipo: 'agua' };
+    else if (l.tipo === 'rua') mapa[i] = { tipo: 'ponte' };
+  });
+}
 
 function novoEstado(nome) {
   const mapa = Array(LARGURA * ALTURA).fill(null);
@@ -23,13 +38,14 @@ function novoEstado(nome) {
   const rio = (r, c) => { const i = r * LARGURA + c; mapa[i] = { tipo: mapa[i] ? 'ponte' : 'agua' }; };
   CURSO_RIO.forEach((c, r) => { rio(r, c); if (r && CURSO_RIO[r - 1] !== c) rio(r, CURSO_RIO[r - 1]); });
   mapa[(LINHA_RUA - 1) * LARGURA + COLUNA_RUA - 1] = { tipo: 'prefeitura' };
+  adicionarAguas(mapa);
   return {
     nome: nome || 'Cidade Legal', dinheiro: 600, xp: 0, mes: 1, reputacao: 0,
     pop: 0, felicidade: 50, mapa, licencas: { prefeitura: true },
     casosVistos: [], casosResolvidos: 0, acertos: 0, aprendidos: [],
     pendentes: [], sequencia: 0, melhorSequencia: 0,
     missoesFeitas: {}, diario: [], selecionado: null, som: true,
-    bairros: { centro: true },
+    bairros: { centro: true }, aguasV2: true,
   };
 }
 
@@ -47,7 +63,7 @@ const fmt = n => Math.round(n).toLocaleString('pt-BR');
 const embaralhar = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const linha = i => Math.floor(i / LARGURA);
-const ehRua = i => s.mapa[i] && ['rua', 'ponte', 'ruaLocal'].includes(s.mapa[i].tipo);
+const ehRua = i => s.mapa[i] && ['rua', 'ponte', 'ruaLocal', 'ponteLocal'].includes(s.mapa[i].tipo);
 const beiraRua = i => {
   const r = linha(i), c = i % LARGURA;
   return (r > 0 && ehRua(i - LARGURA)) || (r < ALTURA - 1 && ehRua(i + LARGURA)) ||
@@ -175,7 +191,8 @@ function calcular() {
   // Serviços públicos insuficientes reduzem a felicidade (cada unidade atende ~60 pessoas)
   const faltas = [];
   for (const k in SERVICOS) {
-    if (popCap > 30 && (servicos[k] || 0) * 60 < popCap) faltas.push(k);
+    const basica = INFRA_BASICA[k];
+    if (basica ? popCap > 60 && (servicos[k] || 0) * basica < popCap : popCap > 30 && (servicos[k] || 0) * 60 < popCap) faltas.push(k);
   }
   felBonus += Math.min(12, felEnfeites); // enfeites ajudam, mas até um limite
   const fel = Math.round(Math.max(0, Math.min(100, 45 + felBonus + s.reputacao - faltas.length * 6)));
@@ -244,7 +261,8 @@ function renderMapa() {
 function clicarLote(i) {
   if (!liberado(i)) return abrirBairro(bairroDe(i));
   const t = s.mapa[i];
-  if (!t) return construirEm(i);
+  if (!t || (t.tipo === 'agua' && s.selecionado === 'ponteLocal')) return construirEm(i);
+  if (t.tipo === 'agua' && s.selecionado) { toast('🌊 Aqui é água: construa uma 🌉 Ponte ou escolha outro terreno.'); return; }
   if (!PREDIOS[t.tipo]) return;
   const pend = s.pendentes.find(p => p.tile === i);
   pend ? abrirCaso(pend) : abrirPredio(i);
@@ -493,6 +511,8 @@ function construirEm(i) {
   if (!tipo) { toast('Escolha primeiro um prédio no painel "Construir".'); return; }
   const p = PREDIOS[tipo];
   if (!liberado(i)) { abrirBairro(bairroDe(i)); return; }
+  const naAgua = s.mapa[i] && s.mapa[i].tipo === 'agua';
+  if (tipo === 'ponteLocal' && !naAgua) { toast('🌉 A ponte só pode ser construída sobre a água.'); return; }
   if (s.dinheiro < p.custo) { toast('💸 Orçamento insuficiente.'); s.selecionado = null; render(); return; }
   s.dinheiro -= p.custo;
   s.mapa[i] = { tipo };
@@ -510,7 +530,7 @@ function abrirPredio(i) {
   const extra = p.efeito.renda ? `<p class="nota">💰 Este prédio rende <b>${fmt(rendaDoLote(i))}</b>/mês${beiraRua(i) ? ' (inclui +20% por estar na beira da rua)' : ''}.</p>` : '';
   abrirModal(`<div class="cab-modal" style="--cor:${p.cor}"><span class="icone-grande">${p.icone}</span>
       <div><small>${p.area}</small><h2>${p.nome}</h2></div></div>
-    ${p.aula ? htmlAula(p) : `<p class="resumo">Enfeites deixam a cidade mais agradável: cada um soma felicidade (até um limite de +12 no total).${p.bonus ? ' ' + p.bonus : ''}</p>`}${extra}
+    ${p.aula ? htmlAula(p) : `<p class="resumo">${p.cat === 'enfeite' ? 'Enfeites deixam a cidade mais agradável: cada um soma felicidade (até um limite de +12 no total).' : 'Obra de infraestrutura da cidade.'}${p.bonus ? ' ' + p.bonus : ''}</p>`}${extra}
     <div class="botoes">
       ${tipo !== 'prefeitura' ? `<button class="btn perigo" id="m-demolir">Demolir (+${Math.floor(p.custo / 2)})</button>` : ''}
       <button class="btn primario" id="m-fechar">Fechar</button>
@@ -518,7 +538,7 @@ function abrirPredio(i) {
     cx.querySelector('#m-fechar').onclick = fecharModal;
     const d = cx.querySelector('#m-demolir');
     if (d) d.onclick = () => {
-      s.mapa[i] = null; s.dinheiro += Math.floor(p.custo / 2);
+      s.mapa[i] = tipo === 'ponteLocal' ? { tipo: 'agua' } : null; s.dinheiro += Math.floor(p.custo / 2);
       s.pendentes = s.pendentes.filter(x => x.tile !== i);
       registrar(`🚧 Demolido(a): ${p.icone} ${p.nome}.`);
       fecharModal(); render();
@@ -595,11 +615,12 @@ function sortearClimaEEventos(mesIdx) {
       else { s.reputacao = Math.max(-30, s.reputacao - 3); efeito = `Com só ${s.felicidade}% de aprovação, você venceu por pouco. Cuide mais da cidade!`; }
     }
     if (id === 'temporal') {
-      const temBombeiros = conta(s, 'bombeiros') > 0;
-      const custo = temBombeiros ? 30 : 120;
+      const temBombeiros = conta(s, 'bombeiros') > 0, temPiscinao = conta(s, 'piscinao') > 0;
+      const custo = Math.max(10, 120 - (temBombeiros ? 70 : 0) - (temPiscinao ? 40 : 0));
       s.dinheiro -= custo;
-      if (!temBombeiros) s.reputacao = Math.max(-30, s.reputacao - 4);
-      efeito = temBombeiros ? `Os Bombeiros agiram rápido: só 💰 ${custo} de estragos.` : `Sem Bombeiros, os estragos custaram 💰 ${custo} e a população ficou insatisfeita.`;
+      if (!temBombeiros && !temPiscinao) s.reputacao = Math.max(-30, s.reputacao - 4);
+      const ajuda = [temBombeiros && 'os Bombeiros agiram rápido', temPiscinao && 'o Piscinão segurou a água'].filter(Boolean).join(' e ');
+      efeito = ajuda ? `Ainda bem: ${ajuda}. Estragos de só 💰 ${custo}.` : `Sem Bombeiros nem Piscinão, os estragos custaram 💰 ${custo} e a população ficou insatisfeita.`;
     }
     if (id === 'auditoria') {
       const ok = s.dinheiro >= 0;
@@ -728,6 +749,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const salvo = carregar();
   s = salvo || novoEstado();
+  if (!s.aguasV2) { adicionarAguas(s.mapa); s.aguasV2 = true; }
   if (!s.bairros) { // jogos salvos antes dos bairros: libera o Centro e onde já houver prédios
     s.bairros = { centro: true };
     s.mapa.forEach((l, i) => { if (l && PREDIOS[l.tipo]) s.bairros[bairroDe(i).id] = true; });

@@ -534,6 +534,155 @@ const PREDIOS = {
     custo: 25, nivel: 0, efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 0 },
     bonus: 'Prédios colados na rua rendem +20%.',
   },
+  /* ── Infraestrutura e saneamento ── */
+  estacaoAgua: {
+    nome: 'Estação de Água', icone: '💧', area: 'Saneamento: Água Potável', cor: '#1E88E5',
+    custo: 300, nivel: 1,
+    efeito: { renda: 0, manutencao: 12, pop: 0, felicidade: 5 },
+    servico: 'agua',
+    aula: {
+      resumo: 'Água tratada na torneira é saneamento básico — e o Novo Marco do Saneamento fixou metas para levá-la a quase todos até 2033.',
+      pontos: [
+        'Saneamento básico reúne abastecimento de água, esgotamento sanitário, limpeza urbana e manejo de resíduos, e drenagem das águas da chuva (Lei 11.445/2007, art. 3º, I).',
+        'O Novo Marco do Saneamento (Lei 14.026/2020) fixou a meta de garantir, até 31/12/2033, água potável a 99% da população e coleta e tratamento de esgoto a 90% (Lei 11.445/2007, art. 11-B).',
+        'O município é o titular do serviço de interesse local; se uma empresa de fora da administração for prestar o serviço, é preciso contrato de concessão precedido de licitação (Lei 11.445/2007, arts. 8º e 10).',
+        'A água é bem de domínio público e recurso natural limitado, dotado de valor econômico (Lei 9.433/1997, art. 1º).',
+        'Concessionárias de serviços essenciais devem prestá-los de forma adequada, eficiente, segura e contínua (CDC, art. 22).',
+      ],
+      pratica: 'A água da torneira está saindo turva há dias? O serviço é essencial e deve ser adequado e seguro: o consumidor pode reclamar com base no CDC (art. 22).',
+    },
+    licenca: [
+      { p: 'Qual a meta do Novo Marco do Saneamento para água potável até 2033?', ops: ['50% da população', '75% da população', '99% da população', 'Não há meta'], c: 2, exp: 'Lei 11.445/2007, art. 11-B (incluído pela Lei 14.026/2020): 99% com água potável e 90% com coleta e tratamento de esgoto até 31/12/2033.' },
+      { p: 'Quem é o titular do serviço de saneamento de interesse local?', ops: ['A União', 'O município', 'O bairro', 'A empresa que instalar os canos'], c: 1, exp: 'Lei 11.445/2007, art. 8º: os municípios e o Distrito Federal são titulares dos serviços públicos de saneamento básico de interesse local.' },
+      { p: 'Drenagem das águas da chuva faz parte do saneamento básico?', ops: ['Sim', 'Não, é só água e esgoto', 'Só em capitais', 'Só no verão'], c: 0, exp: 'Lei 11.445/2007, art. 3º, I, "d": drenagem e manejo das águas pluviais urbanas integram o saneamento básico.' },
+    ],
+  },
+
+  esgoto: {
+    nome: 'Estação de Esgoto', icone: '🚽', area: 'Saneamento: Esgoto', cor: '#6D8B3A',
+    custo: 320, nivel: 1,
+    efeito: { renda: 0, manutencao: 14, pop: 0, felicidade: 5 },
+    servico: 'esgoto',
+    aula: {
+      resumo: 'Esgoto precisa ser coletado e tratado antes de voltar à natureza — isso protege a saúde e os rios.',
+      pontos: [
+        'Esgotamento sanitário é a coleta, o transporte, o tratamento e a destinação final adequada dos esgotos (Lei 11.445/2007, art. 3º, I, "b").',
+        'Onde houver rede pública de esgoto, toda edificação deve se ligar a ela, e o usuário paga as tarifas do serviço (Lei 11.445/2007, art. 45).',
+        'Enquanto não houver rede, admitem-se soluções individuais, como fossas, seguindo as normas sanitárias e ambientais (art. 45, §1º).',
+        'Lançar esgoto sem tratamento em rios pode configurar crime de poluição (Lei 9.605/1998, art. 54).',
+        'Meta do Novo Marco: 90% da população com coleta e tratamento de esgoto até 2033 (art. 11-B).',
+      ],
+      pratica: 'A rede de esgoto chegou à sua rua? A casa deve ser ligada a ela; jogar esgoto no córrego pode ser crime ambiental.',
+    },
+    licenca: [
+      { p: 'A rede pública de esgoto chegou à rua. O morador pode continuar jogando o esgoto no córrego?', ops: ['Pode, a casa é dele', 'Não: deve ligar-se à rede, e poluir o rio pode ser crime', 'Pode, se pagar uma taxa', 'Só à noite'], c: 1, exp: 'Lei 11.445/2007, art. 45: as edificações devem se conectar à rede pública disponível. Lançar esgoto em rio pode configurar o crime do art. 54 da Lei 9.605/98.' },
+      { p: 'Qual a meta de coleta e tratamento de esgoto até 2033?', ops: ['30%', '60%', '90%', '100%'], c: 2, exp: 'Lei 11.445/2007, art. 11-B: 90% da população com coleta e tratamento de esgoto até 31/12/2033.' },
+      { p: 'Onde ainda não existe rede de esgoto, o que a lei admite?', ops: ['Nada, a casa deve ser demolida', 'Soluções individuais, como fossas, seguindo as normas', 'Jogar no rio', 'Enterrar o esgoto em qualquer lugar'], c: 1, exp: 'Lei 11.445/2007, art. 45, §1º: na ausência de redes públicas, são admitidas soluções individuais, observadas as normas.' },
+    ],
+  },
+
+  usina: {
+    nome: 'Usina Solar', icone: '🔆', area: 'Energia e Geração Distribuída', cor: '#F2B705',
+    custo: 360, nivel: 2,
+    efeito: { renda: 12, manutencao: 6, pop: 0, felicidade: 3 },
+    servico: 'energia',
+    aula: {
+      resumo: 'Energia elétrica é serviço federal regulado pela ANEEL — mas hoje qualquer consumidor pode gerar a própria energia limpa.',
+      pontos: [
+        'Compete à União explorar os serviços de energia elétrica, diretamente ou por concessão, e legislar sobre energia (CF, arts. 21, XII, "b" e 22, IV).',
+        'A ANEEL regula e fiscaliza o setor elétrico (Lei 9.427/1996).',
+        'O Marco Legal da Geração Distribuída (Lei 14.300/2022) permite gerar a própria energia — como em telhados solares — e transformar o excedente em créditos na conta de luz.',
+        'Energia é serviço essencial: deve ser prestada de forma adequada e contínua (CDC, art. 22; Lei 8.987/1995, art. 6º).',
+        'A concessionária responde pelos danos que causar, como aparelhos queimados por oscilação na rede (CF, art. 37, §6º).',
+      ],
+      pratica: 'Instalou placas solares e sobrou energia no mês? O excedente vira crédito para abater nas próximas contas (Lei 14.300/2022).',
+    },
+    licenca: [
+      { p: 'Quem regula e fiscaliza o setor de energia elétrica?', ops: ['A prefeitura', 'A ANEEL', 'O Procon', 'O Detran'], c: 1, exp: 'A Agência Nacional de Energia Elétrica foi criada pela Lei 9.427/1996 para regular e fiscalizar o setor.' },
+      { p: 'O que acontece com a energia que sobra de um telhado solar?', ops: ['Se perde', 'Vira crédito para abater na conta de luz', 'Deve ser paga à concessionária', 'É proibido gerar energia em casa'], c: 1, exp: 'Pelo Sistema de Compensação de Energia Elétrica (Lei 14.300/2022), a energia injetada na rede gera créditos.' },
+      { p: 'O município pode fazer uma lei fixando o preço da conta de luz?', ops: ['Sim', 'Não: legislar sobre energia é competência da União', 'Só se a Câmara aprovar por unanimidade', 'Sim, no verão'], c: 1, exp: 'CF, art. 22, IV: compete privativamente à União legislar sobre energia. As tarifas são definidas pela ANEEL.' },
+    ],
+  },
+
+  iluminacao: {
+    nome: 'Iluminação Pública', icone: '💡', area: 'Iluminação Pública', cor: '#FFB300',
+    custo: 60, nivel: 0,
+    efeito: { renda: 0, manutencao: 2, pop: 0, felicidade: 2 },
+    aula: {
+      resumo: 'Os postes de luz das ruas são responsabilidade do município, que pode cobrar uma contribuição para custeá-los.',
+      pontos: [
+        'A iluminação pública é um serviço de interesse local, a cargo do município (CF, art. 30, V).',
+        'Para custeá-la, municípios podem instituir a contribuição de iluminação pública (COSIP ou CIP), que pode ser cobrada na fatura de energia (CF, art. 149-A).',
+        'Esse serviço não pode ser cobrado por meio de taxa (Súmula Vinculante 41 do STF), porque beneficia a todos de forma indivisível.',
+        'Ruas bem iluminadas aumentam a segurança de pedestres e motoristas.',
+      ],
+      pratica: 'Viu a "contribuição de iluminação pública" na sua conta de luz? Ela é constitucional (CF, art. 149-A) e paga os postes da cidade.',
+    },
+    licenca: [
+      { p: 'O município pode criar uma "taxa de iluminação pública"?', ops: ['Sim', 'Não: a Súmula Vinculante 41 proíbe; ele pode instituir a contribuição do art. 149-A', 'Só em ano eleitoral', 'Só para comércios'], c: 1, exp: 'Súmula Vinculante 41: o serviço de iluminação pública não pode ser remunerado mediante taxa. A EC 39/2002 criou a contribuição do art. 149-A.' },
+      { p: 'A contribuição de iluminação pública pode vir na conta de luz?', ops: ['Não, é ilegal', 'Sim, a Constituição permite', 'Só com autorização do STF', 'Só para empresas'], c: 1, exp: 'CF, art. 149-A, parágrafo único: é facultada a cobrança da contribuição na fatura de consumo de energia elétrica.' },
+      { p: 'Quem é responsável pelos postes de luz das ruas da cidade?', ops: ['O governo federal', 'O município', 'Os moradores', 'A polícia'], c: 1, exp: 'A iluminação pública é serviço de interesse local, de responsabilidade municipal (CF, art. 30, V).' },
+    ],
+  },
+
+  telecom: {
+    nome: 'Torre de Telecom', icone: '📡', area: 'Internet e Telecomunicações', cor: '#5C6BC0',
+    custo: 280, nivel: 2,
+    efeito: { renda: 14, manutencao: 4, pop: 0, felicidade: 4 },
+    aula: {
+      resumo: 'Internet é essencial para a cidadania, e o Marco Civil da Internet garante direitos a quem se conecta.',
+      pontos: [
+        'O Marco Civil da Internet (Lei 12.965/2014) reconhece o acesso à internet como essencial ao exercício da cidadania (art. 7º).',
+        'Neutralidade de rede: o provedor deve tratar todos os dados de forma isonômica, sem distinção por conteúdo, origem, destino ou aplicativo (art. 9º).',
+        'O usuário tem direito à não suspensão da conexão, salvo por débito decorrente da própria utilização (art. 7º, IV).',
+        'Provedores de conexão guardam os registros de conexão por 1 ano, em sigilo; a entrega depende de ordem judicial (arts. 10 e 13).',
+        'A Lei Geral das Antenas (Lei 13.116/2015) simplifica o licenciamento de torres e antenas de telecomunicações.',
+      ],
+      pratica: 'A operadora deixou os vídeos de um aplicativo mais lentos que os de outro? Isso viola a neutralidade de rede (art. 9º).',
+    },
+    licenca: [
+      { p: 'O que é neutralidade de rede?', ops: ['Internet grátis para todos', 'Tratar todos os dados de forma igual, sem privilegiar conteúdos ou aplicativos', 'Proibir redes sociais', 'Internet só para órgãos públicos'], c: 1, exp: 'Marco Civil da Internet, art. 9º: dever de tratamento isonômico dos pacotes de dados.' },
+      { p: 'Por quanto tempo o provedor de conexão guarda os registros de conexão?', ops: ['1 mês', '1 ano', '10 anos', 'Para sempre'], c: 1, exp: 'Lei 12.965/2014, art. 13: registros de conexão mantidos sob sigilo pelo prazo de 1 ano.' },
+      { p: 'A polícia pode obter os registros de conexão de alguém só pedindo à operadora?', ops: ['Sim, sempre', 'Não, em regra depende de ordem judicial', 'Sim, se for de madrugada', 'Só a Receita Federal pode'], c: 1, exp: 'Marco Civil, art. 10, §1º: a disponibilização dos registros só ocorre mediante ordem judicial.' },
+    ],
+  },
+
+  piscinao: {
+    nome: 'Piscinão', icone: '🌀', area: 'Drenagem Urbana', cor: '#00897B',
+    custo: 300, nivel: 2,
+    efeito: { renda: 0, manutencao: 10, pop: 0, felicidade: 4 },
+    bonus: 'Reduz os estragos dos temporais.',
+    aula: {
+      resumo: 'Cidades cheias de asfalto e concreto alagam quando chove forte: a drenagem urbana é parte do saneamento.',
+      pontos: [
+        'Drenagem e manejo das águas da chuva fazem parte do saneamento básico (Lei 11.445/2007, art. 3º, I, "d").',
+        'Piscinões (reservatórios de detenção) guardam a água da chuva forte e a liberam devagar, reduzindo enchentes.',
+        'A cobrança pelo serviço de drenagem pode levar em conta a área impermeabilizada de cada lote (Lei 11.445/2007, art. 36).',
+        'Preservar as margens dos rios (APP) também evita enchentes; o Código Florestal protege essas faixas (Lei 12.651/2012, art. 4º).',
+        'O município deve mapear áreas de risco e ter planos de contingência para chuvas fortes (Lei 12.608/2012, art. 8º).',
+      ],
+      pratica: 'O shopping concretou todo o terreno e a água corre toda para a rua? A cobrança da drenagem pode ser maior para quem impermeabiliza mais (art. 36).',
+    },
+    licenca: [
+      { p: 'A drenagem das águas da chuva faz parte do saneamento básico?', ops: ['Sim', 'Não', 'Só em cidades litorâneas', 'Só quando há enchente'], c: 0, exp: 'Lei 11.445/2007, art. 3º, I, "d".' },
+      { p: 'Para que serve um piscinão?', ops: ['Para nadar', 'Para guardar a água da chuva forte e evitar enchentes', 'Para tratar esgoto', 'Para gerar energia'], c: 1, exp: 'Reservatórios de detenção amortecem o pico das chuvas, liberando a água aos poucos para rios e galerias.' },
+      { p: 'A cobrança pela drenagem pode considerar o quê?', ops: ['A cor do imóvel', 'O percentual de área impermeabilizada do lote', 'A idade do dono', 'O número de janelas'], c: 1, exp: 'Lei 11.445/2007, art. 36: a cobrança deve levar em conta, em cada lote urbano, o percentual de área impermeabilizada.' },
+    ],
+  },
+
+  ponteLocal: {
+    nome: 'Ponte', icone: '🌉', area: 'Infraestrutura', cor: '#8D6E63',
+    custo: 120, nivel: 0, efeito: { renda: 0, manutencao: 1, pop: 0, felicidade: 1 },
+    bonus: 'Constrói-se sobre a água. Conta como rua para o bônus de +20%.',
+  },
+  lagoa: {
+    nome: 'Lagoa', icone: '🏞️', area: 'Enfeite', cor: '#3FA7DE', cat: 'enfeite',
+    custo: 90, nivel: 0, efeito: { renda: 0, manutencao: 1, pop: 0, felicidade: 3 },
+  },
+  pontoOnibus: {
+    nome: 'Ponto de ônibus', icone: '🚏', area: 'Enfeite', cor: '#0D7896', cat: 'enfeite',
+    custo: 30, nivel: 0, efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 1 },
+  },
 };
 
 /* Categorias do menu de construção */
@@ -543,6 +692,7 @@ const CATEGORIAS = [
   { id: 'economia', nome: 'Economia', icone: '🏪' },
   { id: 'servicos', nome: 'Serviços', icone: '🏥' },
   { id: 'governo', nome: 'Governo', icone: '⚖️' },
+  { id: 'infra', nome: 'Infraestrutura', icone: '🔧' },
   { id: 'comunidade', nome: 'Comunidade', icone: '🌳' },
   { id: 'enfeite', nome: 'Enfeites', icone: '🌷' },
 ];
@@ -552,6 +702,7 @@ Object.entries({
   escola: 'servicos', saude: 'servicos', inss: 'servicos', bombeiros: 'servicos', delegacia: 'servicos', terminal: 'servicos',
   camara: 'governo', forum: 'governo', cartorio: 'governo', fazenda: 'governo', prefeitura: 'governo',
   parque: 'comunidade', ecoponto: 'comunidade', templo: 'comunidade', cultura: 'comunidade',
+  estacaoAgua: 'infra', esgoto: 'infra', usina: 'infra', iluminacao: 'infra', telecom: 'infra', piscinao: 'infra', ponteLocal: 'infra', ruaLocal: 'infra',
 }).forEach(([k, c]) => { PREDIOS[k].cat = c; });
 
 /* Títulos do prefeito conforme o "Conhecimento Jurídico" acumulado */
@@ -575,6 +726,7 @@ const MISSOES = [
   { id: 'm5', texto: 'Alcance 50 habitantes', ok: s => s.pop >= 50, xp: 20, din: 100 },
   { id: 'mb', texto: 'Compre um novo bairro para expandir a cidade', ok: s => Object.keys(s.bairros || {}).length >= 2, xp: 25, din: 0 },
   { id: 'm6', texto: 'Garanta escola e posto de saúde', ok: s => conta(s, 'escola') >= 1 && conta(s, 'saude') >= 1, xp: 25, din: 150 },
+  { id: 'ms', texto: 'Garanta água tratada e esgoto para a cidade', ok: s => conta(s, 'estacaoAgua') >= 1 && conta(s, 'esgoto') >= 1, xp: 30, din: 150 },
   { id: 'm7', texto: 'Instale Delegacia e Fórum', ok: s => conta(s, 'delegacia') >= 1 && conta(s, 'forum') >= 1, xp: 30, din: 150 },
   { id: 'm8', texto: 'Tenha 8 licenças jurídicas', ok: s => Object.keys(s.licencas).length >= 8, xp: 40, din: 200 },
   { id: 'm9', texto: 'Alcance 150 habitantes e felicidade 70%', ok: s => s.pop >= 150 && s.felicidade >= 70, xp: 50, din: 300 },
@@ -984,6 +1136,107 @@ const CASOS = [
     ops: ['Sim, estava na internet', 'Não: usar a foto exige autorização da autora, e o crédito é obrigatório', 'Sim, se for para cultura'], c: 1,
     exp: 'A fotografia é obra protegida (Lei 9.610/98, art. 7º, VII). Depende de autorização prévia do autor a reprodução da obra (art. 29), e o nome do autor deve ser indicado (art. 79, §1º).',
     base: 'Lei 9.610/1998, arts. 7º, 29 e 79' },
+  // ── Estação de Água ──
+  { predio: 'estacaoAgua', titulo: 'Contrato sem licitação', quem: '📋 Secretário de Obras',
+    texto: 'Uma empresa estadual quer assumir o abastecimento de água da cidade com um contrato assinado direto, sem licitação. Podemos fazer assim?',
+    ops: ['Pode, é empresa pública', 'Não: após o Novo Marco, quem não integra a administração municipal precisa de concessão precedida de licitação', 'Pode, se o prazo for curto'], c: 1,
+    exp: 'Lei 11.445/2007, art. 10 (redação da Lei 14.026/2020): a prestação por entidade que não integre a administração do titular depende de contrato de concessão, mediante prévia licitação; novos contratos de programa ficaram vedados.',
+    base: 'Lei 11.445/2007, art. 10' },
+  { predio: 'estacaoAgua', titulo: 'Água turva', quem: '🚰 Dona Célia',
+    texto: 'Há uma semana a água da minha torneira sai amarelada e com cheiro forte. A empresa diz que "é normal". Tenho algum direito?',
+    ops: ['Não, água é assim mesmo', 'Sim: o serviço essencial deve ser adequado e seguro, e ela pode reclamar e pedir reparação', 'Só se ficar doente'], c: 1,
+    exp: 'CDC, art. 22: órgãos públicos e concessionárias são obrigados a fornecer serviços adequados, eficientes, seguros e, quanto aos essenciais, contínuos — e respondem pelos danos.',
+    base: 'CDC, art. 22' },
+  { predio: 'estacaoAgua', titulo: 'Corte por conta antiga', quem: '💸 Seu Valdir',
+    texto: 'Estou em dia com as contas atuais, mas a empresa quer cortar minha água por uma dívida de três anos atrás. Pode?',
+    ops: ['Pode cortar quando quiser', 'Não: o corte, com aviso prévio, só cabe por débito atual; dívida antiga deve ser cobrada pelos meios comuns', 'Pode, sem aviso'], c: 1,
+    exp: 'Lei 8.987/1995, art. 6º, §3º, II, admite a interrupção por inadimplemento com aviso prévio; o STJ entende que isso vale para débitos atuais, não para dívidas pretéritas.',
+    base: 'Lei 8.987/1995, art. 6º, §3º; jurisprudência do STJ' },
+
+  // ── Estação de Esgoto ──
+  { predio: 'esgoto', titulo: 'Esgoto no córrego', quem: '🏚️ Morador',
+    texto: 'A rede de esgoto já passa na minha rua, mas não quero pagar a ligação. Continuo jogando o esgoto no córrego, que é mais barato. Algum problema?',
+    ops: ['Nenhum', 'Sim: com rede disponível ele deve se ligar a ela, e poluir o córrego pode ser crime', 'Só se o vizinho reclamar'], c: 1,
+    exp: 'Lei 11.445/2007, art. 45: toda edificação permanente urbana deve se conectar às redes públicas disponíveis. A poluição de recursos hídricos pode configurar o crime do art. 54 da Lei 9.605/98.',
+    base: 'Lei 11.445/2007, art. 45; Lei 9.605/1998, art. 54' },
+  { predio: 'esgoto', titulo: 'Efluente da indústria', quem: '🐟 Pescador',
+    texto: 'Uma indústria está despejando água suja e espumosa no rio, e os peixes estão morrendo. O que a lei diz?',
+    ops: ['Nada, é só água', 'É poluição: pode ser crime, a empresa deve reparar o dano e pode ser multada', 'Só a prefeitura pode reclamar'], c: 1,
+    exp: 'Causar poluição que resulte em mortandade de animais é crime (Lei 9.605/98, art. 54), e a responsabilidade pela reparação é objetiva (Lei 6.938/81, art. 14, §1º).',
+    base: 'Lei 9.605/1998, art. 54; Lei 6.938/1981' },
+  { predio: 'esgoto', titulo: 'Bairro sem rede', quem: '🏡 Associação de moradores',
+    texto: 'No nosso bairro ainda não chegou rede de esgoto. Usar fossa séptica é ilegal?',
+    ops: ['É ilegal', 'Não: na falta de rede, soluções individuais são admitidas, seguindo as normas', 'Só com autorização do STF'], c: 1,
+    exp: 'Lei 11.445/2007, art. 45, §1º: na ausência de redes públicas, são admitidas soluções individuais de esgotamento sanitário, observadas as normas.',
+    base: 'Lei 11.445/2007, art. 45, §1º' },
+
+  // ── Usina Solar ──
+  { predio: 'usina', titulo: 'Sobrou energia', quem: '☀️ Dona Lúcia',
+    texto: 'Coloquei placas solares no telhado e este mês produzi mais energia do que gastei. Perdi o que sobrou?',
+    ops: ['Perdeu', 'Não: o excedente vira crédito para abater nas próximas contas', 'Ela precisa pagar pelo excesso'], c: 1,
+    exp: 'Pelo Sistema de Compensação de Energia Elétrica da Lei 14.300/2022, a energia injetada na rede gera créditos para o consumidor.',
+    base: 'Lei 14.300/2022' },
+  { predio: 'usina', titulo: 'Lei da conta de luz', quem: '🗳️ Vereador',
+    texto: 'Quero aprovar uma lei municipal que reduz pela metade a tarifa de energia da cidade. Vai dar certo?',
+    ops: ['Vai, o município é autônomo', 'Não: legislar sobre energia é competência da União, e as tarifas são da ANEEL', 'Vai, se o prefeito sancionar'], c: 1,
+    exp: 'CF, art. 22, IV: compete privativamente à União legislar sobre energia. A regulação tarifária cabe à ANEEL (Lei 9.427/1996).',
+    base: 'CF, art. 22, IV' },
+  { predio: 'usina', titulo: 'Geladeira queimada', quem: '🧊 Seu Otávio',
+    texto: 'Uma queda de energia seguida de pico queimou minha geladeira. A distribuidora diz que não tem nada com isso. Tem?',
+    ops: ['Não tem', 'Tem: a concessionária responde objetivamente pelos danos causados aos usuários', 'Só se ele provar culpa de um funcionário'], c: 1,
+    exp: 'As prestadoras de serviço público respondem pelos danos que seus agentes causarem a terceiros, independentemente de culpa (CF, art. 37, §6º; CDC, art. 22, parágrafo único).',
+    base: 'CF, art. 37, §6º' },
+
+  // ── Iluminação Pública ──
+  { predio: 'iluminacao', titulo: 'Taxa de iluminação', quem: '🧾 Secretário da Fazenda',
+    texto: 'Para pagar os postes novos, que tal criarmos uma "taxa de iluminação pública"?',
+    ops: ['Ótima ideia', 'Não pode ser taxa (Súmula Vinculante 41); o município pode instituir a contribuição do art. 149-A', 'Pode, se for baixa'], c: 1,
+    exp: 'Súmula Vinculante 41 do STF: o serviço de iluminação pública não pode ser remunerado mediante taxa. A Constituição prevê a contribuição de iluminação pública (art. 149-A).',
+    base: 'Súmula Vinculante 41; CF, art. 149-A' },
+  { predio: 'iluminacao', titulo: 'Rua escura', quem: '🌑 Moradora',
+    texto: 'Minha rua está sem luz há meses e tenho medo de voltar à noite. A quem devo pedir solução?',
+    ops: ['À polícia federal', 'À prefeitura, responsável pela iluminação pública', 'Aos vizinhos'], c: 1,
+    exp: 'A iluminação pública é serviço de interesse local, a cargo do município (CF, art. 30, V), custeado pela contribuição do art. 149-A.',
+    base: 'CF, arts. 30, V e 149-A' },
+  { predio: 'iluminacao', titulo: 'Cobrança na conta de luz', quem: '💡 Consumidor',
+    texto: 'Veio na minha conta de luz uma "contribuição de iluminação pública". Isso não é ilegal?',
+    ops: ['É ilegal', 'É permitido: a Constituição autoriza cobrá-la na fatura de energia', 'Só vale para comércios'], c: 1,
+    exp: 'CF, art. 149-A, parágrafo único: é facultada a cobrança da contribuição na fatura de consumo de energia elétrica.',
+    base: 'CF, art. 149-A' },
+
+  // ── Torre de Telecom ──
+  { predio: 'telecom', titulo: 'Vídeo lento de propósito', quem: '📶 Usuária',
+    texto: 'Minha operadora deixa os vídeos de um aplicativo concorrente bem mais lentos que os do aplicativo dela. Pode isso?',
+    ops: ['Pode, a rede é dela', 'Não: viola a neutralidade de rede do Marco Civil', 'Pode, se estiver no contrato'], c: 1,
+    exp: 'Marco Civil da Internet, art. 9º: o responsável pela transmissão deve tratar de forma isonômica quaisquer pacotes de dados, sem distinção por conteúdo, origem, destino, serviço ou aplicação.',
+    base: 'Lei 12.965/2014, art. 9º' },
+  { predio: 'telecom', titulo: 'Registros sem ordem', quem: '🕵️ Investigador',
+    texto: 'Quero que a operadora me entregue agora os registros de conexão de um suspeito, sem passar pelo juiz. Ela é obrigada?',
+    ops: ['Sim, é obrigada', 'Não: em regra, os registros só são entregues com ordem judicial', 'Sim, se for urgente'], c: 1,
+    exp: 'Marco Civil, art. 10, §1º: o provedor só é obrigado a disponibilizar os registros mediante ordem judicial.',
+    base: 'Lei 12.965/2014, art. 10' },
+  { predio: 'telecom', titulo: 'Internet cortada', quem: '💻 Estudante',
+    texto: 'Estou com as contas de internet em dia, mas a operadora suspendeu minha conexão "para manutenção do cadastro". Pode?',
+    ops: ['Pode', 'Não: o usuário tem direito à não suspensão, salvo por débito da própria utilização', 'Pode, uma vez por mês'], c: 1,
+    exp: 'Marco Civil, art. 7º, IV: é direito do usuário a não suspensão da conexão, salvo por débito diretamente decorrente de sua utilização.',
+    base: 'Lei 12.965/2014, art. 7º, IV' },
+
+  // ── Piscinão ──
+  { predio: 'piscinao', titulo: 'Rua que sempre alaga', quem: '☔ Comerciante',
+    texto: 'Toda chuva forte a minha rua vira um rio e a loja alaga. Isso é problema só meu?',
+    ops: ['Só dele', 'Não: drenagem urbana é saneamento básico e responsabilidade do município', 'É problema do governo federal'], c: 1,
+    exp: 'Lei 11.445/2007, art. 3º, I, "d": drenagem e manejo das águas pluviais integram o saneamento básico, de titularidade municipal (art. 8º).',
+    base: 'Lei 11.445/2007, arts. 3º e 8º' },
+  { predio: 'piscinao', titulo: 'Shopping todo concretado', quem: '🏬 Gerente do shopping',
+    texto: 'A cobrança de drenagem do shopping veio maior que a das casas. É justo cobrar diferente?',
+    ops: ['Não, todos pagam igual', 'Sim: a cobrança pode considerar o percentual de área impermeabilizada do lote', 'Só se o shopping concordar'], c: 1,
+    exp: 'Lei 11.445/2007, art. 36: a cobrança pela drenagem deve levar em conta, em cada lote urbano, o percentual de área impermeabilizada.',
+    base: 'Lei 11.445/2007, art. 36' },
+  { predio: 'piscinao', titulo: 'Prédios na beira do rio', quem: '🏗️ Construtora',
+    texto: 'Queremos aterrar a margem do córrego para construir um estacionamento. Isso não ajuda a cidade a crescer?',
+    ops: ['Ajuda, pode fazer', 'Não: a margem é Área de Preservação Permanente, e ocupá-la agrava as enchentes', 'Pode, se plantar grama'], c: 1,
+    exp: 'Código Florestal (Lei 12.651/2012, art. 4º): as faixas marginais de cursos d\'água são APP. Ocupá-las é ilegal e impermeabiliza áreas que absorvem a chuva.',
+    base: 'Lei 12.651/2012, art. 4º' },
 ];
 
 /* Eventos especiais do calendário e do clima: cada um traz uma dica de lei */
