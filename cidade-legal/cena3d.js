@@ -1438,6 +1438,7 @@ const Cena = (() => {
       // faixa da direita para os lentos; na faixa exclusiva, só ônibus
       let alvo = LENTOS.includes(k.tipo) ? 1 : (k.faixa || 0);
       if (k.tipo !== 'onibus' && vias[eixo].onibus.some(sO => Math.abs(sO - k.p) < 1)) alvo = 0;
+      if (k.plano) alvo = 0; // vai converter à esquerda: aproxima-se do eixo da via
       const dLat = FAIXAS_AV[alvo] - k.lat; k.lat += Math.sign(dLat) * Math.min(Math.abs(dLat), dt * .35);
       // não encosta no carro da frente na mesma faixa
       frota.forEach(o => {
@@ -1459,7 +1460,20 @@ const Cena = (() => {
       // quem veio de uma rua local pode sair por outra, virando à direita
       if (k.dono) {
         k.desde += Math.abs(passo);
-        const j = k.desde > 1.5 && vias[eixo].juncoes.find(jn => (jn.s - k.p) * k.sentido > 0 && (jn.s - k.p - passo) * k.sentido <= 0 && ladoDireito(tr, jn.s, k.sentido) === jn.d);
+        // conversão à esquerda: escolhe a rua com antecedência, passa para a faixa da esquerda
+        // e, na hora de virar, cede passagem a quem vem no sentido contrário (CTB, art. 38, parágrafo único)
+        if (k.desde > 1.5 && !k.plano) {
+          const jn = vias[eixo].juncoes.find(x => { const a = (x.s - k.p) * k.sentido; return a > .8 && a < 2.5 && x.s !== k.recusou && ladoDireito(tr, x.s, -k.sentido) === x.d; });
+          if (jn) { if (Math.random() < .5) k.plano = jn; else k.recusou = jn.s; }
+        }
+        if (k.plano) {
+          if ((k.plano.s - k.p - passo) * k.sentido <= 0) {
+            const vem = frota.some(o => o !== k && o.horizontal === k.horizontal && o.sentido !== k.sentido && Math.abs(o.p - k.plano.s) < 1.3);
+            if (vem || k.lat > .15) { k.p = k.plano.s; passo = 0; }
+            else { const j = k.plano; k.plano = null; sairDaAvenida(k, j); return; }
+          }
+        }
+        const j = !k.plano && k.desde > 1.5 && vias[eixo].juncoes.find(jn => (jn.s - k.p) * k.sentido > 0 && (jn.s - k.p - passo) * k.sentido <= 0 && ladoDireito(tr, jn.s, k.sentido) === jn.d);
         if (j && Math.random() < .6) { sairDaAvenida(k, j); return; }
         if (k.p + passo < .6 || k.p + passo > tr.len - .6) { k.dono.av = null; reposicionar(k.dono); return; }
       }
@@ -1496,16 +1510,20 @@ const Cena = (() => {
   // rua local → avenida: para no PARE, espera um espaço e entra virando à direita, na faixa da direita
   function entrarNaAvenida(c, A, dt) {
     const eixo = caminhoAvenida('h').includes(A) ? 'h' : 'v', tr = trajetoAvenida(eixo), sA = tr.tileS[A];
-    const h = DIRV[c.sai], sentidoDe = (() => { const [, , tx, tz] = pontoNoTrajeto(tr, sA); return (-h[1] * tx + h[0] * tz) > 0 ? 1 : -1; })();
+    const h = DIRV[c.sai];
+    if (!c.vira) c.vira = Math.random() < .5 ? 'esquerda' : 'direita';
+    const esq = c.vira === 'esquerda', novo = esq ? [h[1], -h[0]] : [-h[1], h[0]]; // direção depois da conversão
+    const sentidoDe = (() => { const [, , tx, tz] = pontoNoTrajeto(tr, sA); return novo[0] * tx + novo[1] * tz > 0 ? 1 : -1; })();
     c.pare = (c.pare || 0) + dt;
     if (c.pare < .9) return; // parada obrigatória
+    // à direita basta o sentido em que vai entrar estar livre; à esquerda cruza a avenida: os dois sentidos precisam estar livres
     const frota = carros.concat(carrosLocais.filter(o => o.av).map(o => o.av));
-    if (frota.some(o => o.horizontal === (eixo === 'h') && o.sentido === sentidoDe && Math.abs(o.p - sA) < 1.2)) { if (c.pare > 8) reposicionar(c); return; }
-    const pDest = sA + sentidoDe * .4, [px, pz, tx, tz] = pontoNoTrajeto(tr, pDest);
-    const X = [px - tz * sentidoDe * FAIXAS_AV[1], pz + tx * sentidoDe * FAIXAS_AV[1]];
+    if (frota.some(o => o.horizontal === (eixo === 'h') && (esq || o.sentido === sentidoDe) && Math.abs(o.p - sA) < (esq ? 1.5 : 1.2))) { if (c.pare > 8) reposicionar(c); return; }
+    const lat = FAIXAS_AV[esq ? 0 : 1], pDest = sA + sentidoDe * (esq ? .55 : .4), [px, pz, tx, tz] = pontoNoTrajeto(tr, pDest);
+    const X = [px - tz * sentidoDe * lat, pz + tx * sentidoDe * lat];
     manobra(c, [c.obj.position.x, c.obj.position.z], h, X, () => {
-      c.av = { tipo: 'carro', obj: c.obj, horizontal: eixo === 'h', sentido: sentidoDe, p: pDest, comp: .3, v: .8 + Math.random() * .3, faixa: Math.random() < .5 ? 1 : 0, lat: FAIXAS_AV[1], dono: c, desde: 0 };
-      c.tile = -2; c.pare = 0;
+      c.av = { tipo: 'carro', obj: c.obj, horizontal: eixo === 'h', sentido: sentidoDe, p: pDest, comp: .3, v: .8 + Math.random() * .3, faixa: esq ? 0 : (Math.random() < .5 ? 1 : 0), lat, dono: c, desde: 0 };
+      c.tile = -2; c.pare = 0; c.vira = null;
     });
   }
   // avenida → rua local, virando à direita
@@ -1819,7 +1837,7 @@ const Cena = (() => {
     return opcoes[Math.floor(Math.random() * opcoes.length)];
   }
   function entrarNoLote(c, i, ent) {
-    c.tile = i; c.ent = ent; c.sai = escolherSaida(i, ent); c.tr = trajetoLocal(i, ent, c.sai); c.s = 0;
+    c.tile = i; c.ent = ent; c.sai = escolherSaida(i, ent); c.tr = trajetoLocal(i, ent, c.sai); c.s = 0; c.vira = null;
   }
   function reposicionar(c) {
     const lotes = [];

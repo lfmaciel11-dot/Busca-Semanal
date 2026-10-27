@@ -105,7 +105,7 @@ A aba **🚸 Sinalização** reúne o que é instalado sobre as ruas:
 
 - **Avenidas com duas faixas em cada sentido**: faixa dupla amarela no meio e linha branca tracejada entre as faixas. Ônibus e caminhões andam pela direita; os mais rápidos, pela esquerda (CTB, art. 29, IV). Onde há vagas, a baia de estacionamento funciona como uma terceira faixa, sem tirar espaço de quem circula.
 - **Ruas locais de mão dupla**, com faixa amarela tracejada.
-- **Emendas**: onde uma rua local chega à avenida, a calçada se abre e a rua ganha placa **PARE** (R-1) e linha de retenção. Os carros param, esperam um espaço e entram na avenida virando à direita; depois saem por outra rua. Semáforo fica só no cruzamento das avenidas e nos cruzamentos de ruas locais.
+- **Emendas**: onde uma rua local chega à avenida, a calçada se abre e a rua ganha placa **PARE** (R-1) e linha de retenção. Os carros param e entram na avenida virando à direita (basta o sentido em que vão entrar estar livre) ou à esquerda (esperam os dois sentidos livres e entram na faixa da esquerda). Para sair por outra rua à esquerda, passam antes para a faixa da esquerda e cedem passagem a quem vem no sentido contrário (CTB, art. 38, II e parágrafo único). Semáforo fica só no cruzamento das avenidas e nos cruzamentos de ruas locais.
 - **Ônibus acessíveis**: piso baixo, símbolo de acessibilidade e rampa na porta; param nos pontos e terminais à sua direita e baixam a rampa.
 
 | Item | O que ensina |

@@ -718,6 +718,7 @@ const PREDIOS = {
         'É infração gravíssima retornar onde a sinalização proíbe, ou em curvas, aclives, declives, pontes, viadutos e túneis (CTB, art. 206, I e II).',
         'Também é gravíssimo retornar passando por cima da calçada ou do canteiro central, ou entrando na contramão num cruzamento (CTB, art. 206, III e IV).',
         'A placa R-5a, com a seta em U cortada por uma faixa vermelha, significa "proibido retornar à esquerda".',
+        'Na conversão à esquerda, o motorista se aproxima do eixo da via e cede passagem aos pedestres, aos ciclistas e aos veículos que vêm em sentido contrário (CTB, art. 38, II e parágrafo único).',
       ],
       pratica: 'Perdeu a entrada e pensou em dar meia-volta no meio da ponte? Não pode: siga até um retorno sinalizado ou uma rotatória.',
     },
@@ -1903,6 +1904,11 @@ const CASOS = [
     ops: ['A multa é injusta, a faixa estava vazia', 'A multa é correta: carro na faixa exclusiva de ônibus é infração gravíssima', 'Só valeria se tivesse um ônibus atrás'], c: 1,
     exp: 'A faixa exclusiva garante que o ônibus, que leva muita gente, ande mesmo com trânsito. Usá-la com carro é infração gravíssima.',
     base: 'CTB, art. 184, III' },
+  { predio: 'retorno', titulo: 'Conversão à esquerda', quem: '🚕 Taxista Edson',
+    texto: 'Eu ia virar à esquerda para entrar numa rua e bati num carro que vinha no sentido contrário. Eu já estava com a seta ligada! De quem é a culpa?',
+    ops: ['Do outro, porque eu sinalizei', 'Em regra, de quem converteu: na conversão à esquerda é preciso ceder passagem a quem vem em sentido contrário', 'De ninguém, a seta resolve'], c: 1,
+    exp: 'A seta avisa a manobra, mas não dá preferência. Quem converte à esquerda espera os veículos do sentido contrário, os pedestres e os ciclistas.',
+    base: 'CTB, art. 38, parágrafo único' },
 ];
 
 /* Projetos de lei: chegam à Prefeitura quando há Câmara Municipal. O jogador sanciona
