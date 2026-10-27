@@ -81,6 +81,7 @@ Também há **enfeites** sem licença (🌳 árvore, 🌷 canteiro, ⛲ praça c
 
 O estilo mistura **maquete realista** (texturas PBR, sombras, reflexos) com **miniatura estilizada**: desfoque de "tilt-shift" nas bordas, cores mais vivas e vinheta, como se a cidade fosse uma maquete fotografada de perto.
 
+- **Arredores**: a cidade não flutua no céu. Em volta do mapa há campo com morros, plantações, matas, os rios seguindo o curso e as avenidas virando estradas, até sumirem na névoa do horizonte.
 - **Tela cheia**: o mapa ocupa a tela toda e a interface flutua por cima em painéis de vidro, com ícones próprios em SVG. No celular, o menu de construção vira uma gaveta que sobe de baixo.
 - **📱 Celular do prefeito**: a Voz da cidade e o Diário Oficial ficam numa gaveta lateral, com um contador de mensagens não lidas.
 - **Cartões de construção com miniatura 3D** de cada prédio, geradas na hora.

@@ -23,7 +23,7 @@ const Cena = (() => {
   const brotando = {};     // lote → instante da construção
   const carros = [], nuvens = [], postes = [];
   let fantasma = null, fantasmaTipo = null, hover = -1, cursor = -1;
-  let texAgua = [], matRua, matCruz, matGrama, chuva, pmrem, envCena, envAlvo, envDia = -1, envChuva = null, diaAtual = 1;
+  let texAgua = [], matRua, matCruz, matGrama, matCampo, chuva, pmrem, envCena, envAlvo, envDia = -1, envChuva = null, diaAtual = 1;
   const relogio = () => performance.now() / 1000;
 
   const posX = c => c - LARGURA / 2 + .5;
@@ -284,6 +284,7 @@ const Cena = (() => {
     // ipê-roxo floresce em junho/julho; ipê-amarelo em agosto/setembro
     FOLHAS.ipe.color.set(mesIdx === 5 || mesIdx === 6 ? '#B45FCB' : mesIdx === 7 || mesIdx === 8 ? '#F2C51C' : e.copa);
     if (matGrama) matGrama.color.set(IMG.grama_cor ? e.tinta : e.grama);
+    if (matCampo) matCampo.color.copy(matGrama.color).multiplyScalar(.86); // campo de fora um pouco mais escuro que a cidade
   }
   function calcada(g, tam = .94) { const c = caixa(tam, .03, tam, IMG.piso_cor ? pbr('piso', 1) : new THREE.MeshStandardMaterial({ color: '#E6E0D4', map: texPiso })); c.castShadow = false; g.add(c); }
   function porta(g, d, cor = '#6B4B32', y = .03) { g.add(caixa(.12, .2, .02, cor, 0, y, d / 2 + .005)); }
@@ -989,8 +990,6 @@ const Cena = (() => {
 
   /* ── Terreno ────────────────────────────────────────────────────────────── */
   function montarTerreno() {
-    // ilha: bloco de terra sob o mapa
-    scene.add(caixa(LARGURA, 1.3, ALTURA, IMG.terra_cor ? pbr('terra', 6, .5) : mat('#8A5A3B'), 0, -1.4));
     const matriz = new THREE.Object3D();
     const lotes = { grama: [], agua: [], rua: [], ponte: [] };
     s.mapa.forEach((l, i) => lotes[l && lotes[l.tipo] ? l.tipo : 'grama'].push(i));
@@ -1052,6 +1051,7 @@ const Cena = (() => {
     scene.add(rua);
     const cruz = caixa(1, .1, 1, matCruz, posX(COLUNA_RUA), -.1, posZ(LINHA_RUA));
     cruz.castShadow = false; scene.add(cruz);
+    montarArredores(matAgua);
 
     // pontes de madeira com guarda-corpo
     lotes.ponte.forEach(i => {
@@ -1078,6 +1078,111 @@ const Cena = (() => {
     // plano invisível para descobrir o lote clicado
     plano = new THREE.Mesh(new THREE.PlaneGeometry(LARGURA, ALTURA), new THREE.MeshBasicMaterial({ visible: false }));
     plano.rotation.x = -Math.PI / 2; scene.add(plano);
+  }
+
+  /* ── Arredores: campo, morros, plantações, rios e estradas além do mapa ─── */
+  // A cidade não fica mais numa ilha solta no céu: o chão continua até a névoa do horizonte.
+  function montarArredores(matAgua) {
+    const R = 80, MX = LARGURA / 2, MZ = ALTURA / 2;
+    const suave = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+    const distMapa = (x, z) => Math.hypot(Math.max(Math.abs(x) - MX, 0), Math.max(Math.abs(z) - MZ, 0));
+    // rios que entram e saem do mapa: [z da borda, sentido, x na borda, meandro]
+    const canais = [
+      [-MZ, -1, posX(CURSO_RIO[0]), t => 4 * Math.sin(t * .07)],
+      [MZ, 1, posX(CURSO_RIO[ALTURA - 1]), t => 4 * Math.sin(t * .06 + .5)],
+      ...CORREGO.filter(([r]) => r === ALTURA - 1).slice(0, 1).map(([, c]) => [MZ, 1, posX(c), t => -3 * Math.sin(t * .08)]),
+    ];
+    const distCanal = (x, z) => Math.min(...canais.map(([z0, sentido, x0, meandro]) => {
+      const t = (z - z0) * sentido;
+      return t < 0 ? Infinity : Math.abs(x - (x0 + suave(0, 10, t) * meandro(t)));
+    }));
+    const zRua = posZ(LINHA_RUA), xRua = posX(COLUNA_RUA);
+    const distRua = (x, z) => Math.min(Math.abs(x) > MX ? Math.abs(z - zRua) : Infinity, Math.abs(z) > MZ ? Math.abs(x - xRua) : Infinity);
+    const altura = (x, z) => {
+      const morro = Math.max(0, 1.1 + Math.sin(x * .11 + 1.3) * Math.cos(z * .09 - .7) * 1.7 + Math.sin(x * .23 + z * .17) * .6);
+      let h = -.004 + suave(6, 30, distMapa(x, z)) * morro * (1 + distMapa(x, z) * .03);
+      h = -.004 + (h + .004) * suave(1.2, 5, distRua(x, z));
+      return -.22 + (h + .22) * suave(.5, 1.2, distCanal(x, z));
+    };
+
+    // chão em grade de 1 unidade, com buraco no lugar do mapa; usa o mesmo material da grama (muda com as estações)
+    const N = 2 * R + 1, pos = new Float32Array(N * N * 3), uv = new Float32Array(N * N * 2), idx = [];
+    const E = 4;
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const x = i - R, z = j - R, k = j * N + i;
+      pos.set([x, altura(x, z), z], k * 3); uv.set([x / E, -z / E], k * 2);
+    }
+    for (let j = 0; j < N - 1; j++) for (let i = 0; i < N - 1; i++) {
+      const cx = i - R + .5, cz = j - R + .5;
+      if (Math.abs(cx) < MX && Math.abs(cz) < MZ) continue;
+      const a = j * N + i;
+      idx.push(a, a + N, a + N + 1, a, a + N + 1, a + 1);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    geo.setIndex(idx); geo.computeVertexNormals();
+    matCampo = matGrama.clone(); matCampo.color.multiplyScalar(.86);
+    const chao = new THREE.Mesh(geo, matCampo); chao.receiveShadow = true; scene.add(chao);
+
+    // água dos rios fora do mapa: quatro faixas em volta do mapa, abaixo do nível do campo
+    [[0, -(R + MZ) / 2, 2 * R, R - MZ], [0, (R + MZ) / 2, 2 * R, R - MZ], [-(R + MX) / 2, 0, R - MX, 2 * MZ], [(R + MX) / 2, 0, R - MX, 2 * MZ]].forEach(([x, z, w, h]) => {
+      const g = new THREE.PlaneGeometry(w, h), u = g.attributes.uv;
+      for (let n = 0; n < u.count; n++) u.setXY(n, u.getX(n) * w, u.getY(n) * h);
+      const m = new THREE.Mesh(g, matAgua); m.rotation.x = -Math.PI / 2; m.position.set(x, -.07, z); m.receiveShadow = true; scene.add(m);
+    });
+
+    // estradas: as avenidas seguem para fora da cidade
+    const trechos = [];
+    for (let x = MX + .5; x < R - 1; x++) trechos.push([x, zRua, 0], [-x, zRua, 0]);
+    for (let z = MZ + .5; z < R - 1; z++) trechos.push([xRua, z, 1], [xRua, -z, 1]);
+    const estrada = new THREE.InstancedMesh(new THREE.BoxGeometry(1, .1, 1), matRua, trechos.length);
+    const o = new THREE.Object3D();
+    trechos.forEach(([x, z, vert], n) => { o.position.set(x, -.045, z); o.rotation.set(0, vert ? Math.PI / 2 : 0, 0); o.updateMatrix(); estrada.setMatrixAt(n, o.matrix); });
+    estrada.receiveShadow = true; scene.add(estrada);
+
+    // plantações perto da cidade: faixas de cultivo em cores diferentes
+    let semente = 7;
+    const rand = () => (semente = (semente * 16807) % 2147483647) / 2147483647;
+    const CULTIVOS = [['#6E9B3A', '#5C8530'], ['#C9B24A', '#B39A3A'], ['#8A6A4A', '#755A3E'], ['#7FAF45', '#6A9839']];
+    const texCultivo = CULTIVOS.map(([a, b]) => canvasTex(64, 64, ctx => {
+      for (let y = 0; y < 64; y += 8) { ctx.fillStyle = a; ctx.fillRect(0, y, 64, 5); ctx.fillStyle = b; ctx.fillRect(0, y + 5, 64, 3); }
+    }));
+    const matCultivo = texCultivo.map(t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; return new THREE.MeshStandardMaterial({ map: t, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }); });
+    const ocupado = [];
+    const livre = (x, z, folga) => distMapa(x, z) > folga && distCanal(x, z) > folga && distRua(x, z) > folga && ocupado.every(([ox, oz, or]) => Math.hypot(x - ox, z - oz) > or + folga);
+    for (let n = 0, tent = 0; n < 22 && tent < 400; tent++) {
+      const ang = rand() * Math.PI * 2, d = 2 + rand() * 6;
+      const x = Math.round(Math.cos(ang) * (MX + d)), z = Math.round(Math.sin(ang) * (MZ + d)), w = 3 + Math.floor(rand() * 3), h = 2 + Math.floor(rand() * 3);
+      if (![[x - w / 2, z - h / 2], [x + w / 2, z - h / 2], [x - w / 2, z + h / 2], [x + w / 2, z + h / 2], [x, z]].every(([a, b]) => livre(a, b, 1.2))) continue;
+      const g = new THREE.PlaneGeometry(w - .3, h - .3), u = g.attributes.uv;
+      for (let k = 0; k < u.count; k++) u.setXY(k, u.getX(k) * w / 2, u.getY(k) * h / 2);
+      const m = new THREE.Mesh(g, matCultivo[n % matCultivo.length]);
+      m.rotation.set(-Math.PI / 2, 0, rand() < .5 ? 0 : Math.PI / 2); m.position.set(x, -.002, z); m.receiveShadow = true;
+      scene.add(m); ocupado.push([x, z, Math.hypot(w, h) / 2]); n++;
+    }
+
+    // matas e bosques: árvores instanciadas, mais densas nos morros
+    const copas = [], pinhos = [];
+    for (let tent = 0; tent < 5000 && copas.length + pinhos.length < 900; tent++) {
+      const x = (rand() * 2 - 1) * (R - 6), z = (rand() * 2 - 1) * (R - 6), d = distMapa(x, z);
+      if (d < 1.5 || d > 60 || !livre(x, z, .8)) continue;
+      const bosque = .5 + .5 * Math.sin(x * .19 + 2) * Math.sin(z * .21 - 1);
+      if (rand() > .12 + bosque * .7 * suave(3, 12, d)) continue;
+      (rand() < .35 + suave(10, 35, d) * .3 ? pinhos : copas).push([x, altura(x, z) - .02, z, .8 + rand() * .9, rand() * 6.3]);
+    }
+    const instanciar = (lista, geo, material) => {
+      const im = new THREE.InstancedMesh(geo, material, lista.length);
+      lista.forEach(([x, y, z, e, r], n) => { o.position.set(x, y, z); o.rotation.set(0, r, 0); o.scale.setScalar(e); o.updateMatrix(); im.setMatrixAt(n, o.matrix); });
+      im.castShadow = true; scene.add(im);
+    };
+    const tronco = mat('#6D4C35');
+    const geoTronco = new THREE.CylinderGeometry(.03, .045, .3, 6); geoTronco.translate(0, .15, 0);
+    const geoCopa = new THREE.IcosahedronGeometry(.27, 1); geoCopa.translate(0, .45, 0);
+    const geoPinho = new THREE.ConeGeometry(.22, .62, 8); geoPinho.translate(0, .5, 0);
+    instanciar(copas.concat(pinhos), geoTronco, tronco);
+    instanciar(copas, geoCopa, FOLHAS.copa);
+    instanciar(pinhos, geoPinho, FOLHAS.pinho);
   }
 
   function materialRua(cruzamento) {
@@ -1339,6 +1444,7 @@ const Cena = (() => {
     if (matRua && matRua.userData.molhado !== nublado) {
       [matRua, matCruz].forEach(m => { m.roughness = nublado ? .28 : .92; m.metalness = nublado ? .15 : 0; m.userData.molhado = nublado; });
       if (matGrama) matGrama.roughness = nublado ? .7 : 1;
+      if (matCampo) matCampo.roughness = matGrama.roughness;
     }
     const luzes = Math.max(0, Math.min(1, 1 - dia * (nublado ? 1.1 : 1.7)));
 
