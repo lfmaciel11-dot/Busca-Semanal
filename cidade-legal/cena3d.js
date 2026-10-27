@@ -1286,7 +1286,8 @@ const Cena = (() => {
     const aviso = document.createElement('div');
     aviso.className = 'carregando-mapa'; aviso.textContent = 'Carregando texturas…';
     cv.parentElement.appendChild(aviso);
-    carregarImagens().then(() => {
+    // se as texturas demorarem (conexão ou aparelho lento), a cidade abre mesmo assim com cores lisas
+    Promise.race([carregarImagens(), new Promise(ok => setTimeout(ok, 8000))]).then(() => {
       texturasBase();
       montarTerreno();
       montarChuva();

@@ -754,10 +754,13 @@ document.addEventListener('DOMContentLoaded', () => {
     aplicarTema(novo);
     try { localStorage.setItem('cidade-legal-tema', novo); } catch (e) { /* ignora */ }
   };
-  $('btn-reiniciar').onclick = () => {
-    if (!confirm('Reiniciar o jogo? Todo o progresso será perdido.')) return;
-    s = novoEstado(); render(); boasVindas();
-  };
+  // confirmação dentro do jogo (confirm() é bloqueado quando a página roda embutida)
+  $('btn-reiniciar').onclick = () => abrirModal(`<div class="resultado"><span class="icone-grande">🔄</span>
+      <h2>Reiniciar o jogo?</h2><p>Todo o progresso de <b>${esc(s.nome)}</b> será perdido.</p></div>
+    <div class="botoes"><button class="btn" id="m-fechar">Cancelar</button><button class="btn perigo" id="m-reiniciar">Reiniciar</button></div>`, cx => {
+    cx.querySelector('#m-fechar').onclick = fecharModal;
+    cx.querySelector('#m-reiniciar').onclick = () => { s = novoEstado(); render(); boasVindas(); };
+  });
   document.querySelectorAll('.aba').forEach(a => a.onclick = () => {
     som('clique');
     document.querySelectorAll('.aba').forEach(x => x.classList.toggle('ativa', x === a));
