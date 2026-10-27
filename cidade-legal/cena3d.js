@@ -11,7 +11,7 @@
 ══════════════════════════════════════════════════════════════════════════ */
 
 const Cena = (() => {
-  let renderer, scene, camera, controls, cv, aoClicar;
+  let renderer, scene, camera, controls, cv, aoClicar, aoClicarPessoa, pessoaSobMouse = -1;
   let sol, lua, hemi, estrelas, plano, destaque, rotulo, relogioEl, ceuMat, solDisco, luaDisco, grama;
   let mostrarPlacas = true, reduzido = false;
   let hora = 9, lapso = null, estacaoAtual = '', bairrosDesenhados = '';
@@ -1091,6 +1091,9 @@ const Cena = (() => {
     const cabelo = malha(new THREE.SphereGeometry(.0225, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2.1), mat(CABELOS[n % CABELOS.length]), 0, .146, -.003); cabelo.castShadow = false; g.add(cabelo);
     if (n % 7 === 3) { const chapeu = cilindro(.026, .026, .012, '#F5DEB3', 0, .158, 0, 10); chapeu.castShadow = false; g.add(chapeu); }
     if (crianca) g.scale.setScalar(.68);
+    // área de clique invisível, maior que o boneco, para facilitar tocar nas pessoas
+    const alvo = new THREE.Mesh(new THREE.BoxGeometry(.14, .26, .14), new THREE.MeshBasicMaterial({ visible: false }));
+    alvo.position.y = .1; alvo.userData.alvoPessoa = true; g.add(alvo);
     g.userData = { pe1, pe2, br1, br2 };
     return g;
   }
@@ -1432,6 +1435,7 @@ const Cena = (() => {
   }
 
   function atualizarRotulo() {
+    if (pessoaSobMouse >= 0) return; // o rótulo da pessoa é posicionado no movimento do mouse
     const foco = hover >= 0 ? hover : cursor;
     const l = foco >= 0 && s.mapa[foco];
     if (foco >= 0 && !s.bairros[bairroDe(foco).id]) {
@@ -1508,6 +1512,20 @@ const Cena = (() => {
     camera.fov = estreito ? 52 : 40;
     camera.updateProjectionMatrix();
   }
+  // Pedestre sob o ponteiro: devolve um número estável para escolher o morador
+  function pessoaNoPonto(cx, cy) {
+    if (!pronto) return -1;
+    const b = cv.getBoundingClientRect();
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2(((cx - b.left) / b.width) * 2 - 1, -((cy - b.top) / b.height) * 2 + 1), camera);
+    const alvos = pessoas.filter(k => k.obj.visible).map(k => k.obj);
+    Object.values(predios).forEach(g => (g.userData.gente || []).forEach(e => { if (e.obj.visible) alvos.push(e.obj); }));
+    const hit = ray.intersectObjects(alvos, true).find(h => h.object.userData.alvoPessoa);
+    if (!hit) return -1;
+    const obj = hit.object.parent;
+    const n = pessoas.findIndex(k => k.obj === obj);
+    return n >= 0 ? n : 100 + alvos.indexOf(obj);
+  }
   function loteNoPonto(cx, cy) {
     if (!pronto) return -1;
     const b = cv.getBoundingClientRect();
@@ -1522,11 +1540,11 @@ const Cena = (() => {
     return r >= 0 && r < ALTURA && c >= 0 && c < LARGURA ? r * LARGURA + c : -1;
   }
 
-  function init(canvas, clique) {
+  function init(canvas, clique, cliquePessoa) {
     try {
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     } catch (e) { return false; }
-    cv = canvas; aoClicar = clique;
+    cv = canvas; aoClicar = clique; aoClicarPessoa = cliquePessoa;
     reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
     try { mostrarPlacas = localStorage.getItem('cidade-legal-placas') !== '0'; } catch (e) { /* ignora */ }
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
@@ -1604,10 +1622,18 @@ const Cena = (() => {
       const parado = Math.hypot(e.clientX - ini.x, e.clientY - ini.y) < 7 && performance.now() - ini.t < 600;
       ini = null;
       if (!parado) return;
+      const pessoa = aoClicarPessoa && !s.selecionado ? pessoaNoPonto(e.clientX, e.clientY) : -1;
+      if (pessoa >= 0) { aoClicarPessoa(pessoa); return; }
       const i = loteNoPonto(e.clientX, e.clientY);
       if (i >= 0) { if (e.pointerType !== 'mouse') hover = i; aoClicar(i); }
     });
-    cv.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && !ini) hover = loteNoPonto(e.clientX, e.clientY); });
+    cv.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse' || ini) return;
+      pessoaSobMouse = s.selecionado ? -1 : pessoaNoPonto(e.clientX, e.clientY);
+      hover = pessoaSobMouse >= 0 ? -1 : loteNoPonto(e.clientX, e.clientY);
+      cv.style.cursor = pessoaSobMouse >= 0 ? 'pointer' : '';
+      if (pessoaSobMouse >= 0) { rotulo.hidden = false; rotulo.textContent = '👤 Clique para conhecer'; rotulo.style.left = (e.clientX - cv.getBoundingClientRect().left) + 'px'; rotulo.style.top = (e.clientY - cv.getBoundingClientRect().top - 12) + 'px'; }
+    });
     cv.addEventListener('pointerleave', () => { hover = -1; });
     cv.addEventListener('contextmenu', e => e.preventDefault());
 

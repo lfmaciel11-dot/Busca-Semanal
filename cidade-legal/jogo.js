@@ -182,6 +182,7 @@ function rendaDoLote(i) {
   const p = PREDIOS[s.mapa[i].tipo];
   let r = p.efeito.renda * multNivel(s.mapa[i]) * (beiraRua(i) ? 1.2 : 1) * (1 + (s.bonusRenda || 0));
   if (conta(s, 'fazenda')) r *= 1.2;
+  r *= fatorImposto(s.mapa[i].tipo);
   return r * (0.6 + s.felicidade / 125); // cidadãos felizes pagam em dia
 }
 
@@ -203,6 +204,7 @@ function calcular() {
     if (basica ? popCap > 60 && (servicos[k] || 0) * basica < popCap : popCap > 30 && (servicos[k] || 0) * 60 < popCap) faltas.push(k);
   }
   felBonus += Math.min(12, felEnfeites); // enfeites ajudam, mas até um limite
+  felBonus += humorImpostos();           // imposto alto irrita, baixo agrada
   const fel = Math.round(Math.max(0, Math.min(100, 45 + felBonus + s.reputacao - faltas.length * 6)));
   const pop = Math.round(popCap * Math.min(1, 0.55 + fel / 100));
   s.felicidade = fel; s.pop = pop;
@@ -411,6 +413,7 @@ function renderVade() {
 
 function renderDiario() {
   renderVoz();
+  document.querySelectorAll('#voz [data-cid]').forEach(b => b.onclick = () => abrirCidadao(+b.dataset.cid));
   $('diario').innerHTML = s.diario.slice(0, 12).map(d => `<li><span class="d-mes">${nomeMes(d.mes, true)}/${anoDe(d.mes)}</span> ${d.texto}</li>`).join('');
 }
 
@@ -468,6 +471,7 @@ function iniciarProva(tipo) {
       cx.querySelectorAll('.opcao').forEach(b => b.onclick = () => {
         const certo = +b.dataset.i === q.c;
         if (certo) { acertos++; ganharXp(10); som('certo'); } else som('erro');
+        registrarDesempenho(p.area, 'prova', certo);
         cx.querySelectorAll('.opcao').forEach(o => {
           o.disabled = true;
           if (+o.dataset.i === q.c) o.classList.add('certa');
@@ -585,6 +589,8 @@ function proximoMes() {
   s.dinheiro += saldo;
   s.mes++;
   if (Mapa.passarTempo) Mapa.passarTempo();
+  aplicarImpostosPendentes();
+  sincronizarCidadaos();
   const mesIdx = (s.mes - 1) % 12;
   sortearClimaEEventos(mesIdx);
   if (mesIdx === 0) registrar(`🎆 Feliz Ano ${anoDe(s.mes)}! Começa o verão na cidade.`);
@@ -690,6 +696,7 @@ function abrirProjeto(pend) {
       s.pendentes = s.pendentes.filter(x => x !== pend);
       s.leis[pl.id] = sancionou ? 'sancionada' : 'vetada';
       const certo = sancionou === pl.constitucional;
+      registrarDesempenho('Processo Legislativo', 'caso', certo);
       let titulo;
       if (certo) {
         ganharXp(20); s.reputacao = Math.min(30, s.reputacao + 2);
@@ -733,10 +740,16 @@ function gerarVoz(c) {
   if (s.felicidade < 35) opcoes.push('Tá difícil viver nessa cidade... 😤');
   if (s.dinheiro < 0) opcoes.push('Dizem que as contas da prefeitura estão no vermelho 👀 #LRF');
   if ([5, 6, 7, 8].includes((s.mes - 1) % 12)) opcoes.push('Os ipês floriram! Que lindo 🌸📸');
+  if (aliquota('iptu') >= 2.25) opcoes.push(`Esse IPTU de ${fmtAliq(aliquota('iptu'))} tá pesado demais 😤💸`);
+  if (aliquota('iss') <= 2.5) opcoes.push('Com o ISS mais baixo, abri meu pequeno negócio aqui! 🏪');
   if (s.ultimaObra) { opcoes.push(`Inauguraram ${s.ultimaObra} aqui perto! Finalmente 🎉`); s.ultimaObra = null; }
   if (s.pendentes.length) opcoes.push('Já faz tempo que estou esperando atendimento na prefeitura... ⏳');
   opcoes.push(`Bom dia, ${s.nome}! ☀️`, 'Alguém sabe se o ônibus passa no domingo? 🚌');
-  const posts = embaralhar(opcoes).slice(0, 2).map(texto => ({ quem: PERFIS[Math.floor(Math.random() * PERFIS.length)], texto }));
+  const moradores = (s.cidadaos || []).filter(x => !x.atendido);
+  const posts = embaralhar(opcoes).slice(0, 2).map(texto => {
+    const m = moradores.length ? sorteio(moradores) : null;
+    return m ? { quem: arroba(m), cid: m.id, texto } : { quem: PERFIS[Math.floor(Math.random() * PERFIS.length)], texto };
+  });
   // um "Você sabia?" com um ponto de lei de uma área já liberada
   const areas = Object.keys(PREDIOS).filter(k => PREDIOS[k].aula && s.licencas[k]);
   if (areas.length) {
@@ -748,7 +761,7 @@ function gerarVoz(c) {
 function renderVoz() {
   const el = $('voz');
   if (!el) return;
-  el.innerHTML = (s.voz || []).length ? s.voz.slice(0, 4).map(v => `<li class="${v.dica ? 'dica-lei' : ''}"><b>${v.quem}</b><span>${v.texto}</span></li>`).join('')
+  el.innerHTML = (s.voz || []).length ? s.voz.slice(0, 4).map(v => `<li class="${v.dica ? 'dica-lei' : ''}">${v.cid ? `<button class="link autor" data-cid="${v.cid}">${v.quem}</button>` : `<b>${v.quem}</b>`}<span>${v.texto}</span></li>`).join('')
     : '<li class="vazio">Os moradores vão comentar o que acontece na cidade a cada mês.</li>';
 }
 
@@ -792,6 +805,8 @@ function abrirCaso(pend) {
     cx.querySelectorAll('.opcao').forEach(b => b.onclick = () => {
       const certo = +b.dataset.k === c.c;
       s.casosResolvidos++;
+      registrarDesempenho(p.area, 'caso', certo);
+      registrarAtendimento(c, certo);
       s.pendentes = s.pendentes.filter(x => x !== pend && !(x.caso === pend.caso && x.tile === pend.tile));
       cx.querySelector('#m-depois-box').remove();
       cx.querySelectorAll('.opcao').forEach(o => { o.disabled = true; if (+o.dataset.k === c.c) o.classList.add('certa'); });
@@ -837,6 +852,315 @@ function verificarMissoes() {
   });
 }
 
+/* ══ Orçamento e impostos ════════════════════════════════════════════════════
+   IPTU incide sobre os imóveis residenciais e o ISS sobre as demais atividades.
+   Imposto mais alto arrecada mais e irrita a população. Aumento só vale depois
+   da anterioridade anual e nonagesimal; redução pode valer no mês seguinte. */
+const aliquota = k => (s.impostos && s.impostos[k]) || IMPOSTOS[k].padrao;
+const fatorImposto = tipo => RESIDENCIAIS.includes(tipo) ? aliquota('iptu') / IMPOSTOS.iptu.padrao : aliquota('iss') / IMPOSTOS.iss.padrao;
+const humorImpostos = () => -Math.round((aliquota('iptu') - IMPOSTOS.iptu.padrao) * 5 + (aliquota('iss') - IMPOSTOS.iss.padrao) * 3);
+const fmtAliq = v => v.toLocaleString('pt-BR', { minimumFractionDigits: v % 1 ? 1 : 0, maximumFractionDigits: 2 }) + '%';
+
+function receitasPorImposto() {
+  const r = { iptu: 0, iss: 0 };
+  s.mapa.forEach((l, i) => { if (l && PREDIOS[l.tipo] && PREDIOS[l.tipo].efeito.renda) r[RESIDENCIAIS.includes(l.tipo) ? 'iptu' : 'iss'] += rendaDoLote(i); });
+  return r;
+}
+
+function vigenciaDe(k, novo) {
+  if (novo <= aliquota(k)) return s.mes + 1;                     // reduzir não tem anterioridade
+  const proximoAno = anoDe(s.mes) * 12 + 1;                      // 1º de janeiro do ano seguinte
+  return Math.max(proximoAno, s.mes + 3);                        // e ao menos 90 dias (noventena)
+}
+
+function aplicarImpostosPendentes() {
+  (s.impostosPendentes || []).filter(p => p.vigencia <= s.mes).forEach(p => {
+    s.impostos = s.impostos || {};
+    s.impostos[p.k] = p.valor;
+    registrar(`🧾 Entrou em vigor a nova alíquota do <b>${IMPOSTOS[p.k].nome}</b>: ${fmtAliq(p.valor)}.`);
+  });
+  s.impostosPendentes = (s.impostosPendentes || []).filter(p => p.vigencia > s.mes);
+}
+
+function abrirOrcamento() {
+  const c = calcular(), rec = receitasPorImposto(), temCamara = conta(s, 'camara') > 0;
+  const novo = { iptu: aliquota('iptu'), iss: aliquota('iss') };
+  (s.impostosPendentes || []).forEach(p => { novo[p.k] = p.valor; });
+  const linha = k => {
+    const imp = IMPOSTOS[k], pend = (s.impostosPendentes || []).find(p => p.k === k);
+    return `<div class="imposto">
+      <div class="imposto-cab"><b>${imp.nome}</b><span>em vigor: <b>${fmtAliq(aliquota(k))}</b>${pend ? ` · aprovado ${fmtAliq(pend.valor)} a partir de ${nomeMes(pend.vigencia)}/${anoDe(pend.vigencia)}` : ''}</span></div>
+      <small>${imp.descricao}</small>
+      <label class="faixa"><input type="range" id="m-${k}" min="${imp.min}" max="${imp.max}" step="${imp.passo}" value="${novo[k]}"><output id="m-${k}-v">${fmtAliq(novo[k])}</output></label>
+    </div>`;
+  };
+  abrirModal(`<div class="cab-modal" style="--cor:#9A7208"><span class="icone-grande">📊</span>
+      <div><small>Orçamento de ${esc(s.nome)} · ${nomeMes(s.mes)} · Ano ${anoDe(s.mes)}</small><h2>Orçamento e impostos</h2></div></div>
+    <div class="orcamento">
+      <div><small>Receita de IPTU</small><b class="pos">+${fmt(rec.iptu)}</b></div>
+      <div><small>Receita de ISS</small><b class="pos">+${fmt(rec.iss)}</b></div>
+      <div><small>Manutenção</small><b class="neg">−${fmt(c.manut)}</b></div>
+      <div><small>Saldo do mês</small><b class="${c.renda - c.manut >= 0 ? 'pos' : 'neg'}">${c.renda - c.manut >= 0 ? '+' : ''}${fmt(c.renda - c.manut)}</b></div>
+    </div>
+    ${linha('iptu')}${linha('iss')}
+    <p class="nota" id="m-previsao"></p>
+    <ul class="pontos regras-imposto">
+      <li>Nenhum tributo pode ser criado ou aumentado sem lei (CF, art. 150, I): a mudança vai para a Câmara Municipal.</li>
+      <li>Aumento só vale no ano seguinte e depois de 90 dias da lei — anterioridade anual e nonagesimal (CF, art. 150, III, "b" e "c"). Redução pode valer logo.</li>
+      <li>O ISS municipal tem alíquota mínima de 2% e máxima de 5% (LC 116/2003, arts. 8º e 8º-A). O IPTU pode ser progressivo conforme o valor do imóvel (CF, art. 156, §1º).</li>
+      <li>Tributo não pode ter efeito de confisco (CF, art. 150, IV).</li>
+    </ul>
+    <div class="botoes">
+      <button class="btn" id="m-fechar">Fechar</button>
+      <button class="btn primario" id="m-enviar" ${temCamara ? '' : 'disabled title="Construa a Câmara Municipal"'}>📜 Enviar projeto à Câmara</button>
+    </div>
+    ${temCamara ? '' : '<p class="nota">🗳️ Para mudar impostos é preciso lei: construa a <b>Câmara Municipal</b>.</p>'}`, cx => {
+    const previa = () => {
+      const v = { iptu: +cx.querySelector('#m-iptu').value, iss: +cx.querySelector('#m-iss').value };
+      ['iptu', 'iss'].forEach(k => { cx.querySelector(`#m-${k}-v`).textContent = fmtAliq(v[k]); });
+      const novaRec = rec.iptu * v.iptu / aliquota('iptu') + rec.iss * v.iss / aliquota('iss');
+      const humor = -Math.round((v.iptu - IMPOSTOS.iptu.padrao) * 5 + (v.iss - IMPOSTOS.iss.padrao) * 3) - humorImpostos();
+      const datas = ['iptu', 'iss'].filter(k => v[k] !== aliquota(k)).map(k => `${IMPOSTOS[k].nome} a partir de ${nomeMes(vigenciaDe(k, v[k]))}/${anoDe(vigenciaDe(k, v[k]))}`);
+      cx.querySelector('#m-previsao').innerHTML = datas.length
+        ? `Previsão: arrecadação de <b>${fmt(novaRec)}</b>/mês (hoje ${fmt(rec.iptu + rec.iss)}) e felicidade <b>${humor >= 0 ? '+' : ''}${humor}</b>. Vigência: ${datas.join('; ')}.`
+        : 'Mova as barras para simular novas alíquotas.';
+    };
+    ['iptu', 'iss'].forEach(k => { cx.querySelector(`#m-${k}`).oninput = previa; });
+    previa();
+    cx.querySelector('#m-fechar').onclick = fecharModal;
+    cx.querySelector('#m-enviar').onclick = () => {
+      const mudou = [];
+      ['iptu', 'iss'].forEach(k => {
+        const v = +cx.querySelector(`#m-${k}`).value;
+        s.impostosPendentes = (s.impostosPendentes || []).filter(p => p.k !== k);
+        if (v === aliquota(k)) return;
+        const vigencia = vigenciaDe(k, v);
+        s.impostosPendentes.push({ k, valor: v, vigencia });
+        mudou.push(`${IMPOSTOS[k].nome} ${fmtAliq(aliquota(k))} → ${fmtAliq(v)} (vigora em ${nomeMes(vigencia)}/${anoDe(vigencia)})`);
+      });
+      if (mudou.length) {
+        registrar(`🗳️ A Câmara aprovou a lei tributária: ${mudou.join('; ')}.`);
+        toast('📜 Lei aprovada! As novas alíquotas valem a partir da data de vigência.');
+        ganharXp(10);
+      }
+      fecharModal(); render();
+    };
+  });
+}
+
+/* ══ Cidadãos com nome e história ════════════════════════════════════════════ */
+const sorteio = lista => lista[Math.floor(Math.random() * lista.length)];
+function novoCidadao(casas) {
+  const mulher = Math.random() < .5;
+  const idade = Math.random() < .2 ? 5 + Math.floor(Math.random() * 13) : Math.random() < .2 ? 60 + Math.floor(Math.random() * 28) : 18 + Math.floor(Math.random() * 42);
+  const ocupacao = idade < 18 ? (idade < 15 ? 'estudante do ensino fundamental' : 'estudante do ensino médio') : idade >= 65 ? 'aposentado(a)' : sorteio(PROFISSOES);
+  const emoji = idade < 12 ? (mulher ? '👧' : '👦') : idade >= 60 ? (mulher ? '👵' : '👴') : (mulher ? sorteio(['👩', '👩‍🦱', '👩‍🦰', '👱‍♀️']) : sorteio(['👨', '👨‍🦱', '🧔', '👱‍♂️']));
+  return { id: (s.proxCidadao = (s.proxCidadao || 0) + 1), nome: `${sorteio(mulher ? NOMES_F : NOMES_M)} ${sorteio(SOBRENOMES)}`, idade, ocupacao, emoji,
+    casa: sorteio(casas), desde: s.mes, gosto: sorteio(['futebol', 'novela', 'pescar no rio', 'samba', 'ler no parque', 'cozinhar', 'cuidar das plantas', 'jogar videogame', 'andar de bicicleta']), historico: [] };
+}
+function sincronizarCidadaos() {
+  s.cidadaos = s.cidadaos || [];
+  const casas = s.mapa.map((l, i) => l && RESIDENCIAIS.includes(l.tipo) ? i : -1).filter(i => i >= 0);
+  if (!casas.length) return;
+  s.cidadaos.forEach(c => { if (c.casa >= 0 && !(s.mapa[c.casa] && RESIDENCIAIS.includes(s.mapa[c.casa].tipo))) c.casa = sorteio(casas); }); // mudou de casa
+  const alvo = Math.min(40, Math.ceil(s.pop / 4));
+  while (s.cidadaos.filter(c => !c.atendido).length < alvo) s.cidadaos.push(novoCidadao(casas));
+}
+const arroba = c => '@' + c.nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]+/g, '.').replace(/^\.|\.$/g, '');
+function humorCidadao(c) {
+  const faltas = calcular().faltas;
+  const pessoal = (c.id * 37) % 21 - 10;
+  const nota = Math.max(0, Math.min(100, s.felicidade + pessoal));
+  const pedidos = {
+    agua: 'quer água tratada chegando em casa', esgoto: 'reclama do cheiro de esgoto na rua', energia: 'está cansado(a) das quedas de energia',
+    educacao: c.idade < 18 ? 'precisa de vaga numa escola perto de casa' : 'quer mais escolas para as crianças do bairro',
+    saude: c.idade >= 60 ? 'precisa de um posto de saúde perto para as consultas' : 'acha o posto de saúde muito cheio',
+    seguranca: 'tem medo de voltar para casa à noite', lazer: 'sente falta de praças e parques', justica: 'quer um fórum mais perto para resolver um problema',
+  };
+  const falta = faltas.find(k => pedidos[k]);
+  const fala = falta ? pedidos[falta] : nota >= 70 ? `adora morar em ${s.nome}` : nota >= 45 ? 'acha que a cidade está melhorando aos poucos' : 'está pensando em se mudar de cidade';
+  return { nota, rosto: rostoFelicidade(nota), fala };
+}
+function abrirCidadao(id) {
+  const c = (s.cidadaos || []).find(x => x.id === id);
+  if (!c) return;
+  const h = humorCidadao(c);
+  const casa = c.casa >= 0 && s.mapa[c.casa] ? `${PREDIOS[s.mapa[c.casa].tipo].icone} ${PREDIOS[s.mapa[c.casa].tipo].nome} · linha ${Math.floor(c.casa / LARGURA) + 1}, coluna ${c.casa % LARGURA + 1}` : 'endereço não informado';
+  const direito = c.idade !== undefined ? DIREITOS_PERFIL.find(d => c.idade <= d.ate) : null;
+  som('clique');
+  abrirModal(`<div class="cab-modal" style="--cor:#3A80F0"><span class="icone-grande">${c.emoji}</span>
+      <div><small>Ficha de morador(a)${c.idade !== undefined ? ` · ${c.idade} anos` : ''}</small><h2>${esc(c.nome)}</h2></div></div>
+    <dl class="ficha">
+      <dt>Ocupação</dt><dd>${esc(c.ocupacao)}</dd>
+      <dt>Mora em</dt><dd>${casa}</dd>
+      <dt>Na cidade desde</dt><dd>${nomeMes(c.desde)} do Ano ${anoDe(c.desde)}</dd>
+      ${c.gosto ? `<dt>Gosta de</dt><dd>${c.gosto}</dd>` : ''}
+      <dt>Humor</dt><dd>${h.rosto} ${h.nota}% · ${h.fala}</dd>
+    </dl>
+    ${direito ? `<p class="pratica"><b>⚖️ Direito de ${esc(c.nome.split(' ')[0])}:</b> ${direito.texto}</p>` : ''}
+    <h3 class="titulo-lei">Histórico com a prefeitura</h3>
+    ${c.historico.length ? `<ul class="lista-casos">${c.historico.slice(-6).reverse().map(x => `<li><b>${x.certo ? '✅' : '❌'} ${esc(x.titulo)}</b><small>${nomeMes(x.mes, true)}/${anoDe(x.mes)} · ${esc(x.base)}</small></li>`).join('')}</ul>` : '<p class="nota">Ainda não precisou da prefeitura.</p>'}
+    <div class="botoes"><button class="btn" id="m-todos">👥 Todos os moradores</button><button class="btn primario" id="m-fechar">Fechar</button></div>`, cx => {
+    cx.querySelector('#m-fechar').onclick = fecharModal;
+    cx.querySelector('#m-todos').onclick = abrirCidadaos;
+  });
+}
+function abrirCidadaos() {
+  sincronizarCidadaos();
+  const lista = (s.cidadaos || []).slice().sort((a, b) => b.historico.length - a.historico.length || a.nome.localeCompare(b.nome));
+  abrirModal(`<div class="cab-modal" style="--cor:#3A80F0"><span class="icone-grande">👥</span>
+      <div><small>${fmt(s.pop)} habitantes · ${lista.length} com ficha</small><h2>Moradores de ${esc(s.nome)}</h2></div></div>
+    ${lista.length ? `<ul class="moradores">${lista.map(c => {
+      const h = humorCidadao(c);
+      return `<li><button class="morador" data-cid="${c.id}"><span class="m-emoji">${c.emoji}</span><span class="m-info"><b>${esc(c.nome)}</b><small>${c.idade !== undefined ? c.idade + ' anos · ' : ''}${esc(c.ocupacao)}</small></span><span class="m-humor" title="Humor">${h.rosto}</span></button></li>`;
+    }).join('')}</ul>` : '<p class="nota">Construa casas, prédios de aluguel ou condomínios para a cidade ganhar moradores.</p>'}
+    <p class="nota">Dica: clique numa pessoa andando na cidade para ver a ficha dela.</p>
+    <div class="botoes"><button class="btn primario" id="m-fechar">Fechar</button></div>`, cx => {
+    cx.querySelector('#m-fechar').onclick = fecharModal;
+    cx.querySelectorAll('[data-cid]').forEach(b => b.onclick = () => abrirCidadao(+b.dataset.cid));
+  });
+}
+function clicarPessoa(n) {
+  sincronizarCidadaos();
+  const moradores = (s.cidadaos || []).filter(c => !c.atendido);
+  if (moradores.length) abrirCidadao(moradores[n % moradores.length].id);
+  else toast('Construa moradias para conhecer os moradores da cidade.');
+}
+// quem trouxe um caso entra no cadastro, com o histórico do atendimento
+function registrarAtendimento(caso, certo) {
+  s.cidadaos = s.cidadaos || [];
+  const partes = caso.quem.split(' '), emoji = partes[0], resto = partes.slice(1).join(' ');
+  const [nome, detalhe] = resto.split(',').map(x => x.trim());
+  let c = s.cidadaos.find(x => x.nome === nome);
+  if (!c) {
+    const idade = detalhe && /(\d+) anos/.test(detalhe) ? +detalhe.match(/(\d+) anos/)[1] : undefined;
+    c = { id: (s.proxCidadao = (s.proxCidadao || 0) + 1), nome, emoji, idade, ocupacao: detalhe && !/anos/.test(detalhe) ? detalhe : 'morador(a) atendido(a) pela prefeitura',
+      casa: -1, desde: s.mes, historico: [], atendido: true };
+    s.cidadaos.push(c);
+  }
+  c.historico.push({ mes: s.mes, titulo: caso.titulo, certo, base: caso.base });
+}
+
+/* ══ Modo professor: desempenho por área do Direito ══════════════════════════ */
+function registrarDesempenho(area, tipo, certo) {
+  s.desempenho = s.desempenho || {};
+  const d = s.desempenho[area] = s.desempenho[area] || { prova: 0, provaOk: 0, caso: 0, casoOk: 0 };
+  d[tipo]++; if (certo) d[tipo + 'Ok']++;
+}
+function linhasDesempenho() {
+  return Object.entries(s.desempenho || {}).map(([area, d]) => {
+    const total = d.prova + d.caso, ok = d.provaOk + d.casoOk;
+    return { area, ...d, total, ok, pct: total ? Math.round(ok / total * 100) : 0 };
+  }).sort((a, b) => a.pct - b.pct || b.total - a.total);
+}
+function relatorioTexto() {
+  const ls = linhasDesempenho(), total = ls.reduce((n, l) => n + l.total, 0), ok = ls.reduce((n, l) => n + l.ok, 0);
+  return [`Cidade Legal — relatório de desempenho`, `Aluno(a): ${s.aluno || '(sem nome)'} · Turma: ${s.turma || '(sem turma)'}`,
+    `Cidade: ${s.nome} · ${nomeMes(s.mes)} do Ano ${anoDe(s.mes)} · Título: ${NIVEIS[nivelAtual()].titulo} · ${fmt(s.xp)} XP`,
+    `Aproveitamento geral: ${total ? Math.round(ok / total * 100) : 0}% (${ok} de ${total} respostas)`, '',
+    ...ls.map(l => `${l.area}: ${l.pct}% — provas ${l.provaOk}/${l.prova}, casos ${l.casoOk}/${l.caso}`)].join('\n');
+}
+function relatorioCSV() {
+  const q = v => `"${String(v).replace(/"/g, '""')}"`;
+  return ['aluno;turma;area;provas_certas;provas;casos_certos;casos;aproveitamento_%',
+    ...linhasDesempenho().map(l => [s.aluno || '', s.turma || '', l.area, l.provaOk, l.prova, l.casoOk, l.caso, l.pct].map(q).join(';'))].join('\n');
+}
+function abrirProfessor() {
+  const ls = linhasDesempenho(), total = ls.reduce((n, l) => n + l.total, 0), ok = ls.reduce((n, l) => n + l.ok, 0);
+  const atencao = ls.filter(l => l.total >= 2 && l.pct < 60);
+  abrirModal(`<div class="cab-modal" style="--cor:#7B40E8"><span class="icone-grande">🎓</span>
+      <div><small>Modo professor</small><h2>Desempenho por área do Direito</h2></div></div>
+    <div class="campos-aluno">
+      <label class="campo">Nome do(a) aluno(a)<input id="m-aluno" maxlength="60" value="${esc(s.aluno || '')}" autocomplete="name"></label>
+      <label class="campo">Turma<input id="m-turma" maxlength="30" value="${esc(s.turma || '')}" placeholder="ex.: 9ºB-2026"></label>
+    </div>
+    <div class="orcamento">
+      <div><small>Aproveitamento</small><b>${total ? Math.round(ok / total * 100) : 0}%</b></div>
+      <div><small>Respostas</small><b>${total}</b></div>
+      <div><small>Áreas estudadas</small><b>${ls.length}</b></div>
+      <div><small>Título</small><b class="pequeno">${NIVEIS[nivelAtual()].titulo}</b></div>
+    </div>
+    ${ls.length ? `<div class="tabela-rolagem"><table class="tabela-desempenho"><thead><tr><th>Área</th><th>Provas</th><th>Casos</th><th>Aproveitamento</th></tr></thead><tbody>
+      ${ls.map(l => `<tr><td>${esc(l.area)}</td><td>${l.provaOk}/${l.prova}</td><td>${l.casoOk}/${l.caso}</td>
+        <td><span class="barra-pct ${l.pct >= 80 ? 'bom' : l.pct >= 60 ? 'medio' : 'fraco'}"><i style="width:${l.pct}%"></i></span> ${l.pct}%</td></tr>`).join('')}
+    </tbody></table></div>` : '<p class="nota">Ainda não há respostas. As provas de licença, os casos dos cidadãos e os projetos de lei entram aqui automaticamente.</p>'}
+    ${atencao.length ? `<p class="pratica"><b>📌 Para revisar:</b> ${atencao.map(l => esc(l.area)).join(', ')}.</p>` : ''}
+    <div class="botoes">
+      <button class="btn" id="m-copiar">📋 Copiar relatório</button>
+      <button class="btn so-arquivo" id="m-csv">⬇️ Baixar planilha (CSV)</button>
+      <button class="btn primario" id="m-fechar">Fechar</button>
+    </div>
+    <textarea id="m-texto" class="oculto" readonly></textarea>`, cx => {
+    cx.querySelector('#m-aluno').oninput = e => { s.aluno = e.target.value.trim(); salvar(); };
+    cx.querySelector('#m-turma').oninput = e => { s.turma = e.target.value.trim(); salvar(); };
+    cx.querySelector('#m-fechar').onclick = fecharModal;
+    cx.querySelector('#m-copiar').onclick = () => copiarTexto(relatorioTexto(), cx.querySelector('#m-texto'), 'Relatório copiado! Cole no e-mail ou na plataforma da turma.');
+    cx.querySelector('#m-csv').onclick = () => baixarArquivo(`desempenho-${(s.aluno || 'aluno').replace(/\s+/g, '-').toLowerCase()}.csv`, '﻿' + relatorioCSV(), 'text/csv');
+  });
+}
+
+/* ══ Salvar e carregar a cidade ══════════════════════════════════════════════ */
+function copiarTexto(texto, area, aviso) {
+  const mostrar = () => { area.value = texto; area.classList.remove('oculto'); area.focus(); area.select(); toast('Selecionei o texto: copie com Ctrl+C (ou toque e segure).'); };
+  try {
+    navigator.clipboard.writeText(texto).then(() => toast(aviso), mostrar);
+  } catch (e) { mostrar(); }
+}
+function baixarArquivo(nome, conteudo, tipo) {
+  const url = URL.createObjectURL(new Blob([conteudo], { type: tipo }));
+  const a = document.createElement('a');
+  a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+const codigoCidade = () => btoa(unescape(encodeURIComponent(JSON.stringify({ ...s, selecionado: null }))));
+function lerCidade(texto) {
+  texto = texto.trim();
+  const obj = JSON.parse(texto.startsWith('{') ? texto : decodeURIComponent(escape(atob(texto.replace(/\s+/g, '')))));
+  if (!obj || !Array.isArray(obj.mapa) || obj.mapa.length !== LARGURA * ALTURA || typeof obj.licencas !== 'object') throw new Error('arquivo inválido');
+  return obj;
+}
+function carregarCidade(obj) {
+  obj.selecionado = null;
+  try {
+    localStorage.setItem(CHAVE_SAVE, JSON.stringify(obj));
+    location.reload();
+  } catch (e) { // sem armazenamento: carrega na hora mesmo
+    s = obj; migrarEstado(); fecharModal(); render(); toast('🏙️ Cidade carregada!');
+  }
+}
+function abrirSalvar() {
+  abrirModal(`<div class="cab-modal" style="--cor:#0D7896"><span class="icone-grande">💾</span>
+      <div><small>${esc(s.nome)} · ${nomeMes(s.mes)} do Ano ${anoDe(s.mes)}</small><h2>Salvar e carregar a cidade</h2></div></div>
+    <p>O jogo já salva sozinho neste navegador. Para continuar em outro aparelho ou entregar ao professor, guarde a cidade num arquivo ou num código.</p>
+    <div class="botoes esquerda">
+      <button class="btn primario so-arquivo" id="m-baixar">⬇️ Baixar arquivo da cidade</button>
+      <button class="btn" id="m-copiar">📋 Copiar código da cidade</button>
+    </div>
+    <textarea id="m-texto" class="oculto" readonly></textarea>
+    <h3 class="titulo-lei">Carregar uma cidade</h3>
+    <label class="campo so-arquivo-entrada">Arquivo da cidade (.json)<input type="file" id="m-arquivo" accept=".json,application/json"></label>
+    <label class="campo">Ou cole o código da cidade<textarea id="m-codigo" rows="3" placeholder="Cole aqui o código copiado"></textarea></label>
+    <p class="nota" id="m-erro" role="alert"></p>
+    <div class="botoes"><button class="btn" id="m-fechar">Fechar</button><button class="btn primario" id="m-carregar">🏙️ Carregar cidade</button></div>`, cx => {
+    const erro = msg => { cx.querySelector('#m-erro').textContent = msg; };
+    cx.querySelector('#m-fechar').onclick = fecharModal;
+    cx.querySelector('#m-baixar').onclick = () => baixarArquivo(`${s.nome.replace(/[^\w\-]+/g, '-').toLowerCase() || 'cidade'}.cidadelegal.json`, JSON.stringify({ ...s, selecionado: null }), 'application/json');
+    cx.querySelector('#m-copiar').onclick = () => copiarTexto(codigoCidade(), cx.querySelector('#m-texto'), '📋 Código copiado! Guarde-o para carregar a cidade depois.');
+    cx.querySelector('#m-arquivo').onchange = e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const leitor = new FileReader();
+      leitor.onload = () => { try { carregarCidade(lerCidade(leitor.result)); } catch (x) { erro('Não consegui ler esse arquivo. Escolha um arquivo .json salvo pelo Cidade Legal.'); } };
+      leitor.readAsText(f);
+    };
+    cx.querySelector('#m-carregar').onclick = () => {
+      const txt = cx.querySelector('#m-codigo').value;
+      if (!txt.trim()) return erro('Cole o código da cidade ou escolha um arquivo.');
+      try { carregarCidade(lerCidade(txt)); } catch (x) { erro('Esse código não é de uma cidade válida. Confira se copiou o código inteiro.'); }
+    };
+  });
+}
+
 /* ── Início ───────────────────────────────────────────────────────────────── */
 function boasVindas() {
   abrirModal(`<div class="resultado"><span class="icone-grande pulando">🏛️</span>
@@ -858,6 +1182,16 @@ function boasVindas() {
   });
 }
 
+// Atualiza jogos salvos em versões anteriores
+function migrarEstado() {
+  if (!s.aguasV2) { adicionarAguas(s.mapa); s.aguasV2 = true; }
+  if (!s.bairros) { // jogos salvos antes dos bairros: libera o Centro e onde já houver prédios
+    s.bairros = { centro: true };
+    s.mapa.forEach((l, i) => { if (l && PREDIOS[l.tipo]) s.bairros[bairroDe(i).id] = true; });
+  }
+  s.selecionado = null;
+}
+
 function aplicarTema(t) {
   if (t) document.documentElement.dataset.theme = t;
 }
@@ -869,13 +1203,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const salvo = carregar();
   s = salvo || novoEstado();
-  if (!s.aguasV2) { adicionarAguas(s.mapa); s.aguasV2 = true; }
-  if (!s.bairros) { // jogos salvos antes dos bairros: libera o Centro e onde já houver prédios
-    s.bairros = { centro: true };
-    s.mapa.forEach((l, i) => { if (l && PREDIOS[l.tipo]) s.bairros[bairroDe(i).id] = true; });
-  }
-  s.selecionado = null;
-  if (window.THREE && Cena.init($('mapa'), clicarLote)) Mapa = Cena;
+  migrarEstado();
+  if (window.THREE && Cena.init($('mapa'), clicarLote, clicarPessoa)) Mapa = Cena;
   else {
     // sem WebGL: troca por um canvas novo (o antigo pode ter tentado um contexto WebGL) e usa o isométrico
     const novo = $('mapa').cloneNode(true);
@@ -887,6 +1216,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!salvo) boasVindas();
 
   $('btn-mes').onclick = proximoMes;
+  $('btn-orcamento').onclick = abrirOrcamento;
+  $('btn-salvar').onclick = abrirSalvar;
+  $('btn-professor').onclick = abrirProfessor;
+  $('stat-pop').onclick = abrirCidadaos;
   $('btn-som').onclick = () => { s.som = !s.som; som('clique'); render(); };
   $('btn-tema').onclick = () => {
     const escuro = document.documentElement.dataset.theme

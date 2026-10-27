@@ -72,6 +72,10 @@ Também há **enfeites** sem licença (🌳 árvore, 🌷 canteiro, ⛲ praça c
 - **Projetos de lei**: com a Câmara Municipal construída, chegam projetos para sancionar ou vetar (horário do comércio, fila no banco, aplicativos de transporte, IPTU Verde, Lei do Silêncio...). Lei inconstitucional sancionada acaba derrubada no STF.
 - **Voz da cidade**: os moradores comentam o que falta, o que melhorou e postam um "Você sabia?" com um ponto de lei.
 - **Barcos no rio e pássaros** cruzando o céu.
+- **📊 Orçamento e impostos**: ajuste o IPTU (0,5% a 3%) e o ISS (2% a 5%, como na LC 116/2003). Imposto alto arrecada mais e irrita a população. A mudança precisa de lei da Câmara; aumento só vale no ano seguinte e após 90 dias (anterioridade), redução vale no mês seguinte.
+- **👥 Moradores com nome e história**: clique numa pessoa andando na cidade (ou no número de habitantes) para ver a ficha — idade, profissão, onde mora, humor, o que pede à prefeitura e um direito ligado à fase da vida. Quem traz um caso entra no cadastro com o histórico do atendimento, e os moradores assinam os posts da Voz da cidade.
+- **🎓 Modo professor**: aproveitamento por área do Direito (provas de licença, casos e projetos de lei), áreas para revisar, nome do aluno e turma, relatório para copiar e planilha CSV.
+- **💾 Salvar e carregar**: baixe a cidade em arquivo `.json` ou copie um código de texto, e carregue em outro aparelho.
 
 ## Texturas
 

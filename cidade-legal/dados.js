@@ -1282,6 +1282,30 @@ const PROJETOS_LEI = [
     exp: 'A acessibilidade é dever do poder público (CF, arts. 227, §2º e 244; Lei 13.146/2015), e o município pode regulamentar seus próprios prédios.', base: 'CF, art. 244; Lei 13.146/2015' },
 ];
 
+/* Impostos municipais ajustáveis no Orçamento (alíquotas em %) */
+const IMPOSTOS = {
+  iptu: { nome: 'IPTU', descricao: 'Imposto sobre a propriedade de imóveis urbanos — incide sobre casas, prédios e condomínios.',
+    min: .5, max: 3, padrao: 1, passo: .25 },
+  iss: { nome: 'ISS', descricao: 'Imposto sobre serviços — incide sobre comércio, empresas e demais atividades.',
+    min: 2, max: 5, padrao: 3, passo: .5 },
+};
+const RESIDENCIAIS = ['casa', 'aluguel', 'condominio'];
+
+/* Moradores: nomes e profissões para os cidadãos da cidade */
+const NOMES_F = ['Maria', 'Ana', 'Francisca', 'Juliana', 'Patrícia', 'Aline', 'Camila', 'Fernanda', 'Beatriz', 'Larissa', 'Rosa', 'Cida', 'Luana', 'Tereza', 'Débora', 'Sônia', 'Valentina', 'Helena'];
+const NOMES_M = ['José', 'João', 'Antônio', 'Francisco', 'Carlos', 'Paulo', 'Pedro', 'Lucas', 'Rafael', 'Marcos', 'Diego', 'Benedito', 'Raimundo', 'Thiago', 'Bruno', 'Gabriel', 'Miguel', 'Arthur'];
+const SOBRENOMES = ['Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira', 'Alves', 'Pereira', 'Lima', 'Gomes', 'Costa', 'Ribeiro', 'Martins', 'Carvalho', 'Araújo', 'Barbosa'];
+const PROFISSOES = ['professor(a)', 'enfermeiro(a)', 'motorista de aplicativo', 'comerciante', 'pedreiro(a)', 'advogado(a)', 'programador(a)', 'cozinheiro(a)',
+  'auxiliar administrativo', 'vendedor(a)', 'eletricista', 'cabeleireiro(a)', 'agricultor(a) urbano', 'motoboy', 'servidor(a) público', 'diarista', 'mecânico(a)', 'artista'];
+/* Direitos lembrados na ficha de cada morador, conforme a fase da vida */
+const DIREITOS_PERFIL = [
+  { ate: 11, texto: 'Como criança, tem prioridade absoluta na proteção dos seus direitos (CF, art. 227; ECA, art. 4º).' },
+  { ate: 17, texto: 'Adolescente: só pode trabalhar como aprendiz a partir dos 14 anos e nunca em atividade perigosa ou noturna (CF, art. 7º, XXXIII).' },
+  { ate: 59, texto: 'Se trabalha com carteira assinada, tem jornada de até 8h diárias e 44h semanais, férias com 1/3 a mais e FGTS (CF, art. 7º).' },
+  { ate: 64, texto: 'A partir dos 60 anos é pessoa idosa e tem atendimento prioritário (Estatuto da Pessoa Idosa, art. 3º).' },
+  { ate: 200, texto: 'Com 65 anos ou mais, tem transporte coletivo urbano gratuito (Estatuto da Pessoa Idosa, art. 39).' },
+];
+
 /* Eventos especiais do calendário e do clima: cada um traz uma dica de lei */
 const EVENTOS = {
   carnaval: { titulo: '🎊 Carnaval na cidade!', texto: 'Os blocos tomaram as ruas e a cidade está animada.',
