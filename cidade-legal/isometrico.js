@@ -539,6 +539,7 @@ const Iso = (() => {
 
   return {
     init,
+    atualizar() {},
     brotar(i) { brotando[i] = performance.now(); },
     zoom(delta) { zoom = Math.max(1, Math.min(2.5, delta === 0 ? 1 : zoom + delta)); if (delta === 0) pan = { x: 0, y: 0 }; calcularOrigem(); return zoom; },
     alternarPlacas() { mostrarPlacas = !mostrarPlacas; try { localStorage.setItem('cidade-legal-placas', mostrarPlacas ? '1' : '0'); } catch (e) { /* ignora */ } return mostrarPlacas; },

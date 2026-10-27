@@ -122,6 +122,18 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 600; }
 .controles-mapa { position: absolute; right: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 6px; line-height: 1.5; }
 .controles-mapa .btn { width: 38px; height: 38px; padding: 0; font-size: 18px; background: rgba(255,255,255,.9); color: #12233A; }
 .controles-mapa .btn.ativo { background: var(--accent); border-color: #D19D00; }
+.rotulo-3d {
+  position: absolute; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap;
+  background: rgba(18,35,58,.9); color: #fff; font-weight: 800; font-size: 13px; line-height: 1.4;
+  padding: 4px 10px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.25);
+}
+.rotulo-3d[hidden] { display: none; }
+.ajuda-mapa {
+  position: absolute; left: 10px; bottom: 10px; margin: 0; pointer-events: none; line-height: 1.4;
+  background: rgba(18,35,58,.72); color: #fff; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+}
+.ajuda-mapa .toque { display: none; }
+@media (hover: none) { .ajuda-mapa { font-size: 11px; } .ajuda-mapa .toque { display: inline; } .ajuda-mapa .mouse { display: none; } }
 .so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ── Painel lateral ─────────────────────────────────────────────────────── */

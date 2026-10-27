@@ -4,21 +4,24 @@
    atender os cidadãos (balões ❗ no mapa) → ganhar conhecimento → novas áreas.
 ══════════════════════════════════════════════════════════════════════════ */
 
-const LARGURA = 12, ALTURA = 8;
-const CHAVE_SAVE = 'cidade-legal-v2';
-const LINHA_RUA = 5;
-const RIO = [9, 21, 33, 44, 56, 67, 79, 91]; // terrenos de água (não construíveis)
+const LARGURA = 20, ALTURA = 14;
+const CHAVE_SAVE = 'cidade-legal-v3';
+const LINHA_RUA = 6, COLUNA_RUA = 8;   // avenidas horizontal e vertical
+const CURSO_RIO = [15, 15, 14, 14, 14, 15, 15, 16, 16, 15, 15, 14, 14, 14]; // coluna do rio em cada linha
 const SERVICOS = { educacao: '🏫 Educação', saude: '🏥 Saúde', seguranca: '🚓 Segurança', lazer: '🌳 Lazer', justica: '⚖️ Justiça' };
 const MAX_PENDENTES = 3, PRAZO_CASO = 2;
 
 let s;               // estado do jogo
 let ultimoConstruido = null;
+let Mapa;           // Cena (3D) ou Iso (2.5D, se o navegador não tiver WebGL)
 
 function novoEstado(nome) {
   const mapa = Array(LARGURA * ALTURA).fill(null);
   for (let c = 0; c < LARGURA; c++) mapa[LINHA_RUA * LARGURA + c] = { tipo: 'rua' };
-  RIO.forEach(i => { mapa[i] = { tipo: Math.floor(i / LARGURA) === LINHA_RUA ? 'ponte' : 'agua' }; });
-  mapa[4 * LARGURA + 4] = { tipo: 'prefeitura' };
+  for (let r = 0; r < ALTURA; r++) mapa[r * LARGURA + COLUNA_RUA] = { tipo: 'rua' };
+  const rio = (r, c) => { const i = r * LARGURA + c; mapa[i] = { tipo: mapa[i] ? 'ponte' : 'agua' }; };
+  CURSO_RIO.forEach((c, r) => { rio(r, c); if (r && CURSO_RIO[r - 1] !== c) rio(r, CURSO_RIO[r - 1]); });
+  mapa[(LINHA_RUA - 1) * LARGURA + COLUNA_RUA - 1] = { tipo: 'prefeitura' };
   return {
     nome: nome || 'Cidade Legal', dinheiro: 600, xp: 0, mes: 1, reputacao: 0,
     pop: 0, felicidade: 50, mapa, licencas: { prefeitura: true },
@@ -42,7 +45,12 @@ const fmt = n => Math.round(n).toLocaleString('pt-BR');
 const embaralhar = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const linha = i => Math.floor(i / LARGURA);
-const beiraRua = i => Math.abs(linha(i) - LINHA_RUA) === 1;
+const ehRua = i => s.mapa[i] && (s.mapa[i].tipo === 'rua' || s.mapa[i].tipo === 'ponte');
+const beiraRua = i => {
+  const r = linha(i), c = i % LARGURA;
+  return (r > 0 && ehRua(i - LARGURA)) || (r < ALTURA - 1 && ehRua(i + LARGURA)) ||
+    (c > 0 && ehRua(i - 1)) || (c < LARGURA - 1 && ehRua(i + 1));
+};
 const rostoFelicidade = f => f >= 80 ? '😄' : f >= 60 ? '🙂' : f >= 40 ? '😐' : f >= 20 ? '😟' : '😡';
 
 function nivelAtual() {
@@ -107,7 +115,7 @@ function confete(qtd = 70) {
 }
 
 function flutuar(i, texto, classe) {
-  const pos = Iso.posTela(i);
+  const pos = Mapa.posTela(i);
   const f = document.createElement('span');
   f.className = 'flutuante ' + (classe || '');
   f.textContent = texto;
@@ -220,8 +228,9 @@ function renderDica(c) {
 }
 
 function renderMapa() {
-  if (ultimoConstruido !== null) { Iso.brotar(ultimoConstruido); ultimoConstruido = null; }
-  $('btn-placas').classList.toggle('ativo', Iso.placas());
+  Mapa.atualizar();
+  if (ultimoConstruido !== null) { Mapa.brotar(ultimoConstruido); ultimoConstruido = null; }
+  $('btn-placas').classList.toggle('ativo', Mapa.placas());
 }
 
 function clicarLote(i) {
@@ -611,7 +620,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const salvo = carregar();
   s = salvo || novoEstado();
   s.selecionado = null;
-  Iso.init($('mapa'), clicarLote);
+  if (window.THREE && Cena.init($('mapa'), clicarLote)) Mapa = Cena;
+  else {
+    // sem WebGL: troca por um canvas novo (o antigo pode ter tentado um contexto WebGL) e usa o isométrico
+    const novo = $('mapa').cloneNode(true);
+    $('mapa').replaceWith(novo);
+    Iso.init(novo, clicarLote); Mapa = Iso;
+    document.querySelector('.ajuda-mapa').hidden = true;
+  }
   render();
   if (!salvo) boasVindas();
 
@@ -634,10 +650,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.aba').forEach(x => x.classList.toggle('ativa', x === a));
     document.querySelectorAll('.conteudo-aba').forEach(x => x.classList.toggle('oculto', x.id !== 'aba-' + a.dataset.aba));
   });
-  $('btn-zoom-mais').onclick = () => Iso.zoom(.5);
-  $('btn-zoom-menos').onclick = () => Iso.zoom(-.5);
-  $('btn-zoom-reset').onclick = () => Iso.zoom(0);
-  $('btn-placas').onclick = () => { Iso.alternarPlacas(); renderMapa(); };
+  $('btn-zoom-mais').onclick = () => Mapa.zoom(.5);
+  $('btn-zoom-menos').onclick = () => Mapa.zoom(-.5);
+  $('btn-zoom-reset').onclick = () => Mapa.zoom(0);
+  $('btn-placas').onclick = () => { Mapa.alternarPlacas(); renderMapa(); };
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       // provas não podem ser puladas com Esc; aulas, informações e casos ainda não respondidos sim
