@@ -792,6 +792,185 @@ const Cena = (() => {
       g.add(placa);
       g.userData.altura = .55;
     },
+    // ── zona rural ──
+    lavoura(g, n) {
+      g.add(caixa(.94, .03, .94, IMG.terra_cor ? pbr('terra', 1) : mat('#7B5B3A')));
+      const [cor, alt, topo] = [['#4E8B2F', .14, '#E5C04A'], ['#5FA33A', .06, null], ['#D9B44A', .1, null]][n % 3]; // milho, soja ou trigo
+      for (let k = 0; k < 7; k++) {
+        const z = -.39 + k * .13;
+        g.add(caixa(.66, alt, .06, cor, -.1, .03, z));
+        if (topo) for (let x = -.38; x < .2; x += .12) g.add(caixa(.025, .03, .03, topo, x, .03 + alt, z));
+      }
+      g.add(cilindro(.08, .08, .36, mat('#B0BEC5', { metalness: .5, roughness: .35 }), .35, .03, -.3, 14));
+      g.add(cupula(.08, '#90A4AE', .35, .39, -.3, { metalness: .5, roughness: .35 }));
+      g.add(cilindro(.06, .06, .26, mat('#B0BEC5', { metalness: .5, roughness: .35 }), .35, .03, -.08, 14));
+      g.add(cupula(.06, '#90A4AE', .35, .29, -.08, { metalness: .5, roughness: .35 }));
+      const trator = criarVeiculo('trator'); trator.position.set(.33, .03, .28); trator.rotation.y = -Math.PI / 2; g.add(trator);
+      g.userData.altura = .5;
+    },
+    pecuaria(g, n) {
+      const madeira = '#8D6E63';
+      for (let k = 0; k <= 5; k++) {
+        const v = -.44 + k * .176;
+        [[v, -.44], [v, .44], [-.44, v], [.44, v]].forEach(([x, z]) => g.add(cilindro(.009, .009, .16, madeira, x, 0, z, 5)));
+      }
+      [.07, .13].forEach(y => {
+        g.add(caixa(.9, .012, .012, madeira, 0, y, -.44)); g.add(caixa(.9, .012, .012, madeira, 0, y, .44));
+        g.add(caixa(.012, .012, .9, madeira, -.44, y, 0)); g.add(caixa(.012, .012, .9, madeira, .44, y, 0));
+      });
+      g.add(caixa(.3, .2, .24, fachada('#B23A2E', 1, 1), -.24, 0, -.24));
+      const telhado = duasAguas(.34, .12, .28, '#5D4037', .2); telhado.position.set(-.24, .2, -.24); g.add(telhado);
+      g.add(caixa(.08, .12, .01, '#FFF3E0', -.24, 0, -.117));
+      g.add(caixa(.22, .04, .06, '#78909C', .22, 0, -.3)); g.add(caixa(.2, .01, .05, mat('#4FC3F7', { roughness: .1 }), .22, .035, -.3));
+      const vaca = (x, z, rot, malhada) => {
+        const v = new THREE.Group(), pelo = malhada ? '#FAFAFA' : '#8D5A3B';
+        v.add(caixa(.15, .07, .065, pelo, 0, .055, 0));
+        if (malhada) { v.add(caixa(.05, .072, .067, '#263238', .02, .054, 0)); v.add(caixa(.03, .072, .067, '#263238', -.05, .054, 0)); }
+        v.add(caixa(.05, .045, .045, pelo, .09, .085, 0)); v.add(caixa(.02, .02, .03, '#F8BBD0', .12, .088, 0));
+        [[.05, .022], [.05, -.022], [-.05, .022], [-.05, -.022]].forEach(([a, b]) => v.add(cilindro(.008, .008, .056, pelo, a, 0, b, 5)));
+        v.position.set(x, 0, z); v.rotation.y = rot; g.add(v); return v;
+      };
+      const gado = [vaca(.15, .1, .4, true), vaca(-.12, .22, 2.6, n % 2 === 0), vaca(.25, .3, -1.2, false)];
+      g.userData.tick = t => gado.forEach((v, k) => { v.rotation.y += Math.sin(t * .3 + k * 2) * .002; });
+      g.userData.altura = .45;
+    },
+    cooperativa(g) {
+      calcada(g);
+      g.add(caixa(.6, .3, .36, fachada('#E8DCC4', 3, 1), 0, .03, -.2));
+      const telhado = duasAguas(.4, .14, .64, '#2E7D32', .33); telhado.rotation.y = Math.PI / 2; telhado.position.z = -.2; g.add(telhado);
+      ['#E53935', '#FB8C00', '#1E88E5'].forEach((cor, k) => {
+        const x = -.28 + k * .28;
+        g.add(caixa(.2, .07, .12, IMG.madeira_cor ? pbr('madeira', 1) : mat('#8D6E63'), x, .03, .26));
+        [['#FF7043', -.05], ['#7CB342', 0], ['#FDD835', .05]].forEach(([c, dx]) => g.add(caixa(.04, .025, .08, c, x + dx, .1, .26)));
+        g.add(caixa(.22, .012, .16, cor, x, .25, .26));
+        [-.1, .1].forEach(dx => g.add(cilindro(.006, .006, .22, '#ECEFF1', x + dx, .03, .33, 5)));
+      });
+      g.userData.altura = .55;
+    },
+
+    // ── indústria e logística ──
+    galpao(g, n) {
+      g.add(caixa(.94, .03, .94, '#9AA3AE'));
+      g.add(caixa(.82, .34, .5, fachada('#CFD8DC', 1, 1), 0, .03, -.18));
+      const telhado = duasAguas(.54, .08, .86, '#78909C', .37); telhado.rotation.y = Math.PI / 2; telhado.position.z = -.18; g.add(telhado);
+      for (let k = 0; k < 4; k++) g.add(caixa(.14, .18, .012, '#455A64', -.3 + k * .2, .03, .072));
+      const cores = ['#C62828', '#1565C0', '#2E7D32', '#EF6C00'];
+      [[-.32, .3, 2], [-.32, .18, 1], [.32, .3, 1]].forEach(([x, z, alto], k) => {
+        for (let a = 0; a < alto; a++) g.add(caixa(.26, .1, .1, cores[(k + a + n) % 4], x, .03 + a * .1, z));
+      });
+      const cam = criarVeiculo('caminhao', cores[n % 4]); cam.position.set(.02, .03, .3); cam.rotation.y = Math.PI / 2; g.add(cam);
+      g.userData.altura = .6;
+    },
+    industria(g) {
+      g.add(caixa(.94, .03, .94, '#8E9AA6'));
+      g.add(caixa(.5, .42, .42, fachada('#78909C', 3, 2), -.15, .03, .05));
+      const metal = mat('#CFD8DC', { metalness: .6, roughness: .3 });
+      [[.28, .25], [.28, -.05]].forEach(([x, z]) => { g.add(cilindro(.11, .11, .4, metal, x, .03, z, 18)); g.add(cupula(.11, '#B0BEC5', x, .43, z, { metalness: .6, roughness: .3 })); });
+      g.add(caixa(.3, .03, .03, metal, .14, .3, .1)); g.add(caixa(.03, .03, .3, metal, .28, .38, .1));
+      [[-.3, -.32], [-.08, -.34]].forEach(([x, z]) => {
+        g.add(cilindro(.05, .07, 1.15, '#8D6E63', x, .03, z, 12));
+        [.8, 1.0].forEach(y => g.add(cilindro(.056, .056, .06, y === .8 ? '#E53935' : '#FAFAFA', x, y, z, 12)));
+      });
+      const fumaca = [];
+      for (let k = 0; k < 8; k++) {
+        const b = malha(new THREE.SphereGeometry(.09, 10, 8), new THREE.MeshStandardMaterial({ color: '#E0E0E0', transparent: true, opacity: .7, roughness: 1 }));
+        b.castShadow = false; fumaca.push(b); g.add(b);
+      }
+      g.userData.tick = t => fumaca.forEach((b, k) => {
+        const f = (t * .28 + k / 4) % 1, x = k % 2 ? -.3 : -.08, z = k % 2 ? -.32 : -.34;
+        b.position.set(x + f * .4, 1.2 + f * 1.1, z - f * .2);
+        b.scale.setScalar(.6 + f * 1.7); b.material.opacity = .65 * (1 - f);
+      });
+      g.userData.altura = 1.4;
+    },
+    aterro(g) {
+      [[.92, '#6D4C41'], [.74, '#7CB342'], [.54, '#8D6E63'], [.34, '#7CB342']].forEach(([w, cor], k) => g.add(caixa(w, .06, w, cor, 0, k * .06, 0)));
+      [[-.2, -.2], [.18, .1], [-.05, .25]].forEach(([x, z]) => g.add(cilindro(.012, .012, .1, '#9E9E9E', x, .18, z, 6)));
+      g.add(caixa(.18, .1, .12, '#ECEFF1', .34, .06, .36)); g.add(caixa(.2, .02, .14, '#6D8B3A', .34, .16, .36));
+      const trator = new THREE.Group();
+      trator.add(caixa(.11, .05, .07, '#F9A825', 0, .02, 0)); trator.add(caixa(.05, .04, .06, '#F9A825', -.02, .07, 0));
+      trator.add(caixa(.015, .04, .09, '#616161', .065, .01, 0)); trator.add(caixa(.12, .025, .08, '#37474F', 0, 0, 0));
+      trator.position.set(-.05, .24, .02); g.add(trator);
+      g.userData.altura = .4;
+    },
+
+    // ── transporte ──
+    pontoTaxi(g) {
+      calcada(g);
+      g.add(caixa(.2, .18, .16, fachada('#FFF8E1', 1, 1), -.28, .03, -.28));
+      g.add(caixa(.24, .03, .2, '#F9A825', -.28, .21, -.28));
+      [[.05, -.05], [.05, .2]].forEach(([x, z]) => { const t = criarVeiculo('taxi'); t.position.set(x + .12, .03, z); g.add(t); });
+      g.add(caixa(.5, .005, .02, '#F9A825', .17, .03, .34));
+      g.userData.altura = .4;
+    },
+    estacionamento(g, n) {
+      g.add(caixa(.94, .03, .94, IMG.asfalto_cor ? pbr('asfalto', 1) : mat('#3A3D42')));
+      for (let k = 0; k < 5; k++) [-.25, .25].forEach(z => g.add(caixa(.012, .003, .22, '#F5F5F5', -.36 + k * .18, .03, z)));
+      g.add(caixa(.16, .003, .2, '#1565C0', .27, .03, .25));
+      for (let k = 0; k < 4; k++) [-.25, .25].forEach((z, f) => {
+        if ((k + f + n) % 3 === 2) return; // algumas vagas livres
+        const c = criarVeiculo('carro', CORES_CARRO[(k * 2 + f + n) % CORES_CARRO.length]);
+        c.position.set(-.27 + k * .18, .03, z); c.rotation.y = f ? -Math.PI / 2 : Math.PI / 2; g.add(c);
+      });
+      g.add(caixa(.1, .13, .09, fachada('#ECEFF1', 1, 1), .42, .03, 0));
+      g.add(cilindro(.01, .01, .42, '#455A64', .42, .03, .42, 6));
+      const p = mat('#1565C0');
+      g.add(caixa(.13, .13, .012, [p, p, p, p, new THREE.MeshStandardMaterial({ map: texEmoji('🅿️', '#1565C0') }), p], .42, .4, .42));
+      g.userData.altura = .5;
+    },
+    posto(g) {
+      g.add(caixa(.94, .03, .94, '#B0BEC5'));
+      [[-.06, -.04], [.4, -.04], [-.06, .3], [.4, .3]].forEach(([x, z]) => g.add(cilindro(.016, .016, .32, '#ECEFF1', x, .03, z, 8)));
+      g.add(caixa(.56, .03, .44, '#C62828', .17, .33, .13)); g.add(caixa(.54, .03, .42, '#FAFAFA', .17, .36, .13));
+      [.08, .26].forEach(x => { g.add(caixa(.07, .03, .2, '#ECEFF1', x, .03, .13)); g.add(caixa(.05, .12, .04, '#C62828', x, .06, .13)); g.add(caixa(.052, .03, .042, '#FAFAFA', x, .18, .13)); });
+      g.add(caixa(.28, .2, .4, fachada('#FFE7C2', 2, 1), -.3, .03, .05)); g.add(caixa(.3, .03, .42, '#C62828', -.3, .23, .05));
+      g.add(cilindro(.012, .012, .3, '#455A64', .4, .03, -.36, 6)); g.add(caixa(.1, .2, .03, '#C62828', .4, .3, -.36));
+      g.userData.altura = .55;
+    },
+    estacaoTrem(g) {
+      g.add(caixa(.94, .02, .94, '#BDBDBD'));
+      for (let x = -.42; x <= .42; x += .08) g.add(caixa(.025, .01, .26, '#6D4C41', x, .02, 0));
+      [-.07, .07].forEach(z => g.add(caixa(.94, .015, .015, mat('#90A4AE', { metalness: .6, roughness: .35 }), 0, .03, z)));
+      g.add(caixa(.94, .06, .18, '#E0E0E0', 0, .02, -.28)); g.add(caixa(.94, .006, .02, '#FDD835', 0, .08, -.2));
+      g.add(caixa(.9, .03, .24, '#00897B', 0, .36, -.28));
+      [-.38, 0, .38].forEach(x => g.add(cilindro(.012, .012, .28, '#ECEFF1', x, .08, -.33, 6)));
+      const vlt = new THREE.Group();
+      vlt.add(caixa(.74, .16, .14, fachada('#00897B', 6, 1, { vidro: '#CFE9F7' }), 0, .045, 0));
+      vlt.add(caixa(.7, .02, .12, '#ECEFF1', 0, .205, 0)); vlt.add(caixa(.01, .08, .08, '#455A64', 0, .225, 0));
+      g.add(vlt);
+      g.add(caixa(.5, .22, .18, fachada('#E0F2F1', 3, 1), 0, .02, .34)); g.add(caixa(.54, .03, .22, '#00897B', 0, .24, .34));
+      g.userData.altura = .6;
+    },
+
+    // ── porto e aeroporto ──
+    porto(g, n) {
+      g.add(caixa(.96, .07, .96, IMG.concreto_cor ? pbr('concreto', 1) : mat('#9E9E9E'), 0, -.04));
+      for (let k = 0; k < 5; k++) g.add(cilindro(.018, .022, .04, '#37474F', -.4 + k * .2, .03, .44, 8));
+      const cores = ['#C62828', '#1565C0', '#2E7D32', '#EF6C00', '#6A1B9A', '#F9A825'];
+      [-.34, -.14, .06].forEach((x, a) => [-.32, -.18].forEach((z, b) => {
+        const alto = 1 + (a + b + n) % 3;
+        for (let k = 0; k < alto; k++) g.add(caixa(.18, .08, .12, cores[(a * 2 + b + k + n) % cores.length], x, .03 + k * .08, z));
+      }));
+      const laranja = mat('#E65100', { metalness: .3, roughness: .5 });
+      [[.22, .06], [.42, .06], [.22, .34], [.42, .34]].forEach(([x, z]) => g.add(cilindro(.014, .014, .62, laranja, x, .03, z, 6)));
+      g.add(caixa(.26, .05, .05, laranja, .32, .62, .06)); g.add(caixa(.26, .05, .05, laranja, .32, .62, .34));
+      g.add(caixa(.06, .04, .78, laranja, .32, .67, .2)); g.add(caixa(.08, .06, .08, '#FAFAFA', .32, .57, .3));
+      g.add(cilindro(.004, .004, .3, '#263238', .32, .27, .3, 4));
+      g.userData.altura = .9;
+    },
+    aeroporto(g) {
+      g.add(caixa(.96, .02, .3, '#37474F', 0, .01, .22));
+      for (let x = -.38; x <= .38; x += .12) g.add(caixa(.06, .003, .012, '#FAFAFA', x, .03, .22));
+      [-.44, .44].forEach(x => { for (let z = .12; z <= .32; z += .04) g.add(caixa(.03, .003, .015, '#FAFAFA', x, .03, z)); });
+      g.add(caixa(.96, .02, .06, '#455A64', 0, .01, .02));
+      g.add(caixa(.46, .16, .18, fachada('#ECEFF1', 5, 1, { vidro: '#90CAF9' }), -.16, .01, -.3));
+      g.add(caixa(.5, .03, .22, '#283593', -.16, .17, -.3));
+      g.add(cilindro(.035, .05, .5, '#ECEFF1', .3, .01, -.3, 12));
+      g.add(cilindro(.08, .065, .08, mat('#4FC3F7', { roughness: .1, metalness: .5 }), .3, .5, -.3, 12));
+      g.add(cilindro(.09, .09, .02, '#283593', .3, .58, -.3, 12));
+      const aviao = criarAviao(); aviao.scale.setScalar(.8); aviao.position.set(.02, .05, -.04); aviao.rotation.y = .3; g.add(aviao);
+      g.userData.altura = .7;
+    },
   });
 
   /* ── Folhas caindo no outono ────────────────────────────────────────────── */
@@ -838,9 +1017,37 @@ const Cena = (() => {
       scene.add(p); passaros.push(p);
     }
   }
+  // navio de carga no rio quando há porto; avião circulando quando há aeroporto
+  let navio = null, aviaoCeu = null;
+  function sincronizarNavioEAviao() {
+    const temPorto = conta(s, 'porto') > 0;
+    if (temPorto && !navio) {
+      const b = new THREE.Group(), corpo = new THREE.Group();
+      corpo.add(caixa(.62, .06, .17, '#37474F', 0, -.02, 0)); corpo.add(caixa(.63, .014, .172, '#C62828', 0, -.03, 0));
+      ['#C62828', '#1565C0', '#2E7D32', '#EF6C00'].forEach((c, k) => corpo.add(caixa(.1, .07, .13, c, .17 - k * .11, .04, 0)));
+      corpo.add(caixa(.09, .12, .14, '#ECEFF1', -.25, .04, 0)); corpo.add(caixa(.1, .015, .15, '#37474F', -.25, .16, 0));
+      b.add(corpo); b.position.y = -.08; scene.add(b);
+      navio = { obj: b, corpo, t: .3, dir: 1, caminho: barcos[0].caminho, lento: true };
+      barcos.push(navio);
+    } else if (!temPorto && navio) { scene.remove(navio.obj); barcos.splice(barcos.indexOf(navio), 1); navio = null; }
+    const i = s.mapa.findIndex(l => l && l.tipo === 'aeroporto');
+    if (i >= 0 && !aviaoCeu) { const obj = criarAviao(); obj.scale.setScalar(2.4); scene.add(obj); aviaoCeu = { obj, ang: 0, i }; }
+    else if (i < 0 && aviaoCeu) { scene.remove(aviaoCeu.obj); aviaoCeu = null; }
+    if (aviaoCeu) aviaoCeu.i = i;
+  }
+  function moverAviao(dt) {
+    if (!aviaoCeu) return;
+    const a = aviaoCeu, cx = posX(a.i % LARGURA), cz = posZ(Math.floor(a.i / LARGURA)), R = 5.5;
+    if (!reduzido) a.ang += dt * .12;
+    a.obj.position.set(cx + Math.cos(a.ang) * R, 2 + Math.sin(a.ang * 2) * .4, cz + Math.sin(a.ang) * R * .7);
+    a.obj.rotation.set(0, Math.atan2(-Math.cos(a.ang) * .7, -Math.sin(a.ang)), 0);
+    a.obj.rotateX(.25); // inclina na curva
+  }
   function moverBarcosEPassaros(dt, t) {
+    sincronizarNavioEAviao();
+    moverAviao(dt);
     barcos.forEach(b => {
-      if (!reduzido) b.t = (b.t + dt * .018 * b.dir + 1) % 1;
+      if (!reduzido) b.t = (b.t + dt * (b.lento ? .011 : .018) * b.dir + 1) % 1;
       const n = b.caminho.length - 1, f = b.t * n, k = Math.min(n - 1, Math.floor(f)), u = f - k;
       const a = b.caminho[k], c = b.caminho[k + 1];
       b.obj.position.x = a.x + (c.x - a.x) * u; b.obj.position.z = a.z + (c.z - a.z) * u;
@@ -922,6 +1129,42 @@ const Cena = (() => {
       [-.2, .2].forEach(x => { roda(x, .1); roda(x, -.1); });
       return g;
     }
+    const vidroCab = mat('#1C2836', { roughness: .1, metalness: .5 });
+    const sirene = cor => { const m = luzPiscante(cor); g.userData.sirene = m; return m; };
+    if (['caminhao', 'bombeiro', 'lixo'].includes(tipo)) { // caminhões: cabine na frente (+x) e carga atrás
+      const cabine = { caminhao: cor, bombeiro: '#C62828', lixo: '#2E7D32' }[tipo];
+      g.add(caixa(.52, .03, .15, '#37474F', 0, .04, 0));
+      g.add(caixa(.13, .15, .16, mat(cabine, { roughness: .35, metalness: .3 }), .18, .05, 0));
+      g.add(caixa(.004, .06, .13, vidroCab, .247, .13, 0));
+      if (tipo === 'caminhao') g.add(caixa(.36, .17, .16, ['#ECEFF1', '#C62828', '#1565C0', '#EF6C00'][Math.floor(Math.random() * 4)], -.07, .07, 0));
+      if (tipo === 'lixo') { g.add(caixa(.34, .16, .16, '#ECEFF1', -.07, .07, 0)); g.add(caixa(.34, .03, .162, '#2E7D32', -.07, .12, 0)); }
+      if (tipo === 'bombeiro') {
+        g.add(caixa(.34, .12, .16, '#C62828', -.07, .07, 0)); g.add(caixa(.34, .015, .162, '#FAFAFA', -.07, .12, 0));
+        g.add(caixa(.36, .015, .05, '#CFD8DC', -.06, .2, 0));
+        g.add(caixa(.04, .02, .12, sirene('#FF3030'), .18, .2, 0));
+      }
+      [.17, -.09, -.17].forEach(x => { roda(x, .08); roda(x, -.08); });
+      return g;
+    }
+    if (tipo === 'ambulancia') {
+      g.add(caixa(.36, .17, .15, mat('#FAFAFA', { roughness: .35, metalness: .2 }), 0, .04, 0));
+      g.add(caixa(.004, .06, .12, vidroCab, .181, .13, 0));
+      g.add(caixa(.36, .025, .152, '#E53935', 0, .1, 0));
+      g.add(caixa(.04, .02, .1, sirene('#FF3030'), .12, .21, 0));
+      [.11, -.11].forEach(x => { roda(x, .075); roda(x, -.075); });
+      return g;
+    }
+    if (tipo === 'trator') {
+      const verde = mat('#2E7D32', { roughness: .45, metalness: .2 });
+      g.add(caixa(.14, .07, .09, verde, .04, .05, 0)); g.add(caixa(.08, .05, .1, verde, -.05, .05, 0));
+      [[-.04, .05], [-.04, -.05], [.03, .05], [.03, -.05]].forEach(([x, z]) => g.add(cilindro(.004, .004, .1, '#263238', x, .1, z, 4)));
+      g.add(caixa(.1, .01, .12, '#FAFAFA', -.005, .2, 0)); g.add(cilindro(.008, .008, .06, '#263238', .08, .12, 0, 6));
+      [[-.06, .065, .055], [-.06, -.065, .055], [.07, .055, .032], [.07, -.055, .032]].forEach(([x, z, r]) => {
+        const p = cilindro(r, r, .028, '#1E1E1E', x, 0, z, 14); p.rotation.x = Math.PI / 2; p.position.y = r; g.add(p);
+        const c = cilindro(r * .5, r * .5, .03, '#F9A825', x, 0, z, 10); c.rotation.x = Math.PI / 2; c.position.y = r; g.add(c);
+      });
+      return g;
+    }
     // carroceria: perfil lateral com curvas, extrudado com chanfro (cantos arredondados)
     const perfil = new THREE.Shape();
     perfil.moveTo(-.15, .035); perfil.lineTo(.15, .035); perfil.quadraticCurveTo(.17, .035, .17, .06); perfil.lineTo(.168, .082);
@@ -930,12 +1173,17 @@ const Cena = (() => {
     perfil.quadraticCurveTo(-.17, .095, -.17, .07); perfil.lineTo(-.17, .055); perfil.quadraticCurveTo(-.17, .035, -.15, .035);
     const geo = new THREE.ExtrudeGeometry(perfil, { depth: .12, bevelEnabled: true, bevelThickness: .016, bevelSize: .012, bevelSegments: 3, curveSegments: 6 });
     geo.translate(0, 0, -.06);
-    g.add(malha(geo, mat(tipo === 'policia' ? '#F4F4F4' : cor, { roughness: .3, metalness: .35 })));
+    g.add(malha(geo, mat(tipo === 'policia' || tipo === 'taxi' ? '#F4F4F4' : cor, { roughness: .3, metalness: .35 })));
     const vidro = mat('#1C2836', { roughness: .1, metalness: .5 });
     [-.077, .077].forEach(z => g.add(caixa(.13, .036, .004, vidro, -.035, .104, z)));                    // janelas laterais
     const para = caixa(.004, .042, .11, vidro, .045, .1, 0); para.rotation.z = .78; g.add(para);       // para-brisa
     const tras = caixa(.004, .036, .11, vidro, -.105, .1, 0); tras.rotation.z = -.7; g.add(tras);      // vidro traseiro
     [-.095, .095].forEach(x => { roda(x, .075); roda(x, -.075); });
+    if (tipo === 'taxi') {
+      [-.077, .077].forEach(z => g.add(caixa(.3, .014, .004, '#E65100', 0, .066, z)));
+      const placa = new THREE.MeshStandardMaterial({ color: '#FDD835', emissive: '#FFB300', emissiveIntensity: .25 });
+      g.add(caixa(.06, .025, .05, placa, -.03, .147, 0));
+    }
     if (tipo === 'policia') {
       [-.077, .077].forEach(z => g.add(caixa(.12, .02, .004, '#1E3A8A', .02, .055, z)));
       const sir = luzPiscante('#FF3030'); g.add(caixa(.05, .025, .09, sir, -.03, .16)); g.userData.sirene = sir;
@@ -947,12 +1195,35 @@ const Cena = (() => {
     g.add(caixa(.008, .018, .03, lanterna, -.183, .07, .045)); g.add(caixa(.008, .018, .03, lanterna, -.183, .07, -.045));
     return g;
   }
+  // avião: nariz para +x
+  function criarAviao() {
+    const g = new THREE.Group(), branco = mat('#FAFAFA', { roughness: .35, metalness: .3 }), azul = mat('#283593');
+    const fus = cilindro(.035, .03, .42, branco, 0, 0, 0, 14); fus.rotation.z = Math.PI / 2; fus.position.set(0, .05, 0); g.add(fus);
+    const nariz = malha(new THREE.SphereGeometry(.035, 14, 10), branco, .21, .05, 0); nariz.scale.set(1.4, 1, 1); g.add(nariz);
+    g.add(caixa(.4, .012, .072, azul, 0, .047, 0).translateZ(0));
+    g.add(caixa(.11, .008, .52, branco, -.01, .04, 0));
+    g.add(caixa(.06, .006, .18, branco, -.19, .06, 0));
+    g.add(caixa(.07, .1, .008, azul, -.19, .06, 0));
+    [-.13, .13].forEach(z => { const m = cilindro(.016, .016, .07, '#B0BEC5', .02, 0, z, 10); m.rotation.z = Math.PI / 2; m.position.y = .025; g.add(m); });
+    g.add(caixa(.3, .014, .004, mat('#1C2836', { roughness: .1, metalness: .5 }), .03, .058, .034));
+    g.add(caixa(.3, .014, .004, mat('#1C2836', { roughness: .1, metalness: .5 }), .03, .058, -.034));
+    return g;
+  }
+  // tamanho de cada veículo na faixa (para manter distância do da frente)
+  const COMPRIMENTO = { onibus: .62, caminhao: .54, bombeiro: .54, lixo: .54, ambulancia: .38, trator: .24 };
   function sincronizarCarros() {
     const desejado = [];
     const n = 2 + Math.min(8, Math.floor((s.pop || 0) / 20));
     for (let i = 0; i < n; i++) desejado.push('carro');
-    if (conta(s, 'terminal')) desejado.push('onibus');
+    const vezes = (tipo, q) => { for (let i = 0; i < q; i++) desejado.push(tipo); };
+    vezes('onibus', Math.min(3, conta(s, 'terminal') + conta(s, 'estacaoTrem')));
+    vezes('taxi', Math.min(4, conta(s, 'pontoTaxi') * 2));
+    vezes('caminhao', Math.min(4, conta(s, 'fabrica') + conta(s, 'galpao') * 2 + conta(s, 'industria') + conta(s, 'porto') * 2));
     if (conta(s, 'delegacia')) desejado.push('policia');
+    if (conta(s, 'saude')) desejado.push('ambulancia');
+    if (conta(s, 'bombeiros')) desejado.push('bombeiro');
+    if (conta(s, 'aterro') || conta(s, 'ecoponto')) desejado.push('lixo');
+    if (conta(s, 'lavoura') + conta(s, 'pecuaria') + conta(s, 'cooperativa')) desejado.push('trator');
     while (carros.length > desejado.length) scene.remove(carros.pop().obj);
     desejado.forEach((tipo, i) => {
       if (carros[i] && carros[i].tipo === tipo) return;
@@ -960,8 +1231,9 @@ const Cena = (() => {
       const horizontal = i % 2 === 0, sentido = i % 4 < 2 ? 1 : -1;
       const obj = criarVeiculo(tipo, CORES_CARRO[i % CORES_CARRO.length]);
       scene.add(obj);
-      const lim = horizontal ? LARGURA / 2 : ALTURA / 2;
-      carros[i] = { tipo, obj, horizontal, sentido, lim, p: (Math.random() * 2 - 1) * lim, v: (tipo === 'onibus' ? .6 : .9 + Math.random() * .6) };
+      const lim = (horizontal ? LARGURA / 2 : ALTURA / 2) + 10; // seguem pela estrada além da cidade
+      const v = { onibus: .6, trator: .35, caminhao: .75, lixo: .55, bombeiro: 1.1, ambulancia: 1.1 }[tipo] || .9 + Math.random() * .6;
+      carros[i] = { tipo, obj, horizontal, sentido, lim, comp: COMPRIMENTO[tipo] || .34, p: (Math.random() * 2 - 1) * lim, v };
     });
   }
   function moverCarros(dt, sinal) {
@@ -976,7 +1248,7 @@ const Cena = (() => {
       carros.forEach(o => {
         if (o === k || o.horizontal !== k.horizontal || o.sentido !== k.sentido) return;
         const folga = (o.p - k.p) * k.sentido;
-        if (folga > 0 && folga < (k.tipo === 'onibus' || o.tipo === 'onibus' ? .62 : .46)) passo = 0;
+        if (folga > 0 && folga < (k.comp + o.comp) / 2 + .12) passo = 0;
       });
       k.p += passo;
       if (k.p > k.lim + .5) k.p = -k.lim - .5;
@@ -1506,6 +1778,9 @@ const Cena = (() => {
     terminal: ['TERMINAL', .5, .035, 0, .51, .282, '#0D7896'], estacaoAgua: ['ÁGUA', .28, .045, -.18, .27, -.128, '#1E88E5'],
     esgoto: ['ESGOTO', .24, .04, .24, .25, .382, '#6D8B3A'], condominio: ['RESIDENCIAL', .4, .05, 0, .09, .432, '#5D4037'],
     aluguel: ['EDIFÍCIO', .3, .04, 0, .27, .332, '#40536E'],
+    cooperativa: ['COOPERATIVA', .4, .06, 0, .2, -.02, '#2E7D32'], galpao: ['LOGÍSTICA', .36, .06, 0, .29, .072, '#455A64'],
+    pontoTaxi: ['TÁXI', .16, .05, -.28, .15, -.2, '#F9A825', '#212121'], posto: ['CONVENIÊNCIA', .24, .045, -.3, .17, .25, '#C62828'],
+    estacaoTrem: ['ESTAÇÃO', .3, .05, 0, .17, .43, '#00897B'], aeroporto: ['AEROPORTO', .3, .04, -.16, .175, -.188, '#283593'],
   };
   const cacheLetreiro = {};
   function letreiro(g, tipo, n) {

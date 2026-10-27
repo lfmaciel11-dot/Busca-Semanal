@@ -683,6 +683,254 @@ const PREDIOS = {
     nome: 'Ponto de ônibus', icone: '🚏', area: 'Enfeite', cor: '#0D7896', cat: 'enfeite',
     custo: 30, nivel: 0, efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 1 },
   },
+
+  /* ── Zona rural ── */
+  lavoura: {
+    nome: 'Lavoura', icone: '🌾', area: 'Direito Agrário', cor: '#8D7B2A',
+    custo: 180, nivel: 1,
+    efeito: { renda: 20, manutencao: 0, pop: 0, felicidade: 0 },
+    aula: {
+      resumo: 'A terra rural também tem função social: precisa produzir, respeitar o meio ambiente e as leis trabalhistas.',
+      pontos: [
+        'A propriedade rural cumpre a função social quando tem aproveitamento racional, preserva o meio ambiente, respeita as leis trabalhistas e favorece o bem-estar de donos e trabalhadores (CF, art. 186).',
+        'O imóvel rural que não cumpre a função social pode ser desapropriado pela União para reforma agrária, com indenização em títulos da dívida agrária (CF, art. 184).',
+        'A pequena propriedade rural trabalhada pela família não pode ser penhorada para pagar dívidas da sua atividade produtiva (CF, art. 5º, XXVI).',
+        'O uso de agrotóxicos tem regras próprias, como o receituário agronômico e a devolução das embalagens vazias (Lei 14.785/2023).',
+      ],
+      pratica: 'O banco quer penhorar o sítio de 3 hectares onde a família planta e vive, por causa do empréstimo das sementes? A pequena propriedade rural trabalhada pela família é impenhorável.',
+    },
+    licenca: [
+      { p: 'Quando a propriedade rural cumpre sua função social?', ops: ['Quando o dono mora nela', 'Quando produz de forma racional, preserva o ambiente e respeita as leis trabalhistas', 'Sempre que estiver registrada', 'Quando tem mais de 100 hectares'], c: 1, exp: 'Os requisitos estão no art. 186 da Constituição e precisam ser cumpridos ao mesmo tempo.' },
+      { p: 'Quem pode desapropriar imóvel rural improdutivo para reforma agrária?', ops: ['O Município', 'O Estado', 'A União', 'O vizinho'], c: 2, exp: 'Compete à União desapropriar por interesse social, para reforma agrária, o imóvel rural que não cumpre sua função social (CF, art. 184).' },
+      { p: 'A pequena propriedade rural trabalhada pela família pode ser penhorada por dívidas da sua atividade produtiva?', ops: ['Sim, como qualquer bem', 'Não, é impenhorável', 'Só se a dívida for com banco público', 'Só metade dela'], c: 1, exp: 'CF, art. 5º, XXVI: a pequena propriedade rural trabalhada pela família não será objeto de penhora para pagamento de débitos decorrentes de sua atividade produtiva.' },
+    ],
+  },
+  pecuaria: {
+    nome: 'Fazenda de gado', icone: '🐄', area: 'Direito Ambiental Rural', cor: '#6D4C41',
+    custo: 220, nivel: 1,
+    efeito: { renda: 26, manutencao: 0, pop: 0, felicidade: -1 },
+    aula: {
+      resumo: 'Quem produz no campo deve conservar parte da vegetação nativa e tratar bem os animais.',
+      pontos: [
+        'Todo imóvel rural deve manter uma Reserva Legal com vegetação nativa: em regra, 20% da área fora da Amazônia Legal (Código Florestal, Lei 12.651/2012, art. 12).',
+        'Nascentes e margens de rios são Áreas de Preservação Permanente, que não podem ser desmatadas (Código Florestal, art. 4º).',
+        'O imóvel precisa estar no Cadastro Ambiental Rural (CAR), registro eletrônico obrigatório para todos os imóveis rurais (Código Florestal, art. 29).',
+        'Maltratar animais domésticos ou domesticados é crime ambiental (Lei 9.605/1998, art. 32).',
+      ],
+      pratica: 'O fazendeiro quer derrubar toda a mata da fazenda (fora da Amazônia) para ampliar o pasto? Não pode: precisa manter pelo menos 20% como Reserva Legal, além das APPs.',
+    },
+    licenca: [
+      { p: 'Fora da Amazônia Legal, qual é a Reserva Legal mínima, em regra?', ops: ['5%', '20%', '50%', '80%'], c: 1, exp: 'Código Florestal, art. 12, II: 20% nas demais regiões do país. Na Amazônia Legal, o percentual é maior.' },
+      { p: 'O que é o CAR?', ops: ['Um imposto sobre carros', 'O Cadastro Ambiental Rural, obrigatório para imóveis rurais', 'Uma licença para vender gado', 'Um seguro agrícola'], c: 1, exp: 'O Cadastro Ambiental Rural reúne as informações ambientais dos imóveis rurais (Lei 12.651/2012, art. 29).' },
+      { p: 'Maltratar animais é:', ops: ['Permitido nas fazendas', 'Crime ambiental', 'Só uma infração de trânsito', 'Problema apenas do dono'], c: 1, exp: 'Lei 9.605/1998, art. 32: praticar ato de abuso ou maus-tratos a animais é crime.' },
+    ],
+  },
+  cooperativa: {
+    nome: 'Cooperativa agrícola', icone: '🧺', area: 'Agricultura Familiar e Cooperativas', cor: '#558B2F',
+    custo: 240, nivel: 2,
+    efeito: { renda: 16, manutencao: 0, pop: 0, felicidade: 4 },
+    aula: {
+      resumo: 'Juntos, os pequenos produtores ganham força para vender e comprar melhor.',
+      pontos: [
+        'A cooperativa é uma sociedade de pessoas que se unem para uma atividade econômica de proveito comum, sem objetivo de lucro (Lei 5.764/1971, arts. 3º e 4º).',
+        'É agricultor familiar quem tem área de até 4 módulos fiscais e usa principalmente a mão de obra da própria família (Lei 11.326/2006, art. 3º).',
+        'Pelo menos 30% do dinheiro federal da merenda escolar (PNAE) deve comprar alimentos da agricultura familiar (Lei 11.947/2009, art. 14).',
+      ],
+      pratica: 'A escola municipal quer comprar verduras da cooperativa da cidade para a merenda? Pode e deve: ao menos 30% da verba do PNAE vai para a agricultura familiar.',
+    },
+    licenca: [
+      { p: 'No mínimo, quanto da verba federal da merenda escolar vai para a agricultura familiar?', ops: ['10%', '30%', '50%', '100%'], c: 1, exp: 'Lei 11.947/2009, art. 14: no mínimo 30% dos recursos do PNAE.' },
+      { p: 'Quem é agricultor familiar, pela Lei 11.326/2006?', ops: ['Quem tem mais de mil hectares', 'Quem tem até 4 módulos fiscais e usa principalmente a mão de obra da família', 'Qualquer pessoa que plante', 'Só quem mora na cidade'], c: 1, exp: 'Os requisitos estão no art. 3º da Lei 11.326/2006.' },
+      { p: 'Uma cooperativa é:', ops: ['Uma empresa com um único dono', 'Uma sociedade de pessoas que se unem para uma atividade econômica comum', 'Um órgão da prefeitura', 'Um banco público'], c: 1, exp: 'Lei 5.764/1971, arts. 3º e 4º.' },
+    ],
+  },
+
+  /* ── Indústria e logística ── */
+  galpao: {
+    nome: 'Centro logístico', icone: '📦', area: 'Transporte de Cargas', cor: '#5D6D7E',
+    custo: 360, nivel: 3,
+    efeito: { renda: 42, manutencao: 0, pop: 0, felicidade: -2 },
+    aula: {
+      resumo: 'Caminhões levam a produção da cidade, e o motorista tem regras de descanso para a segurança de todos.',
+      pontos: [
+        'O motorista profissional não pode dirigir mais de 5 horas e meia seguidas e deve descansar 30 minutos a cada 6 horas ao volante (CTB, art. 67-C).',
+        'Entre uma jornada e outra, o motorista empregado tem direito a 11 horas de descanso (CLT, art. 235-C, §3º).',
+        'O transporte rodoviário de cargas é regulado e fiscalizado pela ANTT (Lei 10.233/2001).',
+        'Transitar com excesso de peso é infração de trânsito e estraga as estradas (CTB, art. 231, V).',
+      ],
+      pratica: 'A empresa exige que o motorista dirija 10 horas seguidas para entregar mais rápido? Não pode: dirigir cansado põe vidas em risco, e a lei obriga as pausas.',
+    },
+    licenca: [
+      { p: 'Quanto tempo de descanso o motorista empregado tem entre duas jornadas?', ops: ['2 horas', '6 horas', '11 horas', 'Nenhum'], c: 2, exp: 'CLT, art. 235-C, §3º: 11 horas a cada 24 horas.' },
+      { p: 'Qual agência regula o transporte rodoviário de cargas?', ops: ['ANATEL', 'ANTT', 'ANVISA', 'ANAC'], c: 1, exp: 'A Agência Nacional de Transportes Terrestres (Lei 10.233/2001).' },
+      { p: 'Caminhão com excesso de peso:', ops: ['Não tem problema', 'Comete infração de trânsito', 'Só é multado à noite', 'Ganha desconto no pedágio'], c: 1, exp: 'CTB, art. 231, V.' },
+    ],
+  },
+  industria: {
+    nome: 'Indústria pesada', icone: '⚙️', area: 'Responsabilidade Ambiental', cor: '#455A64',
+    custo: 520, nivel: 4,
+    efeito: { renda: 64, manutencao: 0, pop: 6, felicidade: -5 },
+    aula: {
+      resumo: 'Quem polui paga: a empresa responde pelos danos ambientais mesmo sem culpa.',
+      pontos: [
+        'A responsabilidade por dano ambiental é objetiva: o poluidor deve reparar o dano mesmo sem ter tido culpa (Lei 6.938/1981, art. 14, §1º).',
+        'Empresas também podem ser punidas por crimes ambientais, com multa, suspensão das atividades ou prestação de serviços à comunidade (CF, art. 225, §3º; Lei 9.605/1998, arts. 3º e 21).',
+        'O pedido de reparação de dano ambiental não prescreve (STF, Tema 999).',
+        'Atividades poluidoras precisam de licença ambiental antes de se instalar e funcionar (Lei 6.938/1981, art. 10).',
+      ],
+      pratica: 'A indústria jogou resíduos no rio por causa de um vazamento acidental? Mesmo sem culpa, ela tem de limpar e indenizar: a responsabilidade ambiental é objetiva.',
+    },
+    licenca: [
+      { p: 'A empresa que poluiu sem culpa precisa reparar o dano?', ops: ['Não, só se tiver culpa', 'Sim, a responsabilidade ambiental é objetiva', 'Só se alguém morrer', 'Só se for multinacional'], c: 1, exp: 'Lei 6.938/1981, art. 14, §1º.' },
+      { p: 'Uma empresa pode ser punida por crime ambiental?', ops: ['Não, só pessoas físicas', 'Sim, a Constituição e a Lei 9.605/1998 permitem', 'Só empresas públicas', 'Só com pena de prisão'], c: 1, exp: 'CF, art. 225, §3º, e Lei 9.605/1998, art. 3º.' },
+      { p: 'Em quanto tempo prescreve o pedido de reparação de dano ambiental?', ops: ['5 anos', '10 anos', '20 anos', 'Não prescreve'], c: 3, exp: 'O STF fixou que é imprescritível a pretensão de reparação civil de dano ambiental (Tema 999).' },
+    ],
+  },
+  aterro: {
+    nome: 'Aterro sanitário', icone: '🗑️', area: 'Resíduos Sólidos', cor: '#6D8B3A',
+    custo: 300, nivel: 2,
+    efeito: { renda: 0, manutencao: 14, pop: 0, felicidade: 6 },
+    aula: {
+      resumo: 'Lixo tem destino certo: aterro sanitário controlado, reciclagem e inclusão dos catadores.',
+      pontos: [
+        'A Política Nacional de Resíduos Sólidos proíbe lançar lixo a céu aberto, nos lixões, e queimá-lo ao ar livre (Lei 12.305/2010, art. 47).',
+        'Primeiro vem não gerar, reduzir, reutilizar e reciclar; só os rejeitos devem ir para o aterro sanitário (Lei 12.305/2010, art. 9º).',
+        'O Novo Marco do Saneamento deu prazos, de 2021 a 2024 conforme o tamanho da cidade, para os municípios acabarem com os lixões (Lei 14.026/2020, que mudou o art. 54 da Lei 12.305/2010).',
+        'Na coleta seletiva, o município deve priorizar as cooperativas de catadores (Lei 12.305/2010, art. 36, §1º).',
+      ],
+      pratica: 'A prefeitura quer economizar despejando o lixo num terreno baldio afastado? Não pode: lixão é proibido, e o lixo vai para aterro sanitário licenciado.',
+    },
+    licenca: [
+      { p: 'Lixões a céu aberto são:', ops: ['Permitidos em cidades pequenas', 'Proibidos pela Política Nacional de Resíduos Sólidos', 'Obrigatórios', 'Permitidos longe das casas'], c: 1, exp: 'Lei 12.305/2010, art. 47, II.' },
+      { p: 'O que deve ir para o aterro sanitário?', ops: ['Tudo', 'Só os rejeitos, que não podem ser reciclados nem reaproveitados', 'Só papel', 'Só lixo hospitalar'], c: 1, exp: 'Lei 12.305/2010, arts. 3º, VIII, e 9º.' },
+      { p: 'Na coleta seletiva, a prefeitura deve priorizar:', ops: ['Empresas estrangeiras', 'Cooperativas de catadores', 'Voluntários sem cadastro', 'Ninguém'], c: 1, exp: 'Lei 12.305/2010, art. 36, §1º.' },
+    ],
+  },
+
+  /* ── Transporte ── */
+  pontoTaxi: {
+    nome: 'Ponto de táxi', icone: '🚕', area: 'Mobilidade Urbana', cor: '#F9A825',
+    custo: 120, nivel: 1,
+    efeito: { renda: 10, manutencao: 0, pop: 0, felicidade: 3 },
+    aula: {
+      resumo: 'Táxi e carro de aplicativo são transporte individual de passageiros, organizado pelo Município.',
+      pontos: [
+        'A Política Nacional de Mobilidade Urbana dá prioridade a pedestres, ciclistas e transporte coletivo sobre o transporte individual motorizado (Lei 12.587/2012, art. 6º, II).',
+        'O serviço de táxi é de utilidade pública, organizado e fiscalizado pelo Município (Lei 12.587/2012, arts. 12 e 12-A).',
+        'A profissão de taxista é regulamentada pela Lei 12.468/2011.',
+        'O Município pode regulamentar e fiscalizar os aplicativos de transporte, mas não pode proibi-los (Lei 13.640/2018; STF, ADPF 449).',
+      ],
+      pratica: 'A Câmara quer aprovar uma lei proibindo carros de aplicativo na cidade? Seria inconstitucional: o Município pode regulamentar, mas não proibir.',
+    },
+    licenca: [
+      { p: 'Quem organiza e fiscaliza o serviço de táxi da cidade?', ops: ['A União', 'O Município', 'A Polícia Federal', 'O sindicato dos taxistas'], c: 1, exp: 'Lei 12.587/2012, art. 12.' },
+      { p: 'O Município pode proibir carros de aplicativo?', ops: ['Sim, sempre', 'Não; pode regulamentar e fiscalizar, mas não proibir', 'Só nos fins de semana', 'Só se os taxistas pedirem'], c: 1, exp: 'O STF julgou inconstitucional a proibição (ADPF 449), e a Lei 13.640/2018 deu aos municípios o poder de regulamentar.' },
+      { p: 'Pela Política de Mobilidade Urbana, tem prioridade:', ops: ['O carro particular', 'Quem anda a pé, de bicicleta ou de transporte coletivo', 'Os caminhões', 'Os táxis'], c: 1, exp: 'Lei 12.587/2012, art. 6º, II.' },
+    ],
+  },
+  estacionamento: {
+    nome: 'Estacionamento', icone: '🅿️', area: 'Responsabilidade Civil', cor: '#1565C0',
+    custo: 140, nivel: 1,
+    efeito: { renda: 16, manutencao: 0, pop: 0, felicidade: 1 },
+    aula: {
+      resumo: 'Quem guarda o carro do cliente responde por danos e furtos, mesmo com placa dizendo o contrário.',
+      pontos: [
+        'A empresa responde pelo dano ou furto de veículo ocorrido em seu estacionamento (Súmula 130 do STJ).',
+        'A placa "não nos responsabilizamos" não afasta o dever de indenizar: cláusula que exonera o fornecedor é nula (CDC, arts. 25 e 51, I).',
+        'Estacionamentos devem reservar 5% das vagas a idosos e 2% a pessoas com deficiência (Lei 10.741/2003, art. 41; Lei 13.146/2015, art. 47).',
+      ],
+      pratica: 'O carro foi arranhado no estacionamento do shopping, que tem placa "não nos responsabilizamos"? O shopping responde mesmo assim.',
+    },
+    licenca: [
+      { p: 'O carro foi furtado no estacionamento do supermercado. Quem responde?', ops: ['Ninguém', 'O supermercado', 'Só a polícia', 'O dono do carro'], c: 1, exp: 'Súmula 130 do STJ.' },
+      { p: 'A placa "não nos responsabilizamos" tem valor?', ops: ['Sim, sempre', 'Não, a cláusula que afasta a responsabilidade é nula', 'Só se estiver em vermelho', 'Só para motos'], c: 1, exp: 'CDC, arts. 25 e 51, I.' },
+      { p: 'Qual percentual das vagas é reservado a idosos?', ops: ['1%', '2%', '5%', '20%'], c: 2, exp: 'Estatuto da Pessoa Idosa, art. 41.' },
+    ],
+  },
+  posto: {
+    nome: 'Posto de combustível', icone: '⛽', area: 'Consumidor e Ordem Econômica', cor: '#C62828',
+    custo: 220, nivel: 2,
+    efeito: { renda: 26, manutencao: 0, pop: 0, felicidade: 1 },
+    aula: {
+      resumo: 'Combustível tem padrão de qualidade fiscalizado, e o posto responde pelo que vende.',
+      pontos: [
+        'A ANP regula e fiscaliza a venda de combustíveis (Lei 9.478/1997, art. 8º).',
+        'Vender combustível adulterado ou fora das especificações é crime contra a ordem econômica (Lei 8.176/1991, art. 1º).',
+        'O consumidor prejudicado por combustível adulterado pode exigir o conserto do carro: o posto responde pelo vício do produto (CDC, art. 18).',
+        'Combinar preços entre postos para prejudicar a concorrência é cartel, punido pelo CADE (Lei 12.529/2011, art. 36).',
+      ],
+      pratica: 'O carro parou depois de abastecer e a oficina achou água na gasolina? O posto deve pagar o conserto, e vender combustível adulterado é crime.',
+    },
+    licenca: [
+      { p: 'Quem fiscaliza a venda de combustíveis?', ops: ['ANP', 'ANAC', 'ANATEL', 'IBAMA'], c: 0, exp: 'Agência Nacional do Petróleo, Gás Natural e Biocombustíveis (Lei 9.478/1997).' },
+      { p: 'Vender combustível adulterado é:', ops: ['Permitido se for barato', 'Crime contra a ordem econômica', 'Só falta de educação', 'Apenas infração de trânsito'], c: 1, exp: 'Lei 8.176/1991, art. 1º.' },
+      { p: 'Postos que combinam o mesmo preço para lucrar mais praticam:', ops: ['Livre concorrência', 'Cartel, punido pelo CADE', 'Uma promoção', 'Nada de errado'], c: 1, exp: 'Lei 12.529/2011, art. 36.' },
+    ],
+  },
+  estacaoTrem: {
+    nome: 'Estação de VLT', icone: '🚆', area: 'Transporte como Direito Social', cor: '#00897B',
+    custo: 480, nivel: 4,
+    efeito: { renda: 12, manutencao: 18, pop: 0, felicidade: 9 },
+    aula: {
+      resumo: 'O transporte é um direito social, e o transporte coletivo tem prioridade no planejamento da cidade.',
+      pontos: [
+        'O transporte passou a ser direito social na Constituição com a Emenda 90/2015 (CF, art. 6º).',
+        'Cabe ao Município organizar e prestar o transporte coletivo local, diretamente ou por concessão (CF, art. 30, V).',
+        'Municípios com mais de 20 mil habitantes devem ter Plano de Mobilidade Urbana (Lei 12.587/2012, art. 24, §1º).',
+        'Os usuários têm direito a ser informados sobre itinerários, horários e tarifas (Lei 12.587/2012, art. 14, III).',
+      ],
+      pratica: 'A empresa mudou os horários do VLT sem avisar ninguém? Os usuários têm direito a informação clara sobre itinerários, horários e tarifas.',
+    },
+    licenca: [
+      { p: 'O transporte é direito social desde qual mudança na Constituição?', ops: ['Emenda 90/2015', 'Código de Trânsito', 'Lei do Inquilinato', 'Nunca foi'], c: 0, exp: 'A EC 90/2015 incluiu o transporte no art. 6º da CF.' },
+      { p: 'Quem organiza o transporte coletivo dentro da cidade?', ops: ['A União', 'O Município', 'A ANTT', 'Os passageiros'], c: 1, exp: 'CF, art. 30, V.' },
+      { p: 'Municípios com mais de quantos habitantes precisam de Plano de Mobilidade Urbana?', ops: ['1 mil', '20 mil', '500 mil', '1 milhão'], c: 1, exp: 'Lei 12.587/2012, art. 24, §1º.' },
+    ],
+  },
+
+  /* ── Porto e aeroporto ── */
+  porto: {
+    nome: 'Porto fluvial', icone: '⚓', area: 'Direito Portuário e da Navegação', cor: '#1A5276',
+    custo: 650, nivel: 4,
+    efeito: { renda: 72, manutencao: 0, pop: 4, felicidade: 2 },
+    bonus: 'Precisa ficar na margem do rio ou da lagoa.',
+    aula: {
+      resumo: 'Portos e navegação são assunto da União, com regras de segurança fiscalizadas pela Marinha.',
+      pontos: [
+        'Cabe à União explorar os portos, diretamente ou por autorização, concessão ou permissão (CF, art. 21, XII, "f").',
+        'A Lei dos Portos (Lei 12.815/2013) organiza portos públicos e terminais privados, fiscalizados pela ANTAQ.',
+        'A segurança da navegação, como habilitação dos condutores e coletes salva-vidas, é fiscalizada pela Marinha, por meio da Capitania dos Portos (Lei 9.537/1997).',
+        'Rios que banham mais de um Estado são bens da União (CF, art. 20, III).',
+      ],
+      pratica: 'Um barqueiro leva passageiros pelo rio sem habilitação e sem coletes? A Capitania dos Portos pode multar e apreender a embarcação.',
+    },
+    licenca: [
+      { p: 'Quem explora os portos, diretamente ou por concessão?', ops: ['O Município', 'A União', 'O Estado', 'Qualquer empresa, sem autorização'], c: 1, exp: 'CF, art. 21, XII, "f".' },
+      { p: 'Qual agência fiscaliza os portos e o transporte pela água?', ops: ['ANTAQ', 'ANAC', 'ANS', 'ANEEL'], c: 0, exp: 'Agência Nacional de Transportes Aquaviários.' },
+      { p: 'Quem fiscaliza a segurança da navegação, como coletes e habilitação?', ops: ['A prefeitura', 'A Marinha, pela Capitania dos Portos', 'O Detran', 'O IBAMA'], c: 1, exp: 'Lei 9.537/1997.' },
+    ],
+  },
+  aeroporto: {
+    nome: 'Aeroporto', icone: '✈️', area: 'Direito Aeronáutico e do Passageiro', cor: '#283593',
+    custo: 900, nivel: 5, unico: true,
+    efeito: { renda: 95, manutencao: 22, pop: 0, felicidade: 8 },
+    bonus: 'Por causa do ruído, não pode ficar a menos de 2 lotes de casas e prédios residenciais.',
+    aula: {
+      resumo: 'Voar envolve regras de segurança, de vizinhança e direitos do passageiro.',
+      pontos: [
+        'A navegação aérea e a infraestrutura dos aeroportos são de competência da União, com regulação da ANAC (CF, art. 21, XII, "c"; Lei 11.182/2005).',
+        'Em volta dos aeroportos há zonas de proteção que limitam a altura dos prédios e o uso do solo por causa do ruído (Código Brasileiro de Aeronáutica, Lei 7.565/1986, arts. 43 a 46).',
+        'Se o voo atrasar, a companhia deve dar assistência: comunicação a partir de 1 hora, alimentação a partir de 2 horas e hospedagem, se precisar pernoitar, a partir de 4 horas (Resolução ANAC 400/2016, art. 27).',
+        'Em voos internacionais, a indenização por bagagem extraviada segue os limites das Convenções de Varsóvia e Montreal (STF, Tema 210).',
+      ],
+      pratica: 'O voo atrasou 3 horas e a companhia não ofereceu nada? Depois de 2 horas de atraso, ela deve oferecer alimentação, como um voucher.',
+    },
+    licenca: [
+      { p: 'Quem regula e fiscaliza a aviação civil?', ops: ['ANAC', 'ANTAQ', 'ANATEL', 'O Município'], c: 0, exp: 'Agência Nacional de Aviação Civil (Lei 11.182/2005).' },
+      { p: 'Com 2 horas de atraso no voo, o passageiro tem direito a:', ops: ['Nada', 'Alimentação, como voucher ou lanche', 'Passagens de graça para sempre', 'Só um pedido de desculpas'], c: 1, exp: 'Resolução ANAC 400/2016, art. 27, II.' },
+      { p: 'Por que há regras de construção perto dos aeroportos?', ops: ['Para enfeitar', 'Pela segurança dos voos e por causa do ruído', 'Para cobrar mais IPTU', 'Não há regras'], c: 1, exp: 'Código Brasileiro de Aeronáutica, arts. 43 a 46.' },
+    ],
+  },
 };
 
 /* Categorias do menu de construção */
@@ -692,6 +940,9 @@ const CATEGORIAS = [
   { id: 'economia', nome: 'Economia', icone: '🏪' },
   { id: 'servicos', nome: 'Serviços', icone: '🏥' },
   { id: 'governo', nome: 'Governo', icone: '⚖️' },
+  { id: 'rural', nome: 'Rural', icone: '🌾' },
+  { id: 'industria', nome: 'Indústria', icone: '🏭' },
+  { id: 'transporte', nome: 'Transporte', icone: '🚦' },
   { id: 'infra', nome: 'Infraestrutura', icone: '🔧' },
   { id: 'comunidade', nome: 'Comunidade', icone: '🌳' },
   { id: 'enfeite', nome: 'Enfeites', icone: '🌷' },
@@ -699,10 +950,13 @@ const CATEGORIAS = [
 Object.entries({
   casa: 'moradia', aluguel: 'moradia', condominio: 'moradia',
   mercado: 'economia', fabrica: 'economia', banco: 'economia', empresa: 'economia', dados: 'economia',
-  escola: 'servicos', saude: 'servicos', inss: 'servicos', bombeiros: 'servicos', delegacia: 'servicos', terminal: 'servicos',
+  escola: 'servicos', saude: 'servicos', inss: 'servicos', bombeiros: 'servicos', delegacia: 'servicos',
   camara: 'governo', forum: 'governo', cartorio: 'governo', fazenda: 'governo', prefeitura: 'governo',
   parque: 'comunidade', ecoponto: 'comunidade', templo: 'comunidade', cultura: 'comunidade',
-  estacaoAgua: 'infra', esgoto: 'infra', usina: 'infra', iluminacao: 'infra', telecom: 'infra', piscinao: 'infra', ponteLocal: 'infra', ruaLocal: 'infra',
+  lavoura: 'rural', pecuaria: 'rural', cooperativa: 'rural',
+  galpao: 'industria', industria: 'industria', porto: 'industria',
+  pontoTaxi: 'transporte', estacionamento: 'transporte', posto: 'transporte', estacaoTrem: 'transporte', aeroporto: 'transporte', terminal: 'transporte',
+  aterro: 'infra', estacaoAgua: 'infra', esgoto: 'infra', usina: 'infra', iluminacao: 'infra', telecom: 'infra', piscinao: 'infra', ponteLocal: 'infra', ruaLocal: 'infra',
 }).forEach(([k, c]) => { PREDIOS[k].cat = c; });
 
 /* Títulos do prefeito conforme o "Conhecimento Jurídico" acumulado */
@@ -733,6 +987,9 @@ const MISSOES = [
   { id: 'm8', texto: 'Tenha 8 licenças jurídicas', ok: s => Object.keys(s.licencas).length >= 8, xp: 40, din: 200 },
   { id: 'm9', texto: 'Alcance 150 habitantes e felicidade 70%', ok: s => s.pop >= 150 && s.felicidade >= 70, xp: 50, din: 300 },
   { id: 'm10', texto: 'Libere todas as áreas do Direito', ok: s => Object.keys(PREDIOS).every(k => !PREDIOS[k].aula || s.licencas[k]), xp: 100, din: 500 },
+  { id: 'm12', texto: 'Crie uma zona rural: Lavoura e Fazenda de gado', ok: s => conta(s, 'lavoura') >= 1 && conta(s, 'pecuaria') >= 1, xp: 25, din: 150 },
+  { id: 'm13', texto: 'Organize o trânsito: Ponto de táxi, Estacionamento e Terminal de ônibus', ok: s => ['pontoTaxi', 'estacionamento', 'terminal'].every(k => conta(s, k) >= 1), xp: 30, din: 200 },
+  { id: 'm14', texto: 'Ligue a cidade ao mundo: construa um Porto ou um Aeroporto', ok: s => conta(s, 'porto') + conta(s, 'aeroporto') >= 1, xp: 60, din: 400 },
   { id: 'm11', texto: 'Compre todos os bairros da cidade', ok: s => BAIRROS.every(b => (s.bairros || {})[b.id]), xp: 120, din: 0 },
 ];
 
@@ -1239,6 +1496,67 @@ const CASOS = [
     ops: ['Ajuda, pode fazer', 'Não: a margem é Área de Preservação Permanente, e ocupá-la agrava as enchentes', 'Pode, se plantar grama'], c: 1,
     exp: 'Código Florestal (Lei 12.651/2012, art. 4º): as faixas marginais de cursos d\'água são APP. Ocupá-las é ilegal e impermeabiliza áreas que absorvem a chuva.',
     base: 'Lei 12.651/2012, art. 4º' },
+  // ── Zona rural, indústria, transporte, porto e aeroporto ──
+  { predio: 'lavoura', titulo: 'Agrotóxico sem receita', quem: '👨‍🌾 Seu Valdir',
+    texto: 'Quero comprar um agrotóxico forte para a lavoura, mas a loja pediu receita de agrônomo. Isso é exigência mesmo?',
+    ops: ['Não, é só burocracia', 'Sim, a venda depende de receituário agronômico', 'Só para quem planta soja'], c: 1,
+    exp: 'Agrotóxico só é vendido com receituário agronômico, que indica a dose e o modo de uso seguros. As embalagens vazias devem ser devolvidas.',
+    base: 'Lei 14.785/2023' },
+  { predio: 'pecuaria', titulo: 'Desmatar para o pasto', quem: '🤠 Sr. Osvaldo',
+    texto: 'Quero derrubar toda a mata da minha fazenda para aumentar o pasto. A terra é minha, posso?',
+    ops: ['Pode, a terra é sua', 'Não: precisa manter a Reserva Legal (em regra, 20%) e as Áreas de Preservação Permanente', 'Pode, se plantar eucalipto depois'], c: 1,
+    exp: 'A propriedade tem função social. Fora da Amazônia Legal, a Reserva Legal é de 20%, e margens de rios e nascentes são APPs que não podem ser derrubadas.',
+    base: 'Lei 12.651/2012, arts. 4º e 12' },
+  { predio: 'cooperativa', titulo: 'Merenda da roça', quem: '👩‍🍳 Diretora da escola',
+    texto: 'Posso comprar alface e mandioca da cooperativa da cidade para a merenda, sem fazer licitação comum?',
+    ops: ['Não, só de supermercado', 'Sim: a compra da agricultura familiar para a merenda pode ser feita por chamada pública, sem licitação', 'Só se o prefeito for sócio'], c: 1,
+    exp: 'A lei do PNAE permite dispensar a licitação nas compras da agricultura familiar, com preços compatíveis com os do mercado, e exige que pelo menos 30% da verba vá para esses produtores.',
+    base: 'Lei 11.947/2009, art. 14' },
+  { predio: 'galpao', titulo: 'Entrega a qualquer custo', quem: '🚚 Motorista Jair',
+    texto: 'Meu chefe quer que eu dirija 9 horas sem parar para a carga chegar amanhã cedo. Sou obrigado?',
+    ops: ['Sim, ordem é ordem', 'Não: o motorista não pode dirigir mais de 5h30 seguidas e tem direito a pausas e ao descanso entre jornadas', 'Só se ganhar hora extra'], c: 1,
+    exp: 'O CTB proíbe dirigir mais de 5 horas e meia ininterruptas, e a CLT garante 11 horas de descanso entre jornadas. Cansaço ao volante causa acidentes graves.',
+    base: 'CTB, art. 67-C; CLT, art. 235-C' },
+  { predio: 'industria', titulo: 'Vazamento no rio', quem: '🎣 Associação de pescadores',
+    texto: 'A indústria vazou produtos químicos no rio e os peixes morreram. A empresa diz que foi acidente e que não teve culpa. Ela tem que pagar?',
+    ops: ['Não, foi acidente', 'Sim: a responsabilidade ambiental é objetiva e não depende de culpa', 'Só se a polícia provar que foi de propósito'], c: 1,
+    exp: 'Quem polui deve reparar o dano, com ou sem culpa. Os pescadores prejudicados também podem pedir indenização.',
+    base: 'Lei 6.938/1981, art. 14, §1º' },
+  { predio: 'aterro', titulo: 'Lixão escondido', quem: '🧹 Fiscal ambiental',
+    texto: 'A empresa contratada pela prefeitura está despejando lixo num terreno baldio fora da cidade para economizar. O que fazemos?',
+    ops: ['Deixa, sai mais barato', 'Suspender já: lixão é proibido e o lixo tem de ir para o aterro sanitário licenciado', 'Queimar o lixo no próprio terreno'], c: 1,
+    exp: 'Lançar resíduos a céu aberto e queimá-los ao ar livre são proibidos. O contrato deve ser fiscalizado e a área, recuperada.',
+    base: 'Lei 12.305/2010, art. 47' },
+  { predio: 'pontoTaxi', titulo: 'Taxímetro desligado', quem: '🧳 Turista',
+    texto: 'O taxista não ligou o taxímetro e cobrou o dobro do normal. O que posso fazer?',
+    ops: ['Nada, o preço é livre', 'Reclamar à prefeitura, que fiscaliza os táxis, e ao Procon: cobrança abusiva é proibida', 'Pagar e esquecer'], c: 1,
+    exp: 'O Município fiscaliza o serviço de táxi e suas tarifas. Exigir vantagem manifestamente excessiva do consumidor é prática abusiva.',
+    base: 'Lei 12.587/2012, art. 12; CDC, art. 39, V' },
+  { predio: 'estacionamento', titulo: 'Arranhão no estacionamento', quem: '🚗 Dona Lúcia',
+    texto: 'Deixei meu carro no estacionamento e voltei com a porta amassada. O dono disse que tem uma placa: "não nos responsabilizamos". E agora?',
+    ops: ['A placa resolve tudo', 'O estacionamento responde pelo dano, apesar da placa', 'Só a seguradora paga'], c: 1,
+    exp: 'Quem oferece estacionamento responde por danos e furtos ali ocorridos, e a cláusula que tenta afastar essa responsabilidade é nula.',
+    base: 'Súmula 130 do STJ; CDC, art. 51, I' },
+  { predio: 'posto', titulo: 'Gasolina batizada', quem: '🧑‍🔧 Mecânico Beto',
+    texto: 'Três clientes apareceram com o carro estragado depois de abastecer no mesmo posto. A gasolina tinha álcool demais. E agora?',
+    ops: ['Nada, combustível é assim mesmo', 'O posto paga os consertos, e a ANP e a polícia devem ser avisadas: vender combustível adulterado é crime', 'Os clientes que escolham outro posto'], c: 1,
+    exp: 'O posto responde pelo vício do produto que vende, e a adulteração de combustível é crime contra a ordem econômica.',
+    base: 'CDC, art. 18; Lei 8.176/1991, art. 1º' },
+  { predio: 'estacaoTrem', titulo: 'Horário mudou sem aviso', quem: '🧑‍💼 Passageiro do VLT',
+    texto: 'A empresa do VLT tirou os trens das 6h sem avisar. Perdi a hora no trabalho. A empresa podia fazer isso?',
+    ops: ['Sim, a empresa decide sozinha', 'Não: os usuários têm direito a ser informados sobre itinerários, horários e tarifas, e a prefeitura fiscaliza o serviço', 'Só se fosse feriado'], c: 1,
+    exp: 'O transporte coletivo é serviço público. Mudanças devem ser informadas com antecedência, e o Município, que concede o serviço, deve fiscalizar.',
+    base: 'Lei 12.587/2012, art. 14; CF, art. 30, V' },
+  { predio: 'porto', titulo: 'Barco lotado', quem: '⚓ Fiscal do porto',
+    texto: 'Um barqueiro quer levar 30 pessoas num barco feito para 15, e não há coletes para todos. Deixamos sair?',
+    ops: ['Deixa, todos querem passear', 'Não: a Capitania dos Portos pode multar e impedir a viagem, porque viola as normas de segurança da navegação', 'Só cobra uma taxa extra'], c: 1,
+    exp: 'Lotação, coletes salva-vidas e habilitação são exigências de segurança fiscalizadas pela Marinha.',
+    base: 'Lei 9.537/1997' },
+  { predio: 'aeroporto', titulo: 'Voo atrasado', quem: '✈️ Passageira Joana',
+    texto: 'Meu voo está atrasado há 5 horas, já é noite e a companhia não ofereceu nada. Quais são meus direitos?',
+    ops: ['Nenhum', 'Alimentação e, se precisar pernoitar, hospedagem e transporte; e posso escolher reacomodação, reembolso ou outro meio de transporte', 'Só reembolso de 10%'], c: 1,
+    exp: 'Pela Resolução 400 da ANAC, a assistência material cresce com o tempo de espera, e atraso de mais de 4 horas permite escolher reacomodação, reembolso integral ou outro meio de transporte.',
+    base: 'Resolução ANAC 400/2016, arts. 21 e 27' },
 ];
 
 /* Projetos de lei: chegam à Prefeitura quando há Câmara Municipal. O jogador sanciona

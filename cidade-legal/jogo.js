@@ -20,6 +20,24 @@ const SERVICOS = { educacao: '🏫 Educação', saude: '🏥 Saúde', seguranca:
 // água, esgoto e energia passam a fazer falta quando a cidade cresce; cada unidade atende mais gente
 const INFRA_BASICA = { agua: 150, esgoto: 150, energia: 140 };
 const MAX_PENDENTES = 3, PRAZO_CASO = 2;
+// zoneamento: atividades rurais e industriais rendem mais no bairro certo
+const ZONA_IDEAL = { lavoura: ['chacaras', 'serra'], pecuaria: ['chacaras', 'serra'], cooperativa: ['chacaras', 'serra'],
+  galpao: ['industrial'], industria: ['industrial'], porto: ['rio', 'industrial'] };
+const BONUS_ZONA = 1.3;
+Object.entries(ZONA_IDEAL).forEach(([k, zonas]) => {
+  const nomes = zonas.map(z => BAIRROS.find(b => b.id === z).nome).join(' ou ');
+  PREDIOS[k].bonus = [PREDIOS[k].bonus, `Zoneamento: rende 30% a mais em ${nomes}.`].filter(Boolean).join(' ');
+});
+const naZonaIdeal = i => (ZONA_IDEAL[s.mapa[i].tipo] || []).includes(bairroDe(i).id);
+// vizinhos até uma distância (em lotes) ao redor de i
+function vizinhos(i, raio) {
+  const r = Math.floor(i / LARGURA), c = i % LARGURA, lista = [];
+  for (let dr = -raio; dr <= raio; dr++) for (let dc = -raio; dc <= raio; dc++) {
+    const rr = r + dr, cc = c + dc;
+    if ((dr || dc) && rr >= 0 && rr < ALTURA && cc >= 0 && cc < LARGURA) lista.push(rr * LARGURA + cc);
+  }
+  return lista;
+}
 
 let s;               // estado do jogo
 let ultimoConstruido = null;
@@ -191,6 +209,7 @@ function rendaDoLote(i) {
   const p = PREDIOS[s.mapa[i].tipo];
   let r = p.efeito.renda * multNivel(s.mapa[i]) * (beiraRua(i) ? 1.2 : 1) * (1 + (s.bonusRenda || 0));
   if (conta(s, 'fazenda')) r *= 1.2;
+  if (naZonaIdeal(i)) r *= BONUS_ZONA;
   r *= fatorImposto(s.mapa[i].tipo);
   return r * (0.6 + s.felicidade / 125); // cidadãos felizes pagam em dia
 }
@@ -555,6 +574,12 @@ function construirEm(i) {
   if (!liberado(i)) { abrirBairro(bairroDe(i)); return; }
   const naAgua = s.mapa[i] && s.mapa[i].tipo === 'agua';
   if (tipo === 'ponteLocal' && !naAgua) { toast('🌉 A ponte só pode ser construída sobre a água.'); return; }
+  const ehAgua = j => s.mapa[j] && ['agua', 'ponte'].includes(s.mapa[j].tipo);
+  if (tipo === 'porto' && !vizinhos(i, 1).some(ehAgua)) { toast('⚓ O porto precisa ficar na margem do rio ou da lagoa.'); return; }
+  const residencial = j => s.mapa[j] && RESIDENCIAIS.includes(s.mapa[j].tipo);
+  const aeroporto = j => s.mapa[j] && s.mapa[j].tipo === 'aeroporto';
+  if (tipo === 'aeroporto' && vizinhos(i, 2).some(residencial)) { toast('✈️ Zona de ruído: o aeroporto precisa ficar a pelo menos 2 lotes de moradias (Código Brasileiro de Aeronáutica, arts. 43 a 46).'); return; }
+  if (RESIDENCIAIS.includes(tipo) && vizinhos(i, 2).some(aeroporto)) { toast('✈️ Zona de ruído do aeroporto: moradias precisam ficar a pelo menos 2 lotes de distância.'); return; }
   if (s.dinheiro < p.custo) { toast('💸 Orçamento insuficiente.'); s.selecionado = null; render(); return; }
   s.dinheiro -= p.custo;
   s.mapa[i] = { tipo };
@@ -573,7 +598,8 @@ function construirEm(i) {
 
 function abrirPredio(i) {
   const tipo = s.mapa[i].tipo, p = PREDIOS[tipo];
-  const extra = p.efeito.renda ? `<p class="nota">💰 Este prédio rende <b>${fmt(rendaDoLote(i))}</b>/mês${beiraRua(i) ? ' (inclui +20% por estar na beira da rua)' : ''}.</p>` : '';
+  const bonus = [beiraRua(i) && '+20% por estar na beira da rua', naZonaIdeal(i) && '+30% pelo zoneamento certo'].filter(Boolean);
+  const extra = p.efeito.renda ? `<p class="nota">💰 Este prédio rende <b>${fmt(rendaDoLote(i))}</b>/mês${bonus.length ? ` (inclui ${bonus.join(' e ')})` : ''}.</p>` : '';
   abrirModal(`<div class="cab-modal" style="--cor:${p.cor}"><span class="icone-grande">${p.icone}</span>
       <div><small>${p.area}</small><h2>${p.nome}</h2></div></div>
     ${ampliavel(tipo) ? `<div class="nivel-predio"><span>Nível ${'⭐'.repeat(s.mapa[i].nivel || 1)}${'☆'.repeat(MAX_NIVEL - (s.mapa[i].nivel || 1))}</span>
