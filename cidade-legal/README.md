@@ -4,7 +4,7 @@ Jogo educativo de construção de cidade em que o jogador, como prefeito(a), apr
 
 **Como jogar:** abra `index.html` no navegador (não precisa de servidor nem instalação; funciona offline).
 
-A cidade é em **3D** (Three.js, em `vendor/`): mapa de 20×14 lotes com duas avenidas, rio e pontes, sombras do sol, carros, nuvens e noite com janelas acesas no tema escuro. Arraste para girar, role para zoom, botão direito (ou dois dedos) para mover. Se o navegador não tiver WebGL, o jogo cai automaticamente para a versão isométrica 2.5D.
+A cidade é em **3D** (Three.js, em `vendor/`): mapa de 32×24 lotes com duas avenidas, rio e pontes, sombras do sol, carros, nuvens e noite com janelas acesas no tema escuro. Arraste para mover o mapa, botão direito (ou dois dedos) para girar, role para zoom; W A S D também movem e Q E giram. Na aba Bairros, 📍 leva a câmera até cada bairro. Se o navegador não tiver WebGL, o jogo cai automaticamente para a versão isométrica 2.5D.
 
 O tempo passa de verdade: o sol cruza o céu, entardece e anoitece (janelas e postes acendem), e cada "Próximo mês" mostra um dia acelerado. O calendário (Janeiro · Ano 1) define a estação: as árvores e a grama mudam de cor e os ipês florescem (roxos em junho/julho, amarelos em agosto/setembro). Pedestres caminham nas calçadas conforme a população cresce.
 
@@ -24,7 +24,7 @@ O tempo passa de verdade: o sol cruza o céu, entardece e anoitece (janelas e po
 2. **Tirar a licença**: quiz de 3 perguntas (precisa acertar 2) para liberar o prédio.
 3. **Construir** no mapa — cada prédio gera renda, população ou felicidade. Prédios colados em rua rendem +20%.
 4. **Avançar o mês**: arrecadação, manutenção e um cidadão aparece com um balão ❗ sobre um prédio — clique para resolver o caso aplicando a lei.
-5. **Expandir a cidade**: só o Centro começa liberado. Bairro Oeste (💰 600), Vila Norte (💰 900), Jardim Sul (💰 1.300) e Beira-Rio (💰 2.200) ficam bloqueados até o caixa juntar o valor — cada compra ensina Direito Urbanístico (Plano Diretor, desapropriação, loteamento, função social e IPTU progressivo).
+5. **Expandir a cidade**: só o Centro começa liberado. Bairro Oeste (💰 600), Vila Norte (💰 900), Jardim Sul (💰 1.300), Beira-Rio (💰 2.200), Chácaras do Oeste (💰 3.000), Serra Norte (💰 4.200), Distrito Industrial (💰 5.500) e Vila Esperança (💰 7.000) ficam bloqueados até o caixa juntar o valor — cada compra ensina Direito Urbanístico e Ambiental (Plano Diretor, desapropriação, loteamento, função social e IPTU progressivo, IPTU × ITR, áreas protegidas e mananciais, EIV e licenciamento, Reurb). Jogos salvos no mapa antigo (20×14) são levados para o meio do mapa novo.
 6. **Subir de título** (Estudante → Estagiário → Bacharel → Advogado → Juiz → Desembargador → Ministro do STF) e liberar áreas mais avançadas.
 
 ## Áreas cobertas

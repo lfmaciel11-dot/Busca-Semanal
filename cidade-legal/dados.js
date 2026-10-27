@@ -1324,8 +1324,8 @@ const EVENTOS = {
    ser comprados quando o caixa juntar o valor. Cada compra ensina Direito Urbanístico.
    r0..r1 / c0..c1 = linhas e colunas (inclusive) do mapa 20×14. */
 const BAIRROS = [
-  { id: 'centro', nome: 'Centro', icone: '🏛️', preco: 0, r0: 2, r1: 10, c0: 3, c1: 12 },
-  { id: 'oeste', nome: 'Bairro Oeste', icone: '🏡', preco: 600, r0: 2, r1: 10, c0: 0, c1: 2,
+  { id: 'centro', nome: 'Centro', icone: '🏛️', preco: 0, r0: 7, r1: 15, c0: 9, c1: 18 },
+  { id: 'oeste', nome: 'Bairro Oeste', icone: '🏡', preco: 600, r0: 7, r1: 15, c0: 6, c1: 8,
     lei: {
       titulo: 'Plano Diretor',
       pontos: [
@@ -1335,7 +1335,7 @@ const BAIRROS = [
       ],
       base: 'CF, art. 182; Lei 10.257/2001',
     } },
-  { id: 'norte', nome: 'Vila Norte', icone: '🏘️', preco: 900, r0: 0, r1: 1, c0: 0, c1: 12,
+  { id: 'norte', nome: 'Vila Norte', icone: '🏘️', preco: 900, r0: 5, r1: 6, c0: 6, c1: 18,
     lei: {
       titulo: 'Desapropriação',
       pontos: [
@@ -1345,7 +1345,7 @@ const BAIRROS = [
       ],
       base: 'CF, art. 5º, XXIV; DL 3.365/1941',
     } },
-  { id: 'sul', nome: 'Jardim Sul', icone: '🌻', preco: 1300, r0: 11, r1: 13, c0: 0, c1: 12,
+  { id: 'sul', nome: 'Jardim Sul', icone: '🌻', preco: 1300, r0: 16, r1: 18, c0: 6, c1: 18,
     lei: {
       titulo: 'Loteamento e parcelamento do solo',
       pontos: [
@@ -1355,7 +1355,7 @@ const BAIRROS = [
       ],
       base: 'Lei 6.766/1979',
     } },
-  { id: 'rio', nome: 'Beira-Rio', icone: '🌊', preco: 2200, r0: 0, r1: 13, c0: 13, c1: 19,
+  { id: 'rio', nome: 'Beira-Rio', icone: '🌊', preco: 2200, r0: 5, r1: 18, c0: 19, c1: 25,
     lei: {
       titulo: 'Função social da propriedade urbana',
       pontos: [
@@ -1364,6 +1364,46 @@ const BAIRROS = [
         'O IPTU progressivo pode chegar a 15% do valor do imóvel, por até 5 anos, e depois cabe desapropriação paga com títulos da dívida pública (Estatuto da Cidade, arts. 7º e 8º).',
       ],
       base: 'CF, art. 182, §4º; Lei 10.257/2001',
+    } },
+  { id: 'chacaras', nome: 'Chácaras do Oeste', icone: '🐄', preco: 3000, r0: 5, r1: 18, c0: 0, c1: 5,
+    lei: {
+      titulo: 'Zona urbana e zona rural: IPTU ou ITR?',
+      pontos: [
+        'Quem define a zona urbana é a lei municipal. Nela o imóvel paga IPTU, imposto do Município (CF, art. 156, I); na zona rural paga ITR, imposto da União (CF, art. 153, VI).',
+        'Para cobrar IPTU, a área precisa ter pelo menos dois melhoramentos públicos, como calçamento, água, esgoto, iluminação ou escola a até 3 km (CTN, art. 32, §1º).',
+        'Sítio usado de verdade para agricultura ou pecuária continua pagando ITR, mesmo dentro da zona urbana (DL 57/1966, art. 15; STJ, REsp 1.112.646).',
+      ],
+      base: 'CF, arts. 153, VI, e 156, I; CTN, art. 32',
+    } },
+  { id: 'serra', nome: 'Serra Norte', icone: '⛰️', preco: 4200, r0: 0, r1: 4, c0: 0, c1: 31,
+    lei: {
+      titulo: 'Áreas protegidas e mananciais',
+      pontos: [
+        'A Serra tem nascentes e represas que abastecem a cidade. O Município pode criar uma unidade de conservação, como um parque natural ou uma Área de Proteção Ambiental (Lei 9.985/2000, o SNUC).',
+        'Em volta de nascentes, a faixa de 50 metros é Área de Preservação Permanente (Código Florestal, Lei 12.651/2012, art. 4º, IV).',
+        'Ocupar ou desmatar área protegida sem autorização é infração e pode ser crime ambiental (Lei 9.605/1998, arts. 38 e 40).',
+      ],
+      base: 'Lei 9.985/2000; Lei 12.651/2012, art. 4º',
+    } },
+  { id: 'industrial', nome: 'Distrito Industrial', icone: '🏭', preco: 5500, r0: 5, r1: 18, c0: 26, c1: 31,
+    lei: {
+      titulo: 'Estudo de Impacto de Vizinhança e licenciamento',
+      pontos: [
+        'Empreendimentos que mudam a vida do bairro, como trânsito, barulho e valor dos imóveis, dependem do Estudo de Impacto de Vizinhança, o EIV (Estatuto da Cidade, arts. 36 a 38).',
+        'Atividades que podem poluir precisam de licença ambiental: prévia, de instalação e de operação (Resolução CONAMA 237/1997).',
+        'O Município licencia as atividades de impacto local, conforme a Lei Complementar 140/2011 (art. 9º, XIV).',
+      ],
+      base: 'Lei 10.257/2001, arts. 36–38; LC 140/2011',
+    } },
+  { id: 'esperanca', nome: 'Vila Esperança', icone: '🏚️', preco: 7000, r0: 19, r1: 23, c0: 0, c1: 31,
+    lei: {
+      titulo: 'Regularização fundiária (Reurb)',
+      pontos: [
+        'Muitas famílias moram em núcleos informais, sem escritura. A Reurb transforma essas áreas em bairros regulares, com registro em nome dos moradores (Lei 13.465/2017).',
+        'Na Reurb de interesse social (Reurb-S), para a população de baixa renda, o registro e as obras básicas não custam nada aos moradores (Lei 13.465/2017, arts. 13 e 33).',
+        'O título dado aos moradores é a legitimação fundiária ou a de posse, registradas no Cartório de Imóveis (Lei 13.465/2017, arts. 23 e 25).',
+      ],
+      base: 'Lei 13.465/2017',
     } },
 ];
 

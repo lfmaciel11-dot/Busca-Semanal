@@ -4,13 +4,17 @@
    atender os cidadãos (balões ❗ no mapa) → ganhar conhecimento → novas áreas.
 ══════════════════════════════════════════════════════════════════════════ */
 
-const LARGURA = 20, ALTURA = 14;
+const LARGURA = 32, ALTURA = 24;
 const CHAVE_SAVE = 'cidade-legal-v3';
-const LINHA_RUA = 6, COLUNA_RUA = 8;   // avenidas horizontal e vertical
-const CURSO_RIO = [15, 15, 14, 14, 14, 15, 15, 16, 16, 15, 15, 14, 14, 14]; // coluna do rio em cada linha
-// córrego do Jardim Sul (deságua no rio) e lagoa natural do Bairro Oeste: [linha, coluna]
-const CORREGO = [[13, 1], [13, 2], [12, 2], [12, 3], [12, 4], [11, 4], [11, 5], [11, 6], [11, 7], [11, 8], [11, 9], [12, 9], [12, 10], [12, 11], [13, 11], [13, 12], [13, 13]];
-const LAGOA = [[8, 0], [8, 1], [9, 0], [9, 1], [7, 0]];
+const LINHA_RUA = 11, COLUNA_RUA = 14;   // avenidas horizontal e vertical
+const CURSO_RIO = [22, 22, 21, 21, 21, 21, 21, 20, 20, 20, 21, 21, 22, 22, 21, 21, 20, 20, 20, 20, 19, 19, 20, 20]; // coluna do rio em cada linha
+// córrego que sai da lagoa do Bairro Oeste e deságua no rio; represa da Serra Norte: [linha, coluna]
+const CORREGO = [[15, 7], [16, 7], [17, 7], [18, 7], [18, 8], [17, 8], [17, 9], [17, 10], [16, 10], [16, 11], [16, 12], [16, 13], [16, 14], [16, 15],
+  [17, 15], [17, 16], [17, 17], [18, 17], [18, 18], [18, 19]];
+const LAGOA = [[13, 6], [13, 7], [14, 6], [14, 7], [12, 6]];
+const REPRESA = [[1, 4], [1, 5], [2, 3], [2, 4], [2, 5], [3, 4], [1, 26], [2, 26], [2, 27]];
+// mapa antigo (20×14) fica no meio do mapa novo
+const MAPA_ANTIGO = { largura: 20, altura: 14, dl: 5, dc: 6 };
 const SERVICOS = { educacao: '🏫 Educação', saude: '🏥 Saúde', seguranca: '🚓 Segurança', lazer: '🌳 Lazer', justica: '⚖️ Justiça',
   agua: '💧 Água', esgoto: '🚽 Esgoto', energia: '⚡ Energia' };
 // água, esgoto e energia passam a fazer falta quando a cidade cresce; cada unidade atende mais gente
@@ -24,19 +28,24 @@ let Mapa;           // Cena (3D) ou Iso (2.5D, se o navegador não tiver WebGL)
 
 // Córrego e lagoa: só ocupam lotes vazios (jogos salvos antigos ganham as águas onde não há prédio)
 function adicionarAguas(mapa) {
-  CORREGO.concat(LAGOA).forEach(([r, c]) => {
+  CORREGO.concat(LAGOA, REPRESA).forEach(([r, c]) => {
     const i = r * LARGURA + c, l = mapa[i];
     if (!l) mapa[i] = { tipo: 'agua' };
     else if (l.tipo === 'rua') mapa[i] = { tipo: 'ponte' };
   });
 }
 
-function novoEstado(nome) {
+function novoMapa() {
   const mapa = Array(LARGURA * ALTURA).fill(null);
   for (let c = 0; c < LARGURA; c++) mapa[LINHA_RUA * LARGURA + c] = { tipo: 'rua' };
   for (let r = 0; r < ALTURA; r++) mapa[r * LARGURA + COLUNA_RUA] = { tipo: 'rua' };
   const rio = (r, c) => { const i = r * LARGURA + c; mapa[i] = { tipo: mapa[i] ? 'ponte' : 'agua' }; };
   CURSO_RIO.forEach((c, r) => { rio(r, c); if (r && CURSO_RIO[r - 1] !== c) rio(r, CURSO_RIO[r - 1]); });
+  return mapa;
+}
+
+function novoEstado(nome) {
+  const mapa = novoMapa();
   mapa[(LINHA_RUA - 1) * LARGURA + COLUNA_RUA - 1] = { tipo: 'prefeitura' };
   adicionarAguas(mapa);
   return {
@@ -334,13 +343,31 @@ function renderBairros() {
         <small>${lotes} lotes${b.lei ? ' · ' + b.lei.titulo : ' · bairro inicial'}</small>
         ${dono ? '<small class="selo ok">✔ Faz parte da cidade</small>' : `<div class="barra-bairro"><div style="width:${pct}%"></div><span>💰 ${fmt(Math.max(0, s.dinheiro))} / ${fmt(b.preco)}</span></div>`}
       </div>
-      ${dono ? '' : `<button class="btn pequeno ${s.dinheiro >= b.preco ? 'primario' : ''}" data-bairro="${b.id}">${s.dinheiro >= b.preco ? 'Comprar' : 'Ver'}</button>`}
+      <div class="acoes-bairro">
+        ${Mapa && Mapa.focar ? `<button class="btn pequeno" data-ver-bairro="${b.id}" title="Ver ${esc(b.nome)} no mapa" aria-label="Ver ${esc(b.nome)} no mapa">📍</button>` : ''}
+        ${dono ? '' : `<button class="btn pequeno ${s.dinheiro >= b.preco ? 'primario' : ''}" data-bairro="${b.id}">${s.dinheiro >= b.preco ? 'Comprar' : 'Detalhes'}</button>`}
+      </div>
     </li>`;
   });
   h += '</ul>';
   const el = $('aba-bairros');
   el.innerHTML = h;
   el.querySelectorAll('[data-bairro]').forEach(btn => btn.onclick = () => abrirBairro(BAIRROS.find(b => b.id === btn.dataset.bairro)));
+  el.querySelectorAll('[data-ver-bairro]').forEach(btn => btn.onclick = () => verBairro(BAIRROS.find(b => b.id === btn.dataset.verBairro)));
+}
+
+function recolherPainel(fechar) {
+  $('painel').classList.toggle('recolhido', fechar);
+  document.querySelector('.app').classList.toggle('painel-fechado', fechar);
+  $('btn-painel').setAttribute('aria-expanded', String(!fechar));
+}
+
+// voa com a câmera até o bairro, afastando o suficiente para vê-lo inteiro
+function verBairro(b) {
+  som('clique');
+  const r = Math.round((b.r0 + b.r1) / 2), c = Math.round((b.c0 + b.c1) / 2);
+  Mapa.focar(r * LARGURA + c, false, Math.min(30, Math.max(b.r1 - b.r0, (b.c1 - b.c0) * .55) * 1.1 + 9));
+  if (matchMedia('(max-width: 760px)').matches) recolherPainel(true);
 }
 
 function abrirBairro(b) {
@@ -1125,7 +1152,7 @@ const codigoCidade = () => btoa(unescape(encodeURIComponent(JSON.stringify({ ...
 function lerCidade(texto) {
   texto = texto.trim();
   const obj = JSON.parse(texto.startsWith('{') ? texto : decodeURIComponent(escape(atob(texto.replace(/\s+/g, '')))));
-  if (!obj || !Array.isArray(obj.mapa) || obj.mapa.length !== LARGURA * ALTURA || typeof obj.licencas !== 'object') throw new Error('arquivo inválido');
+  if (!obj || !Array.isArray(obj.mapa) || ![LARGURA * ALTURA, MAPA_ANTIGO.largura * MAPA_ANTIGO.altura].includes(obj.mapa.length) || typeof obj.licencas !== 'object') throw new Error('arquivo inválido');
   return obj;
 }
 function carregarCidade(obj) {
@@ -1192,7 +1219,21 @@ function boasVindas() {
 }
 
 // Atualiza jogos salvos em versões anteriores
+// Jogos salvos no mapa antigo (20×14): a cidade vai para o meio do mapa novo, cercada pelos bairros novos
+function ampliarMapa() {
+  const { largura, altura, dl, dc } = MAPA_ANTIGO;
+  const nova = i => (Math.floor(i / largura) + dl) * LARGURA + i % largura + dc;
+  const mapa = novoMapa();
+  s.mapa.forEach((l, i) => { mapa[nova(i)] = l; });
+  s.mapa = mapa;
+  adicionarAguas(s.mapa);
+  (s.pendentes || []).forEach(p => { p.tile = nova(p.tile); });
+  (s.cidadaos || []).forEach(c => { if (c.casa >= 0) c.casa = nova(c.casa); });
+  s.aguasV2 = true;
+}
+
 function migrarEstado() {
+  if (s.mapa.length === MAPA_ANTIGO.largura * MAPA_ANTIGO.altura) ampliarMapa();
   if (!s.aguasV2) { adicionarAguas(s.mapa); s.aguasV2 = true; }
   if (!s.bairros) { // jogos salvos antes dos bairros: libera o Centro e onde já houver prédios
     s.bairros = { centro: true };
@@ -1249,11 +1290,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── interface em tela cheia: topo medido, painel recolhível, celular e visões ──
   const topo = document.querySelector('.topo');
   new ResizeObserver(() => document.documentElement.style.setProperty('--topo-h', topo.offsetHeight + 'px')).observe(topo);
-  const recolherPainel = fechar => {
-    $('painel').classList.toggle('recolhido', fechar);
-    document.querySelector('.app').classList.toggle('painel-fechado', fechar);
-    $('btn-painel').setAttribute('aria-expanded', String(!fechar));
-  };
   recolherPainel(matchMedia('(max-width: 760px)').matches); // no celular a cidade começa à vista
   $('btn-painel').onclick = () => { som('clique'); recolherPainel(!$('painel').classList.contains('recolhido')); };
   const abrirCelular = abrir => {

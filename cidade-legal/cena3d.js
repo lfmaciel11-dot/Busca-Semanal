@@ -23,6 +23,7 @@ const Cena = (() => {
   const brotando = {};     // lote → instante da construção
   const carros = [], nuvens = [], postes = [];
   let fantasma = null, fantasmaTipo = null, hover = -1, cursor = -1;
+  let moverPorTeclado = () => {};
   let texAgua = [], matRua, matCruz, matGrama, matCampo, chuva, pmrem, envCena, envAlvo, envDia = -1, envChuva = null, diaAtual = 1;
   const relogio = () => performance.now() / 1000;
 
@@ -1083,7 +1084,7 @@ const Cena = (() => {
   /* ── Arredores: campo, morros, plantações, rios e estradas além do mapa ─── */
   // A cidade não fica mais numa ilha solta no céu: o chão continua até a névoa do horizonte.
   function montarArredores(matAgua) {
-    const R = 80, MX = LARGURA / 2, MZ = ALTURA / 2;
+    const R = 120, MX = LARGURA / 2, MZ = ALTURA / 2;
     const suave = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
     const distMapa = (x, z) => Math.hypot(Math.max(Math.abs(x) - MX, 0), Math.max(Math.abs(z) - MZ, 0));
     // rios que entram e saem do mapa: [z da borda, sentido, x na borda, meandro]
@@ -1164,9 +1165,9 @@ const Cena = (() => {
 
     // matas e bosques: árvores instanciadas, mais densas nos morros
     const copas = [], pinhos = [];
-    for (let tent = 0; tent < 5000 && copas.length + pinhos.length < 900; tent++) {
-      const x = (rand() * 2 - 1) * (R - 6), z = (rand() * 2 - 1) * (R - 6), d = distMapa(x, z);
-      if (d < 1.5 || d > 60 || !livre(x, z, .8)) continue;
+    for (let tent = 0; tent < 9000 && copas.length + pinhos.length < 1400; tent++) {
+      const x = (rand() * 2 - 1) * 80, z = (rand() * 2 - 1) * 80, d = distMapa(x, z);
+      if (d < 1.5 || d > 62 || !livre(x, z, .8)) continue;
       const bosque = .5 + .5 * Math.sin(x * .19 + 2) * Math.sin(z * .21 - 1);
       if (rand() > .12 + bosque * .7 * suave(3, 12, d)) continue;
       (rand() < .35 + suave(10, 35, d) * .3 ? pinhos : copas).push([x, altura(x, z) - .02, z, .8 + rand() * .9, rand() * 6.3]);
@@ -1261,7 +1262,7 @@ const Cena = (() => {
       }
       if (!dono && !zonas[b.id]) {
         const w = b.c1 - b.c0 + 1, h = b.r1 - b.r0 + 1, cx = posX(b.c0) + (w - 1) / 2, cz = posZ(b.r0) + (h - 1) / 2;
-        const sombra = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: '#0E1A10', transparent: true, opacity: .36, depthWrite: false }));
+        const sombra = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: '#0E1A10', transparent: true, opacity: .2, depthWrite: false }));
         sombra.rotation.x = -Math.PI / 2; sombra.position.set(cx, .025, cz); sombra.renderOrder = 2;
         const borda = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([
           new THREE.Vector3(-w / 2, 0, -h / 2), new THREE.Vector3(w / 2, 0, -h / 2), new THREE.Vector3(w / 2, 0, h / 2), new THREE.Vector3(-w / 2, 0, h / 2)]),
@@ -1450,7 +1451,8 @@ const Cena = (() => {
 
     const dirSol = new THREE.Vector3(Math.cos(ang) * 1, Math.max(elev, -.3), -.45).normalize();
     const dirLuz = new THREE.Vector3(Math.cos(ang), Math.max(elev, .3), -.45).normalize(); // sombra nunca rasante
-    sol.position.copy(dirLuz).multiplyScalar(30); sol.intensity = 1.7 * dia * (nublado ? .3 : 1);
+    const centro = controls ? new THREE.Vector3(Math.round(controls.target.x), 0, Math.round(controls.target.z)) : new THREE.Vector3();
+    sol.position.copy(centro).addScaledVector(dirLuz, 30); sol.target.position.copy(centro); sol.target.updateMatrixWorld(); sol.intensity = 1.7 * dia * (nublado ? .3 : 1);
     sol.color.copy(lerpCor('#FFF3DD', '#FF9A55', crep * .85));
     const dirLua = new THREE.Vector3(-Math.cos(ang), Math.max(-elev, .25), .35).normalize();
     lua.position.copy(dirLua).multiplyScalar(30); lua.intensity = .5 * (1 - dia);
@@ -1783,7 +1785,11 @@ const Cena = (() => {
       controls.target.lerpVectors(voo.t0, voo.t1, e); camera.position.lerpVectors(voo.p0, voo.p1, e);
       if (x >= 1) voo = null;
     }
+    moverPorTeclado(dt);
     controls.update();
+    // névoa acompanha o zoom: de perto o horizonte fica suave, de longe dá para ver a cidade inteira
+    const distCam = camera.position.distanceTo(controls.target);
+    scene.fog.far = Math.min(distCam * 1.8 + 45, 105); scene.fog.near = scene.fog.far * .42;
     desenhar(luzes, (agora - (quadro.anterior || agora)) / 1000); quadro.anterior = agora;
     atualizarRotulo();
   }
@@ -1955,7 +1961,7 @@ const Cena = (() => {
     sol.shadow.mapSize.set(movel ? 1024 : 2048, movel ? 1024 : 2048);
     Object.assign(sol.shadow.camera, { left: -14, right: 14, top: 12, bottom: -12, near: 1, far: 50 });
     sol.shadow.bias = -.0006; sol.shadow.normalBias = .04;
-    scene.add(sol);
+    scene.add(sol, sol.target);
 
     const geoE = new THREE.BufferGeometry(), pos = [];
     for (let k = 0; k < 400; k++) { const a = Math.random() * Math.PI * 2, e = Math.random() * .5 + .08; pos.push(Math.cos(a) * 80 * Math.cos(e), 80 * Math.sin(e), Math.sin(a) * 80 * Math.cos(e)); }
@@ -1987,15 +1993,38 @@ const Cena = (() => {
     controls = new THREE.OrbitControls(camera, cv);
     controls.target.copy(VISTA.alvo);
     controls.enableDamping = true; controls.dampingFactor = .08;
-    controls.minDistance = 4; controls.maxDistance = 34;
+    controls.minDistance = 4; controls.maxDistance = 52;
     controls.maxPolarAngle = 1.32; controls.minPolarAngle = .25;
-    controls.screenSpacePanning = false;
-    controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+    controls.screenSpacePanning = false; controls.panSpeed = 1.1; controls.rotateSpeed = .8; controls.zoomSpeed = 1.2;
+    // como num mapa: arrastar move a cidade; botão direito (ou dois dedos) gira
+    controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+    controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
     controls.addEventListener('change', () => {
-      controls.target.x = Math.max(-LARGURA / 2, Math.min(LARGURA / 2, controls.target.x));
-      controls.target.z = Math.max(-ALTURA / 2, Math.min(ALTURA / 2, controls.target.z));
+      controls.target.x = Math.max(-LARGURA / 2 - 4, Math.min(LARGURA / 2 + 4, controls.target.x));
+      controls.target.z = Math.max(-ALTURA / 2 - 4, Math.min(ALTURA / 2 + 4, controls.target.z));
       controls.target.y = 0;
     });
+    // teclado: W A S D movem, Q E giram (setas continuam escolhendo o lote para quem usa leitor de tela)
+    const teclas = new Set();
+    addEventListener('keydown', e => {
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+      const k = e.key.toLowerCase();
+      if ('wasdqe'.includes(k) && k.length === 1) { teclas.add(k); voo = null; }
+    });
+    addEventListener('keyup', e => teclas.delete(e.key.toLowerCase()));
+    addEventListener('blur', () => teclas.clear());
+    moverPorTeclado = dt => {
+      if (!teclas.size) return;
+      const dir = camera.position.clone().sub(controls.target);
+      const frente = new THREE.Vector3(-dir.x, 0, -dir.z).normalize(), lado = new THREE.Vector3(-frente.z, 0, frente.x);
+      const v = new THREE.Vector3(), passo = dt * (4 + dir.length() * .9);
+      if (teclas.has('w')) v.add(frente); if (teclas.has('s')) v.sub(frente);
+      if (teclas.has('d')) v.add(lado); if (teclas.has('a')) v.sub(lado);
+      if (v.lengthSq()) { v.setLength(passo); controls.target.add(v); camera.position.add(v); }
+      const giro = (teclas.has('q') ? 1 : 0) - (teclas.has('e') ? 1 : 0);
+      if (giro) { dir.applyAxisAngle(new THREE.Vector3(0, 1, 0), giro * dt * 1.4); camera.position.copy(controls.target).add(dir); }
+      controls.dispatchEvent({ type: 'change' });
+    };
 
     new ResizeObserver(redimensionar).observe(cv.parentElement);
     redimensionar();
@@ -2067,11 +2096,11 @@ const Cena = (() => {
     init, atualizar,
     miniatura: tipo => miniaturas[tipo],
     visao(k) { visaoAtiva = k; return desenharVisao(); },
-    focar(i, perto) {
+    focar(i, perto, distancia) {
       if (!pronto || i < 0) return;
       const alvo = new THREE.Vector3(posX(i % LARGURA), 0, posZ(Math.floor(i / LARGURA)));
       const dir = camera.position.clone().sub(controls.target);
-      const dist = perto ? 6.5 : Math.min(Math.max(dir.length(), 7), 11);
+      const dist = distancia || (perto ? 6.5 : Math.min(Math.max(dir.length(), 7), 11));
       const p1 = alvo.clone().add(dir.setLength(dist));
       if (reduzido) { controls.target.copy(alvo); camera.position.copy(p1); return; }
       voo = { ini: performance.now(), t0: controls.target.clone(), p0: camera.position.clone(), t1: alvo, p1 };
