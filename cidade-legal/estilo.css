@@ -586,3 +586,41 @@ html:has(body.tela-jogo), body.tela-jogo { height: 100%; overflow: hidden; }
 body.demolindo #mapa { cursor: crosshair; }
 #btn-demolir.ativo { background: #C62828; color: #FFFFFF; border-color: #8E1B1B; }
 #btn-desfazer:disabled { opacity: .4; cursor: default; }
+
+/* ── Cidade viva: painel, desafios, medalhas, audiências, acessibilidade ── */
+.painel-cidade h3, #aba-missoes h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.painel-cidade h3 small { color: var(--muted); font-weight: 500; font-size: 12px; }
+.indicador { display: grid; grid-template-columns: 1fr 90px 28px; align-items: center; gap: 6px; font-size: 13px; margin: 3px 0; }
+.indicador b { text-align: right; }
+.desafio.ativo { border: 2px solid var(--accent); background: var(--panel2); border-radius: 12px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+.desafio small, .lista-desafios small { color: var(--muted); font-size: 12px; display: block; }
+.lista-desafios { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+.lista-desafios li { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 10px; }
+.lista-desafios li div { flex: 1; min-width: 0; }
+.lista-desafios li.feita { opacity: .7; }
+.medalhas { display: flex; flex-wrap: wrap; gap: 6px; }
+.medalha { background: linear-gradient(135deg, #FFE082, #FFC107); color: #4E3500; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 700; }
+.audiencia { display: grid; gap: 8px; }
+.audiencia .parte { display: flex; gap: 8px; align-items: flex-start; }
+.audiencia .parte.reu { flex-direction: row-reverse; text-align: right; }
+.votacao { list-style: none; padding: 0; margin: 6px 0; display: grid; gap: 4px; }
+.votacao li { display: flex; justify-content: space-between; padding: 4px 8px; background: var(--panel2); border-radius: 8px; }
+.opcao-acess { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border: 1px solid var(--border); border-radius: 10px; margin: 6px 0; cursor: pointer; }
+.opcao-acess input { width: 20px; height: 20px; margin-top: 2px; }
+.opcao-acess small { display: block; color: var(--muted); }
+.btn.ouvir { float: right; margin: 0 0 6px 8px; }
+kbd { background: var(--panel2); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 6px; padding: 1px 6px; font-family: inherit; font-size: 12px; white-space: nowrap; }
+#m-codigos { width: 100%; font-family: ui-monospace, monospace; font-size: 12px; }
+.opcao small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+/* letras maiores */
+html.fonte-grande .hud, html.fonte-grande #modal-caixa { zoom: 1.15; }
+/* alto contraste */
+html.alto-contraste { --ink: #000000; --muted: #1A1A1A; --border: #000000; --panel: #FFFFFF; --panel2: #FFF6CC; --vidro: #FFFFFF; --vidro-forte: #FFFFFF; --vidro-borda: #000000; --accent: #FFD000; --ok: #006B2E; --erro: #B00000; }
+html.alto-contraste .hud, html.alto-contraste #modal-caixa { backdrop-filter: none; -webkit-backdrop-filter: none; border: 2px solid #000000 !important; }
+html.alto-contraste .btn { border: 2px solid #000000 !important; }
+html.alto-contraste :focus-visible { outline: 4px solid #0050FF !important; outline-offset: 2px; }
+html.alto-contraste[data-theme="dark"], html.alto-contraste.escuro-ac { --ink: #FFFFFF; --muted: #F0F0F0; --border: #FFFFFF; --panel: #000000; --panel2: #1A1A00; --vidro: #000000; --vidro-forte: #000000; --vidro-borda: #FFFFFF; }
+html.alto-contraste[data-theme="dark"] .hud, html.alto-contraste[data-theme="dark"] #modal-caixa, html.alto-contraste[data-theme="dark"] .btn { border-color: #FFFFFF !important; }
+/* menos animação */
+html.sem-animacao *, html.sem-animacao *::before, html.sem-animacao *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }

@@ -273,6 +273,7 @@ function som(tipo) {
 }
 
 function confete(qtd = 70) {
+  if (document.documentElement.classList.contains('sem-animacao')) return;
   const cores = ['#F2B705', '#E07B2A', '#3A80F0', '#0FA86A', '#C24B28', '#7B40E8', '#FF6FAE'];
   const camada = document.createElement('div');
   camada.className = 'confete';
@@ -557,7 +558,7 @@ function abrirBairro(b) {
 
 function renderMissoes() {
   const feitas = MISSOES.filter(m => s.missoesFeitas[m.id]).length;
-  let h = `<div class="progresso-missoes"><div style="width:${feitas / MISSOES.length * 100}%"></div><span>${feitas}/${MISSOES.length} missões</span></div><ul class="lista-missoes">`;
+  let h = htmlIndicadores() + htmlDesafios() + `<h3>🎯 Missões</h3><div class="progresso-missoes"><div style="width:${feitas / MISSOES.length * 100}%"></div><span>${feitas}/${MISSOES.length} missões</span></div><ul class="lista-missoes">`;
   let proxima = true;
   MISSOES.forEach(m => {
     const feita = s.missoesFeitas[m.id];
@@ -571,6 +572,7 @@ function renderMissoes() {
     <div><b>${total}</b><small>casos</small></div>
     <div><b>${total ? Math.round(s.acertos / total * 100) : 0}%</b><small>acertos</small></div>
     <div><b>🔥 ${s.melhorSequencia}</b><small>melhor sequência</small></div></div>`;
+  h += htmlMedalhas();
   $('aba-missoes').innerHTML = h;
 }
 
@@ -614,9 +616,10 @@ function fecharModal() { $('modal').classList.add('oculto'); }
 
 /* ── Aula + licença ───────────────────────────────────────────────────────── */
 function htmlAula(p) {
-  return `<p class="resumo">${p.aula.resumo}</p>
+  return `<div class="aula-texto"><button class="btn pequeno ouvir" data-ler=".aula-texto" title="Ouvir a aula em voz alta">🔊 Ouvir</button>
+    <p class="resumo">${p.aula.resumo}</p>
     <ul class="pontos">${p.aula.pontos.map(x => `<li>${x}</li>`).join('')}</ul>
-    <p class="pratica"><b>💡 Na prática:</b> ${p.aula.pratica}</p>`;
+    <p class="pratica"><b>💡 Na prática:</b> ${p.aula.pratica}</p></div>`;
 }
 
 function abrirAula(tipo, comProva) {
@@ -656,6 +659,7 @@ function iniciarProva(tipo) {
         const certo = +b.dataset.i === q.c;
         if (certo) { acertos++; ganharXp(10); som('certo'); } else som('erro');
         registrarDesempenho(p.area, 'prova', certo);
+        if (!certo) agendarRevisao({ t: 'prova', k: tipo, q: p.licenca.indexOf(q) });
         cx.querySelectorAll('.opcao').forEach(o => {
           o.disabled = true;
           if (+o.dataset.i === q.c) o.classList.add('certa');
@@ -703,7 +707,7 @@ function iniciarProva(tipo) {
 }
 
 /* ── Construção ───────────────────────────────────────────────────────────── */
-function construirEm(i) {
+function construirEm(i, custoFinal) {
   const tipo = s.selecionado;
   if (!tipo) { toast('Escolha primeiro um prédio no painel "Construir".'); return; }
   const p = PREDIOS[tipo];
@@ -717,10 +721,11 @@ function construirEm(i) {
   if (tipo === 'aeroporto' && vizinhos(i, 2).some(residencial)) { toast('✈️ Zona de ruído: o aeroporto precisa ficar a pelo menos 2 lotes de moradias (Código Brasileiro de Aeronáutica, arts. 43 a 46).'); return; }
   if (RESIDENCIAIS.includes(tipo) && vizinhos(i, 2).some(aeroporto)) { toast('✈️ Zona de ruído do aeroporto: moradias precisam ficar a pelo menos 2 lotes de distância.'); return; }
   if (s.dinheiro < p.custo) { toast('💸 Orçamento insuficiente.'); s.selecionado = null; render(); return; }
-  const antes = copia(s.mapa[i]);
-  s.dinheiro -= p.custo;
+  if (custoFinal === undefined && precisaLicitacao(tipo)) { abrirLicitacao(tipo, i); return; } // obra pública: primeiro a licitação
+  const custo = custoFinal ?? p.custo, antes = copia(s.mapa[i]);
+  s.dinheiro -= custo;
   s.mapa[i] = { tipo };
-  anotar(i, antes, -p.custo, `${p.icone} ${p.nome}`);
+  anotar(i, antes, -custo, `${p.icone} ${p.nome}`);
   ultimoConstruido = i;
   som('construir');
   if (conta(s, tipo) === 1) {
@@ -728,10 +733,10 @@ function construirEm(i) {
     if (p.aula) s.ultimaObra = `${p.icone} ${p.nome}`;
     if (Mapa.focar && p.cat !== 'enfeite') Mapa.focar(i); // câmera acompanha a primeira obra de cada tipo
   }
-  if (p.unico || s.dinheiro < p.custo) s.selecionado = null;
+  if (p.unico || s.dinheiro < p.custo || custoFinal !== undefined) s.selecionado = null;
   verificarMissoes();
   render();
-  flutuar(i, `−${p.custo} 💰`, 'neg');
+  flutuar(i, `−${custo} 💰`, 'neg');
 }
 
 function abrirPredio(i) {
@@ -894,6 +899,7 @@ function proximoMes() {
       registrar(`🗄️ O projeto "<b>${pl.titulo}</b>" ficou parado na mesa do prefeito e foi arquivado.`);
       return false;
     }
+    if (p.aud !== undefined) { registrar('⚖️ A audiência no Fórum ficou sem decisão e o processo atrasou. Justiça lenta deixa a cidade insatisfeita.'); return false; }
     registrar(`😤 Um cidadão desistiu de esperar no caso "<b>${CASOS[p.caso].titulo}</b>". A cidade ficou insatisfeita.`);
     return false;
   });
@@ -901,6 +907,7 @@ function proximoMes() {
   const novo = Math.random() < 0.85 ? gerarCaso() : null;
   const projeto = conta(s, 'camara') && Math.random() < .45 ? gerarProjeto() : null;
   if (projeto) setTimeout(() => toast('📜 Um projeto de lei chegou da Câmara para você sancionar ou vetar.'), 1200);
+  aoPassarMes(); // desafios, orçamento participativo, bairros que crescem, audiências e revisão
   gerarVoz(c);
   verificarMissoes();
   render();
@@ -1073,12 +1080,14 @@ function gerarCaso() {
 function abrirCaso(pend) {
   if (Mapa.focar) Mapa.focar(pend.tile, true);
   if (pend.lei) return abrirProjeto(pend);
+  if (pend.aud !== undefined) return abrirAudiencia(pend);
   const i = pend.caso, c = CASOS[i], p = PREDIOS[c.predio];
   const restam = pend.expira - s.mes;
   const ordem = embaralhar(c.ops.map((t, k) => ({ t, i: k })));
   som('clique');
   abrirModal(`<div class="cab-modal" style="--cor:${p.cor}"><span class="icone-grande">${p.icone}</span>
       <div><small>Caso da cidade · ${p.area}</small><h2>${c.titulo}</h2></div></div>
+    <button class="btn pequeno ouvir" data-ler=".cena" title="Ouvir o caso em voz alta">🔊 Ouvir</button>
     <div class="cena"><span class="avatar">${c.quem.split(' ')[0]}</span>
       <blockquote class="fala"><b>${c.quem.split(' ').slice(1).join(' ')}</b>${c.texto}</blockquote></div>
     <p class="pergunta">O que você responde? <small>${restam > 0 ? `⏳ espera mais ${restam} mês(es)` : '⏳ último mês de espera!'}${s.sequencia >= 2 ? ` · 🔥 sequência de ${s.sequencia}` : ''}</small></p>
@@ -1106,7 +1115,7 @@ function abrirCaso(pend) {
         som('certo');
         if (s.sequencia >= 3) confete(40);
       } else {
-        b.classList.add('errada'); ganharXp(5); s.sequencia = 0;
+        b.classList.add('errada'); ganharXp(5); s.sequencia = 0; agendarRevisao({ t: 'caso', k: i });
         s.reputacao = Math.max(-30, s.reputacao - 4);
         registrar(`❌ Caso "<b>${c.titulo}</b>" mal resolvido — a cidade reclamou. Base: ${c.base}.`);
         som('erro');
@@ -1134,6 +1143,7 @@ function verificarMissoes() {
       setTimeout(() => { toast(`🎯 Missão cumprida: ${m.texto}`, true); confete(50); som('certo'); }, 200);
     }
   });
+  verificarExtras(); // desafios com prazo e medalhas
 }
 
 /* ══ Orçamento e impostos ════════════════════════════════════════════════════
@@ -1368,8 +1378,12 @@ function abrirProfessor() {
       ${ls.map(l => `<tr><td>${esc(l.area)}</td><td>${l.provaOk}/${l.prova}</td><td>${l.casoOk}/${l.caso}</td>
         <td><span class="barra-pct ${l.pct >= 80 ? 'bom' : l.pct >= 60 ? 'medio' : 'fraco'}"><i style="width:${l.pct}%"></i></span> ${l.pct}%</td></tr>`).join('')}
     </tbody></table></div>` : '<p class="nota">Ainda não há respostas. As provas de licença, os casos dos cidadãos e os projetos de lei entram aqui automaticamente.</p>'}
+    ${htmlMedalhas()}
     ${atencao.length ? `<p class="pratica"><b>📌 Para revisar:</b> ${atencao.map(l => esc(l.area)).join(', ')}.</p>` : ''}
     <div class="botoes">
+      <button class="btn" id="m-entrega">📤 Código de entrega</button>
+      <button class="btn" id="m-turma-painel">👩‍🏫 Painel da turma</button>
+      <button class="btn" id="m-competicao">🏁 Competição</button>
       <button class="btn" id="m-copiar">📋 Copiar relatório</button>
       <button class="btn so-arquivo" id="m-csv">⬇️ Baixar planilha (CSV)</button>
       <button class="btn primario" id="m-fechar">Fechar</button>
@@ -1379,6 +1393,9 @@ function abrirProfessor() {
     cx.querySelector('#m-turma').oninput = e => { s.turma = e.target.value.trim(); salvar(); };
     cx.querySelector('#m-fechar').onclick = fecharModal;
     cx.querySelector('#m-copiar').onclick = () => copiarTexto(relatorioTexto(), cx.querySelector('#m-texto'), 'Relatório copiado! Cole no e-mail ou na plataforma da turma.');
+    cx.querySelector('#m-entrega').onclick = () => copiarTexto(codigoEntrega(), cx.querySelector('#m-texto'), 'Código de entrega copiado! Envie ao professor, que cola no Painel da turma.');
+    cx.querySelector('#m-turma-painel').onclick = abrirPainelTurma;
+    cx.querySelector('#m-competicao').onclick = abrirCompeticao;
     cx.querySelector('#m-csv').onclick = () => baixarArquivo(`desempenho-${(s.aluno || 'aluno').replace(/\s+/g, '-').toLowerCase()}.csv`, '﻿' + relatorioCSV(), 'text/csv');
   });
 }
