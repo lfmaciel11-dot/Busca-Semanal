@@ -100,6 +100,8 @@ A aba **🚸 Sinalização** reúne o que é instalado sobre as ruas:
 | ❌ Proibido parar e estacionar (R-6c) | Qualquer trecho | CTB, art. 181, XIX |
 | 🚸 Faixa de pedestres | Trecho reto | Preferência do pedestre (CTB, arts. 70 e 214); os carros param quando alguém atravessa |
 | 📸 Radar | Trecho reto | Limites de velocidade (CTB, art. 61) e infração pelo excesso (art. 218); os carros reduzem perto dele |
+| 🚦 Semáforo de pedestres | Trecho reto, fora da ponte | Obedecer ao foco de pedestres (CTB, art. 69, III, "a"); quem não terminou a travessia tem preferência (art. 70, parágrafo único); sinal vermelho (art. 208). Os carros param no vermelho e os pedestres atravessam |
+| 〰️ Lombada | Ruas locais, trecho reto | Só nos padrões do Contran (CTB, art. 94, parágrafo único; Resolução 600/2016); obra na via depende de permissão (art. 95). Os carros reduzem e sobem a lombada |
 
 ### Motos, bicicletas e patinetes
 

@@ -1441,11 +1441,12 @@ const Cena = (() => {
     k.obj.position.set(x, 0, z);
   }
   function viasNasAvenidas() {
-    const novo = () => ({ rot: [], ret: [], faixa: [], radar: [], onibus: [], paradas: [], juncoes: [] }), v = { h: novo(), v: novo() }, av = lotesAvenida();
+    const novo = () => ({ rot: [], ret: [], faixa: [], radar: [], onibus: [], paradas: [], juncoes: [], semPed: [] }), v = { h: novo(), v: novo() }, av = lotesAvenida();
     ['h', 'v'].forEach(e => { const tr = trajetoAvenida(e); tr.lotes.forEach(i => {
       const l = s.mapa[i]; if (l && l.via === 'rotatoria') v[e].rot.push(tr.tileS[i]); if (l && l.via === 'retorno') v[e].ret.push(tr.tileS[i]);
       if (l && l.via === 'faixaPedestre') v[e].faixa.push({ s: tr.tileS[i], i }); if (l && l.via === 'radar') v[e].radar.push(tr.tileS[i]);
       if (l && l.via === 'faixaOnibus') v[e].onibus.push(tr.tileS[i]);
+      if (l && l.via === 'semaforoPedestre') v[e].semPed.push({ s: tr.tileS[i], i });
       [0, 1, 2, 3].forEach(d => { // pontos de ônibus e ruas locais ao lado da avenida
         const j = vizinhoNa(i, d); if (j < 0 || av.has(j)) return;
         if (s.mapa[j] && ['pontoOnibus', 'pontoAcessivel', 'terminal'].includes(s.mapa[j].tipo)) v[e].paradas.push({ s: tr.tileS[i], d });
@@ -1492,6 +1493,7 @@ const Cena = (() => {
       // perto do radar todos reduzem; na faixa de pedestres, param enquanto alguém atravessa
       if (vias[eixo].radar.some(r => Math.abs(r - k.p) < 1.6)) passo *= .55;
       vias[eixo].faixa.forEach(f => { const a = ((f.s - k.sentido * .55) - k.p) * k.sentido; if (a >= 0 && a < .3 && travessia(f.i, agora) >= 0) passo = 0; });
+      vias[eixo].semPed.forEach(f => { const a = ((f.s - k.sentido * .55) - k.p) * k.sentido; if (a >= 0 && a < .3 && faseSemPed(f.i, agora).carros !== 'verde') passo = 0; });
       // faixa da direita para os lentos; na faixa exclusiva, só ônibus
       let alvo = LENTOS.includes(k.tipo) ? 1 : (k.faixa || 0);
       if (k.tipo !== 'onibus' && vias[eixo].onibus.some(sO => Math.abs(sO - k.p) < 1)) alvo = 0;
@@ -1649,6 +1651,14 @@ const Cena = (() => {
         for (let k = 0; k < 8; k++) { const a = Math.PI / 8 + k * Math.PI / 4; ctx.lineTo(W / 2 + Math.cos(a) * W * .47, W / 2 + Math.sin(a) * W * .47); }
         ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = W * .03; ctx.stroke();
         texto(ctx, W, 'PARE', '#FFFFFF', .26);
+      } else if (tipo === 'lombada') { // A-18: saliência ou lombada
+        ctx.save(); ctx.translate(W / 2, W / 2); ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = '#111111'; ctx.fillRect(-W * .34, -W * .34, W * .68, W * .68); ctx.fillStyle = '#F9C80E'; ctx.fillRect(-W * .31, -W * .31, W * .62, W * .62);
+        ctx.restore(); ctx.fillStyle = '#111111'; ctx.fillRect(W * .25, W * .6, W * .5, W * .05);
+        ctx.beginPath(); ctx.ellipse(W / 2, W * .6, W * .14, W * .1, 0, Math.PI, 0); ctx.fill();
+      } else if (tipo === 'listras') { // pintura amarela e preta da lombada
+        ctx.fillStyle = '#F9C80E'; ctx.fillRect(0, 0, W, W); ctx.fillStyle = '#212121';
+        for (let x = -W; x < W * 2; x += W / 4) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + W / 8, 0); ctx.lineTo(x + W / 8 + W, W); ctx.lineTo(x + W, W); ctx.fill(); }
       } else if (tipo === 'busFaixa') {
         ctx.fillStyle = '#1565C0'; ctx.fillRect(0, 0, W, W); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 8; ctx.strokeRect(10, 10, W - 20, W - 20);
         texto(ctx, W, '🚌', '#FFFFFF', .36, .4); texto(ctx, W, 'EXCLUSIVO', '#FFFFFF', .13, .78);
@@ -1659,7 +1669,7 @@ const Cena = (() => {
   }
   function placaSinal(g, tipo, x, z) {
     g.add(cilindro(.009, .009, .4, '#455A64', x, 0, z, 6));
-    const cinza = mat('#90A4AE'), face = new THREE.MeshStandardMaterial({ map: texSinal(tipo), transparent: ['r6a', 'r6b', 'r6c', 'vel60', 'vel30', 'pare'].includes(tipo), roughness: .6 });
+    const cinza = mat('#90A4AE'), face = new THREE.MeshStandardMaterial({ map: texSinal(tipo), transparent: ['r6a', 'r6b', 'r6c', 'vel60', 'vel30', 'pare', 'lombada'].includes(tipo), roughness: .6 });
     g.add(caixa(.13, .13, .008, [cinza, cinza, cinza, cinza, face, cinza], x, .33, z + .01));
   }
   function eixoRua(g, i) {
@@ -1832,6 +1842,55 @@ const Cena = (() => {
     },
   });
 
+  /* ── Semáforo de pedestres e lombada ── */
+  // ciclo de 15 s (defasado por lote): carros no verde, amarelo, depois vermelho enquanto os pedestres atravessam
+  function faseSemPed(i, t) {
+    const f = (t + (Math.abs(i) * 2.3) % 15) % 15;
+    return {
+      carros: f < 9 ? 'verde' : f < 11 ? 'amarelo' : 'vermelho',
+      ped: f >= 11 && f < 14 ? 'verde' : f >= 14 ? 'piscando' : 'vermelho',
+      u: f >= 11 && f < 14 ? (f - 11) / 3 : -1, ida: Math.floor((t + (Math.abs(i) * 2.3) % 15) / 15) % 2 ? 1 : -1,
+    };
+  }
+  Object.assign(MODELOS, {
+    semaforoPedestre(g, n, i) {
+      const grp = eixoRua(g, i);
+      for (let z = -.33; z <= .34; z += .11) grp.add(caixa(.24, .005, .06, '#F5F5F5', 0, 0, z));
+      [-.25, .25].forEach(x => grp.add(caixa(.03, .005, .36, '#F5F5F5', x, 0, x < 0 ? .19 : -.19))); // linhas de retenção
+      const luz = cor => new THREE.MeshStandardMaterial({ color: cor, emissive: cor, emissiveIntensity: .05 });
+      const carro = { verde: luz('#2ECC71'), amarelo: luz('#F1C40F'), vermelho: luz('#E74C3C') }, ped = { verde: luz('#2ECC71'), vermelho: luz('#E74C3C') };
+      [[-.16, .46, -1], [.16, -.46, 1]].forEach(([x, z, frente]) => { // um poste em cada calçada
+        grp.add(cilindro(.011, .013, .5, '#37474F', x, 0, z, 6));
+        const cab = new THREE.Group(); cab.position.set(x, .44, z);
+        cab.add(caixa(.035, .12, .045, '#212121', 0, -.06, 0));
+        ['vermelho', 'amarelo', 'verde'].forEach((c, k) => { const l = malha(new THREE.SphereGeometry(.012, 10, 8), carro[c], frente * .019, .035 - k * .035, 0); l.castShadow = false; cab.add(l); });
+        grp.add(cab);
+        const pc = new THREE.Group(); pc.position.set(x, .27, z);
+        pc.add(caixa(.04, .07, .025, '#212121', 0, -.035, 0));
+        [['vermelho', .016], ['verde', -.016]].forEach(([c, y]) => pc.add(caixa(.026, .024, .003, ped[c], 0, y, -Math.sign(z) * .014)));
+        grp.add(pc);
+        grp.add(caixa(.025, .035, .02, '#F2C200', x + .02, .12, z - Math.sign(z) * .012)); // botoeira
+      });
+      const p = criarPessoa(Math.abs(i) * 5 + 2, false); p.visible = false; grp.add(p);
+      g.userData.tick = t => {
+        const f = faseSemPed(i, t), pisca = f.ped === 'piscando' && Math.floor(t * 4) % 2;
+        Object.entries(carro).forEach(([c, m]) => { m.emissiveIntensity = f.carros === c ? 2.2 : .05; });
+        ped.verde.emissiveIntensity = f.ped === 'verde' ? 2.2 : .05;
+        ped.vermelho.emissiveIntensity = f.ped === 'vermelho' || pisca ? 2.2 : .05;
+        p.visible = f.u >= 0;
+        if (f.u >= 0) { p.position.set(.05, 0, f.ida * (-.47 + .94 * f.u)); p.rotation.y = f.ida > 0 ? 0 : Math.PI; animarPasso(p, t * 9, true); }
+      };
+      g.userData.altura = .55;
+    },
+    lombada(g, n, i) {
+      const grp = eixoRua(g, i);
+      const lomb = malha(new THREE.CylinderGeometry(.06, .06, .76, 16, 1, false, 0, Math.PI), new THREE.MeshStandardMaterial({ map: texSinal('listras'), roughness: .8 }), 0, 0, 0);
+      lomb.rotation.set(Math.PI / 2, Math.PI / 2, 0); lomb.scale.set(1, 1, .3); lomb.castShadow = false; grp.add(lomb);
+      placaSinal(g, 'lombada', .47, .47);
+      g.userData.altura = .5;
+    },
+  });
+
   /* ── Trajeto das avenidas: centro de cada lote, com arcos nas curvas e a estrada além da borda ── */
   const centroLote = i => [posX(i % LARGURA), posZ(Math.floor(i / LARGURA))];
   // lados do lote ligados a outro lote da mesma avenida (ruas locais não entram)
@@ -1941,6 +2000,7 @@ const Cena = (() => {
       if (c.tile < 0 || !ehLocal(c.tile)) { reposicionar(c); return; }
       let passo = reduzido ? 0 : c.v * dt;
       if (s.mapa[c.tile].via === 'radar') passo *= .55;
+      if (s.mapa[c.tile].via === 'lombada') passo *= .45;
       // não encosta no carro da frente no mesmo trajeto
       carrosLocais.forEach(o => { if (o !== c && o.tile === c.tile && o.ent === c.ent && o.s > c.s && o.s - c.s < .32) passo = 0; });
       if (c.s + passo >= c.tr.len) {
@@ -1954,7 +2014,7 @@ const Cena = (() => {
         const ent = (c.sai + 2) % 4, lp = s.mapa[prox], eixo = c.sai % 2 ? 'h' : 'v';
         const ocupado = carrosLocais.some(o => o !== c && o.tile === prox && (lp.via === 'rotatoria' || (o.ent === ent && o.s < .3)));
         const semaforo = temSemaforo(prox) && sinal[eixo] !== 'verde';
-        const pedestre = lp.via === 'faixaPedestre' && travessia(prox, relogio()) >= 0;
+        const pedestre = (lp.via === 'faixaPedestre' && travessia(prox, relogio()) >= 0) || (lp.via === 'semaforoPedestre' && faseSemPed(prox, relogio()).carros !== 'verde');
         if (ocupado || semaforo || pedestre) passo = Math.max(0, c.tr.len - c.s - .001); // espera: preferência de quem está na rotatória / sinal fechado
         else { const resto = c.s + passo - c.tr.len; entrarNoLote(c, prox, ent); c.s = resto; passo = 0; c.pare = 0; }
         }
@@ -1967,6 +2027,7 @@ const Cena = (() => {
       c.obj.position.set(posX(c.tile % LARGURA) + x, .013, posZ(Math.floor(c.tile / LARGURA)) + z);
       c.obj.rotation.y = Math.atan2(-(pts[k][1] - pts[k - 1][1]), pts[k][0] - pts[k - 1][0]);
       animarDuasRodas(c.obj, relogio(), passo !== 0);
+      if (s.mapa[c.tile].via === 'lombada') { const d = Math.abs(c.s - c.tr.len / 2); if (d < .12) c.obj.position.y += .016 * (1 - d / .12); } // sobe a lombada
       if (c.surgindo !== undefined) { c.surgindo = Math.min(1, c.surgindo + dt * 3); c.obj.scale.setScalar(.85 * c.surgindo); if (c.surgindo >= 1) delete c.surgindo; }
     });
   }

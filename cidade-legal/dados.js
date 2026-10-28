@@ -1008,6 +1008,49 @@ const PREDIOS = {
     ],
   },
 
+  semaforoPedestre: {
+    nome: 'Semáforo de pedestres', icone: '🚦', area: 'Trânsito: travessia de pedestres', cor: '#2E7D32', cat: 'sinalizacao', via: true,
+    custo: 55, nivel: 1,
+    efeito: { renda: 0, manutencao: 1, pop: 0, felicidade: 3 },
+    bonus: 'Faixa com semáforo e botoeira: de tempos em tempos o sinal fecha para os carros e os pedestres atravessam. Só em trecho reto, fora da ponte.',
+    aula: {
+      resumo: 'O semáforo de pedestres organiza a travessia longe dos cruzamentos: quando fica vermelho para os carros, é a vez de quem atravessa.',
+      pontos: [
+        'Onde há semáforo de pedestres, quem atravessa deve obedecer às luzes dele (CTB, art. 69, III, "a").',
+        'Quem ainda não terminou a travessia tem preferência, mesmo que o sinal já tenha aberto para os carros (CTB, art. 70, parágrafo único).',
+        'Avançar o sinal vermelho é infração gravíssima (CTB, art. 208).',
+        'Com a botoeira, o pedestre pede a travessia; em vias movimentadas, o semáforo pode ter sinal sonoro para pessoas cegas (Lei 10.098/2000, art. 9º).',
+      ],
+      pratica: 'O sinal abriu para os carros, mas uma senhora ainda está no meio da faixa? Espere ela terminar: a preferência continua sendo dela.',
+    },
+    licenca: [
+      { p: 'O sinal abriu para os carros, mas um idoso ainda está atravessando. O que o motorista deve fazer?', ops: ['Buzinar e passar', 'Esperar o pedestre terminar a travessia', 'Desviar dele', 'Acelerar para passar antes'], c: 1, exp: 'CTB, art. 70, parágrafo único.' },
+      { p: 'Avançar o sinal vermelho é:', ops: ['Infração leve', 'Infração gravíssima', 'Permitido de madrugada', 'Permitido se não vier ninguém'], c: 1, exp: 'CTB, art. 208.' },
+      { p: 'Diante do bonequinho vermelho, o pedestre deve:', ops: ['Atravessar correndo', 'Esperar o verde', 'Atravessar fora da faixa', 'Pedir para os carros pararem'], c: 1, exp: 'CTB, art. 69, III, "a".' },
+    ],
+  },
+  lombada: {
+    nome: 'Lombada', icone: '〰️', area: 'Trânsito: redutores de velocidade', cor: '#F9A825', cat: 'sinalizacao', via: true,
+    custo: 20, nivel: 0,
+    efeito: { renda: 0, manutencao: 0, pop: 0, felicidade: 1 },
+    bonus: 'Reduz a velocidade dos carros na rua, com pintura amarela e placa. Neste jogo, só em ruas locais (nas avenidas, use radar e semáforo).',
+    aula: {
+      resumo: 'A lombada reduz a velocidade nas ruas de bairro, mas só pode ser instalada pela autoridade de trânsito, dentro do padrão e bem sinalizada.',
+      pontos: [
+        'É proibido usar lombadas e sonorizadores como redutores de velocidade, salvo nos casos e padrões definidos pelo Contran (CTB, art. 94, parágrafo único).',
+        'A Resolução Contran 600/2016 define onde a lombada pode ser usada, suas medidas e a sinalização obrigatória.',
+        'A lombada precisa de placa de advertência e de pintura que a deixem visível de dia e de noite.',
+        'Nenhuma obra que atrapalhe o trânsito pode ser feita na rua sem permissão do órgão de trânsito; morador não pode fazer lombada por conta própria (CTB, art. 95).',
+      ],
+      pratica: 'Os vizinhos querem fazer uma lombada de cimento em frente à escola, por conta própria? Não podem: devem pedir à prefeitura, que avalia e instala dentro do padrão.',
+    },
+    licenca: [
+      { p: 'Um morador pode fazer uma lombada em frente de casa por conta própria?', ops: ['Sim, a rua é dele', 'Não: obra na via depende de permissão do órgão de trânsito', 'Sim, se pintar de amarelo', 'Só nos fins de semana'], c: 1, exp: 'CTB, art. 95.' },
+      { p: 'Quem define os padrões das lombadas?', ops: ['Os moradores', 'O Contran', 'A construtora', 'Ninguém'], c: 1, exp: 'CTB, art. 94, parágrafo único; Resolução Contran 600/2016.' },
+      { p: 'O que toda lombada precisa ter?', ops: ['Nada', 'Sinalização: placa e pintura visíveis', 'Um policial', 'Um pedágio'], c: 1, exp: 'Resolução Contran 600/2016.' },
+    ],
+  },
+
   /* ── Zona rural ── */
   lavoura: {
     nome: 'Lavoura', icone: '🌾', area: 'Direito Agrário', cor: '#8D7B2A',
@@ -1320,6 +1363,7 @@ const MISSOES = [
   { id: 'm16', texto: 'Organize o estacionamento: Zona Azul, vaga para pessoa com deficiência e faixa de pedestres', ok: s => ['zonaAzul', 'vagaPcd', 'faixaPedestre'].every(k => conta(s, k) >= 1), xp: 30, din: 150 },
   { id: 'm17', texto: 'Cidade para todos: Ciclofaixa, Rampa de acessibilidade e Piso tátil', ok: s => ['ciclovia', 'rampa', 'pisoTatil'].every(k => conta(s, k) >= 1), xp: 30, din: 150 },
   { id: 'm18', texto: 'Transporte para todos: Ponto de ônibus acessível e Faixa exclusiva de ônibus', ok: s => conta(s, 'pontoAcessivel') >= 1 && conta(s, 'faixaOnibus') >= 1, xp: 30, din: 200 },
+  { id: 'm19', texto: 'Travessia segura: Semáforo de pedestres e Lombada', ok: s => conta(s, 'semaforoPedestre') >= 1 && conta(s, 'lombada') >= 1, xp: 25, din: 120 },
   { id: 'm11', texto: 'Compre todos os bairros da cidade', ok: s => BAIRROS.every(b => (s.bairros || {})[b.id]), xp: 120, din: 0 },
 ];
 
@@ -1962,6 +2006,16 @@ const CASOS = [
     ops: ['Pode, é rapidinho', 'Não: sem capacete é infração gravíssima com suspensão, e a empresa deve exigir o equipamento de segurança', 'Só se ele assinar um termo'], c: 1,
     exp: 'O capacete é obrigatório para quem pilota e para o passageiro. A atividade de motofrete exige ainda curso e equipamentos de segurança.',
     base: 'CTB, art. 244, I; Lei 12.009/2009' },
+  { predio: 'semaforoPedestre', titulo: 'Sinal abriu no meio da travessia', quem: '👩‍🦯 Dona Lurdes',
+    texto: 'Eu estava no meio da faixa quando o sinal abriu para os carros, e um motorista buzinou e quase me atropelou. Ele diz que o sinal estava verde para ele. Quem tinha razão?',
+    ops: ['O motorista, o sinal era dele', 'Dona Lurdes: quem não terminou a travessia tem preferência, mesmo com o sinal aberto para os carros', 'Ninguém'], c: 1,
+    exp: 'Onde há semáforo, o pedestre que ainda está atravessando tem preferência quando o sinal muda. O motorista deve esperar.',
+    base: 'CTB, art. 70, parágrafo único' },
+  { predio: 'lombada', titulo: 'Lombada caseira', quem: '🏘️ Associação de moradores',
+    texto: 'Os carros correm muito na nossa rua. Podemos juntar dinheiro e fazer uma lombada de cimento por conta própria?',
+    ops: ['Podem, a rua é de quem mora nela', 'Não: devem pedir à prefeitura, que avalia e instala dentro do padrão do Contran, com sinalização', 'Podem, se for bem alta'], c: 1,
+    exp: 'Obras na via dependem de permissão do órgão de trânsito, e as lombadas seguem os padrões do Contran. Uma lombada fora do padrão pode causar acidentes.',
+    base: 'CTB, arts. 94 e 95; Resolução Contran 600/2016' },
 ];
 
 /* Projetos de lei: chegam à Prefeitura quando há Câmara Municipal. O jogador sanciona

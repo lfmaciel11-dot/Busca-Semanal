@@ -90,9 +90,9 @@ function validarVia(tipo, i) {
       if (!reto || ponte) return '🚲 A ciclofaixa vai num trecho reto de rua, fora da ponte.';
       if (VAGAS.includes(l.via)) return vagasECiclo;
     }
-    if (tipo === 'rampa' && con.length < 3 && l.via !== 'faixaPedestre') return '♿ A rampa fica onde as pessoas atravessam: num cruzamento ou junto de uma faixa de pedestres.';
+    if (tipo === 'rampa' && con.length < 3 && !['faixaPedestre', 'semaforoPedestre'].includes(l.via)) return '♿ A rampa fica onde as pessoas atravessam: num cruzamento ou junto de uma faixa de pedestres.';
     if (tipo === 'pisoTatil' && (!reto || ponte)) return '🦯 O piso tátil vai nas calçadas de um trecho reto de rua, fora da ponte.';
-    if (tipo === 'semaforoSonoro' && !temSemaforo(i)) return '🔊 O semáforo sonoro fica num cruzamento com semáforo (sem rotatória).';
+    if (tipo === 'semaforoSonoro' && !temSemaforo(i) && l.via !== 'semaforoPedestre') return '🔊 O semáforo sonoro fica num cruzamento com semáforo (sem rotatória) ou junto de um semáforo de pedestres.';
     return '';
   }
   if (l.via) return `Este trecho já tem ${PREDIOS[l.via].icone} ${PREDIOS[l.via].nome}. Clique nele para remover antes.`;
@@ -110,7 +110,9 @@ function validarVia(tipo, i) {
       return '🚫 A menos de 5 metros da esquina não pode estacionar (CTB, art. 181, I). Escolha um trecho mais longe do cruzamento.';
   }
   if (tipo === 'faixaOnibus' && (l.tipo !== 'rua' || !reto)) return '🚍 A faixa exclusiva vai num trecho reto de avenida, que tem duas faixas em cada sentido.';
-  if (['faixaPedestre', 'radar'].includes(tipo) && (!reto || ponte)) return `${PREDIOS[tipo].icone} Instale num trecho reto de rua, fora da ponte.`;
+  if (tipo === 'lombada' && l.tipo !== 'ruaLocal') return '〰️ Neste jogo a lombada vai em ruas locais. Nas avenidas, o controle de velocidade é feito com radar e semáforo.';
+  if (tipo === 'lombada' && !reto) return '〰️ A lombada vai num trecho reto da rua, onde o motorista consegue vê-la de longe.';
+  if (['faixaPedestre', 'radar', 'semaforoPedestre'].includes(tipo) && (!reto || ponte)) return `${PREDIOS[tipo].icone} Instale num trecho reto de rua, fora da ponte.`;
   if (tipo === 'retorno') {
     if (ponte) return '🚫 Retorno em ponte ou viaduto é infração gravíssima (CTB, art. 206, II).';
     if (curva) return '🚫 Retorno em curva é infração gravíssima: falta visibilidade (CTB, art. 206, II).';
