@@ -128,6 +128,22 @@ A aba **🚸 Sinalização** reúne o que é instalado sobre as ruas:
 - Nas quatro estradas que chegam à cidade há uma placa **"Bem-vindo(a) a [nome da cidade]"** com o número de habitantes; do lado de dentro, "Obrigado pela visita · volte sempre". O **🏛️ Portal da cidade** troca as placas por pórticos iluminados, com canteiros e bandeiras (aula: símbolos municipais, CF art. 13, §2º; Lei Orgânica, art. 29; criação de municípios, art. 18, §4º).
 - A **🚍 Rodoviária** (passa por licitação) recebe ônibus de viagem que chegam pelas estradas, param na plataforma e partem para outras cidades (aula: ANTT, gratuidade de idosos e jovens de baixa renda, passe livre e viagem de criança desacompanhada, ECA art. 83).
 
+### Cultura e esporte
+
+| Construção | O que ensina |
+|---|---|
+| 🛍️ Shopping center | Preço à vista (Lei 10.962/2004), arrependimento só fora da loja (CDC, art. 49), vício do produto (art. 18), estacionamento (Súmula 130 do STJ), aluguel em shopping (Lei 8.245/1991, art. 54) |
+| 🎭 Teatro municipal | Liberdade artística e proibição da censura (CF, arts. 5º, IX, e 220), direitos culturais (art. 215), meia-entrada (Lei 12.933/2013), classificação indicativa (ECA, art. 74) |
+| 🏺 Museu da cidade | Patrimônio cultural (CF, art. 216), tombamento (DL 25/1937), Estatuto de Museus, crime contra o patrimônio (Lei 9.605/1998, art. 62) |
+| 📚 Biblioteca pública | Direito autoral (Lei 9.610/1998, arts. 29, 41 e 46), bibliotecas escolares (Lei 12.244/2010) |
+| 🏟️ Estádio de futebol | Esporte como direito (CF, art. 217), torcedor consumidor, violência e cambismo (Lei Geral do Esporte, Lei 14.597/2023), lugares acessíveis |
+| 🏀 Quadra de basquete | Lazer como direito social (CF, arts. 6º e 217, §3º), prioridade de crianças e adolescentes (ECA, arts. 4º e 59) |
+| ⚽ Quadra de futsal | Paradesporto (Lei 13.146/2015, arts. 42 e 43), idoso (Estatuto, art. 20), racismo no esporte (Lei 7.716/1989) |
+| 🏃 Pista de atletismo | Prioridade ao desporto educacional (CF, art. 217, II), Bolsa Atleta (Lei 10.891/2004), doping |
+| 🤸 Academia ao ar livre | Aparelhos de ginástica para todas as idades |
+
+As quadras, o estádio e a pista têm jogadores e corredores em movimento, e o estádio tem torcida e refletores que acendem à noite.
+
 ### Motos, bicicletas e patinetes
 
 Motos (com capacete) circulam nas avenidas e ruas; bicicletas e patinetes elétricos andam no bordo da pista (CTB, art. 58), e os carros e ônibus que vêm atrás passam para a faixa da esquerda para ultrapassar com distância (art. 201). Duas construções ensinam as regras: 🛴 **Estação de bikes e patinetes** (Resolução Contran 996/2023, CTB art. 59, Lei 12.587/2012 art. 18, responsabilidade civil) e 🏍️ **Central de motofrete** (capacete, CTB arts. 54, 55 e 244; categoria A; Lei 12.009/2009).

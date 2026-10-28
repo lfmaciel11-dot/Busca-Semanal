@@ -166,7 +166,7 @@ function abrirAudiencia(pend) {
 }
 
 /* ── Licitação das obras públicas ─────────────────────────────────────────── */
-const OBRAS_PUBLICAS = ['escola', 'saude', 'delegacia', 'bombeiros', 'forum', 'camara', 'terminal', 'estacaoAgua', 'esgoto', 'usina', 'aterro', 'estacaoTrem', 'pontoAcessivel', 'fazenda', 'inss', 'rodoviaria'];
+const OBRAS_PUBLICAS = ['escola', 'saude', 'delegacia', 'bombeiros', 'forum', 'camara', 'terminal', 'estacaoAgua', 'esgoto', 'usina', 'aterro', 'estacaoTrem', 'pontoAcessivel', 'fazenda', 'inss', 'rodoviaria', 'teatro', 'museu', 'biblioteca', 'estadio', 'pistaAtletismo'];
 const precisaLicitacao = tipo => OBRAS_PUBLICAS.includes(tipo) && PREDIOS[tipo].custo >= 200;
 function abrirLicitacao(tipo, i) {
   const p = PREDIOS[tipo], preco = f => Math.round(p.custo * f);

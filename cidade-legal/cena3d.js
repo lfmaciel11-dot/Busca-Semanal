@@ -2031,6 +2031,158 @@ const Cena = (() => {
     });
   }
 
+  /* ── Cultura e esporte ── */
+  function texQuadra(tipo) {
+    return canvasTex(256, 256, (ctx, W) => {
+      const fundo = { basquete: '#D2691E', futsal: '#1E88E5', campo: '#3E9A3E' }[tipo];
+      ctx.fillStyle = fundo; ctx.fillRect(0, 0, W, W);
+      if (tipo === 'campo') for (let k = 0; k < 8; k++) { ctx.fillStyle = k % 2 ? '#3E9A3E' : '#46A846'; ctx.fillRect(k * W / 8, 0, W / 8, W); }
+      ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 4;
+      ctx.strokeRect(12, 20, W - 24, W - 40); ctx.beginPath(); ctx.moveTo(W / 2, 20); ctx.lineTo(W / 2, W - 20); ctx.stroke();
+      ctx.beginPath(); ctx.arc(W / 2, W / 2, W * .12, 0, Math.PI * 2); ctx.stroke();
+      if (tipo === 'basquete') [12, W - 12].forEach(x => { ctx.beginPath(); ctx.arc(x, W / 2, W * .3, x < W / 2 ? -Math.PI / 2 : Math.PI / 2, x < W / 2 ? Math.PI / 2 : Math.PI * 1.5); ctx.stroke(); });
+      else [12, W - 58].forEach(x => ctx.strokeRect(x, W * .3, 46, W * .4));
+    });
+  }
+  // jogadores que correm em volta (ou seguem a bola) dentro de um retângulo
+  function jogadores(g, n, w, d, cores, semente, alt = 0) {
+    const lista = [];
+    for (let k = 0; k < n; k++) {
+      const p = criarPessoa(semente + k * 7, false); p.scale.setScalar(.8);
+      p.traverse(o => { if (o.isMesh && !o.userData.alvoPessoa && o.material && o.material.color && o.position.y > .07 && o.position.y < .12) o.material = mat(cores[k % 2]); }); // uniforme do time
+      g.add(p); lista.push({ p, f: k * 1.7, r: .4 + (k % 3) * .2 });
+    }
+    const bola = malha(new THREE.SphereGeometry(.018, 10, 8), mat('#FAFAFA')); g.add(bola);
+    return t => {
+      const bx = Math.sin(t * .7) * w * .35, bz = Math.sin(t * 1.1) * d * .3;
+      bola.position.set(bx, alt + .02 + Math.abs(Math.sin(t * 5)) * .03, bz);
+      lista.forEach(({ p, f, r }) => {
+        const x = bx * r + Math.sin(t * .9 + f) * w * .25, z = bz * r + Math.cos(t * .8 + f) * d * .25;
+        const dx = x - p.position.x, dz = z - p.position.z;
+        p.position.set(x, alt, z); if (Math.hypot(dx, dz) > 1e-4) p.rotation.y = Math.atan2(dx, dz);
+        animarPasso(p, t * 10 + f, true);
+      });
+    };
+  }
+  Object.assign(MODELOS, {
+    shopping(g) {
+      g.add(caixa(.96, .03, .96, IMG.piso_cor ? pbr('piso', 2) : mat('#E6E0D4')));
+      g.add(caixa(.86, .42, .6, fachada('#F8BBD0', 5, 2, { parede: 'vidro', vidro: '#B3E5FC' }), 0, .03, -.15));
+      g.add(caixa(.9, .05, .64, '#AD1457', 0, .45, -.15));
+      g.add(cilindro(.16, .16, .52, mat('#B3E5FC', { transparent: true, opacity: .55, roughness: .1, metalness: .3 }), .28, .03, .12, 20));
+      g.add(cupula(.16, '#AD1457', .28, .55, .12));
+      g.add(caixa(.5, .006, .3, '#90A4AE', -.18, .03, .3)); for (let k = 0; k < 4; k++) g.add(caixa(.008, .007, .1, '#FAFAFA', -.38 + k * .12, .03, .3));
+      [-.32, -.06].forEach((x, k) => { const c = criarVeiculo('carro', CORES_CARRO[k + 2]); c.scale.setScalar(.85); c.rotation.y = Math.PI / 2; c.position.set(x, .03, .3); g.add(c); });
+      g.userData.altura = .75;
+    },
+    teatro(g) {
+      calcada(g);
+      g.add(caixa(.8, .5, .56, fachada('#F3E5F5', 4, 2), 0, .03, -.12));
+      for (let k = 0; k < 5; k++) g.add(cilindro(.03, .03, .42, '#FAFAFA', -.3 + k * .15, .03, .2, 10));
+      g.add(caixa(.8, .06, .14, '#E1BEE7', 0, .45, .2));
+      const fr = new THREE.Shape(); fr.moveTo(-.42, 0); fr.lineTo(.42, 0); fr.lineTo(0, .16); fr.lineTo(-.42, 0);
+      const front = malha(new THREE.ExtrudeGeometry(fr, { depth: .16, bevelEnabled: false }), mat('#6A1B9A'), 0, .51, .13); g.add(front);
+      const mask = new THREE.Mesh(new THREE.PlaneGeometry(.14, .1), new THREE.MeshStandardMaterial({ map: texEmoji('🎭', '#6A1B9A') })); mask.position.set(0, .58, .295); g.add(mask);
+      g.add(caixa(.24, .14, .015, '#4A148C', 0, .03, .155));
+      g.userData.altura = .75;
+    },
+    museu(g) {
+      calcada(g);
+      g.add(caixa(.84, .06, .64, '#D7CCC8', 0, .03, -.05)); g.add(caixa(.76, .36, .5, fachada('#EFEBE9', 3, 1), 0, .09, -.08));
+      for (let k = 0; k < 4; k++) g.add(cilindro(.025, .028, .34, '#FAFAFA', -.27 + k * .18, .09, .22, 10));
+      g.add(caixa(.8, .04, .12, '#EFEBE9', 0, .43, .2));
+      g.add(cupula(.17, '#B0BEC5', 0, .45, -.08, { metalness: .4, roughness: .3 }));
+      g.add(caixa(.1, .12, .1, '#8D6E63', -.36, .03, .38)); g.add(malha(new THREE.SphereGeometry(.04, 10, 8), mat('#B08D57', { metalness: .6, roughness: .3 }), -.36, .19, .38)); // estátua
+      g.userData.altura = .8;
+    },
+    biblioteca(g) {
+      calcada(g);
+      g.add(caixa(.78, .38, .5, fachada('#FFF3E0', 4, 1, { parede: 'tijolo' }), 0, .03, -.12));
+      g.add(caixa(.82, .04, .54, '#5D4037', 0, .41, -.12));
+      g.add(caixa(.3, .22, .02, '#3E2723', 0, .03, .135));
+      const livro = (x, c, h) => g.add(caixa(.04, h, .1, c, x, .03, .32));
+      ['#C62828', '#1565C0', '#2E7D32', '#F9A825', '#6A1B9A'].forEach((c, k) => livro(-.2 + k * .045, c, .1 + (k % 2) * .03));
+      g.add(caixa(.3, .03, .14, IMG.madeira_cor ? pbr('madeira', 1) : mat('#8D6E63'), .22, .1, .3));
+      g.userData.altura = .6;
+    },
+    estadio(g, n) {
+      const campo = new THREE.Mesh(new THREE.PlaneGeometry(.66, .46), new THREE.MeshStandardMaterial({ map: texQuadra('campo'), roughness: .9 }));
+      campo.rotation.x = -Math.PI / 2; campo.position.y = .035; g.add(campo);
+      g.add(caixa(.96, .03, .96, '#9E9E9E'));
+      const arq = mat('#ECEFF1');
+      [[0, -.4, .9, .12, 0], [0, .4, .9, .12, 0], [-.42, 0, .12, .66, 1], [.42, 0, .12, .66, 1]].forEach(([x, z, w, d], k) => {
+        for (let deg = 0; deg < 3; deg++) {
+          const ww = k < 2 ? w : w + deg * .02, dd = k < 2 ? d + deg * .02 : d;
+          const off = (k < 2 ? Math.sign(z) : Math.sign(x)) * deg * .03;
+          g.add(caixa(ww, .06, dd, deg % 2 ? arq : mat(['#2E7D32', '#F9A825', '#1565C0', '#C62828'][k]), x + (k >= 2 ? off : 0), .03 + deg * .06, z + (k < 2 ? off : 0)));
+        }
+      });
+      // torcida colorida
+      const torcida = new THREE.InstancedMesh(new THREE.BoxGeometry(.02, .025, .02), new THREE.MeshStandardMaterial({ vertexColors: false }), 80);
+      const o = new THREE.Object3D(), cor = new THREE.Color();
+      for (let k = 0; k < 80; k++) {
+        const lado = k % 4, u = (k / 80) * 2 - 1;
+        const pos = [[u * .4, -.42], [u * .4, .42], [-.44, u * .3], [.44, u * .3]][lado];
+        o.position.set(pos[0], .22, pos[1]); o.updateMatrix(); torcida.setMatrixAt(k, o.matrix);
+        torcida.setColorAt(k, cor.set(['#FFFFFF', '#F9A825', '#2E7D32', '#E53935', '#1565C0'][k % 5]));
+      }
+      g.add(torcida);
+      [[-.44, -.42], [.44, -.42], [-.44, .42], [.44, .42]].forEach(([x, z]) => {
+        g.add(cilindro(.012, .014, .7, '#455A64', x, .03, z, 6));
+        const refl = new THREE.MeshStandardMaterial({ color: '#FFFFFF', emissive: '#FFF6D0', emissiveIntensity: 0 }); refl.userData = { farol: true }; materiaisNoturnos.push(refl);
+        g.add(caixa(.08, .05, .02, refl, x, .72, z));
+      });
+      [-.3, .3].forEach(x => { g.add(caixa(.01, .05, .1, '#FAFAFA', x, .035, 0)); });
+      const jogo = jogadores(g, 8, .6, .4, ['#E53935', '#1E88E5'], n, .035);
+      g.userData.tick = t => { jogo(t); torcida.position.y = Math.abs(Math.sin(t * 6)) * .01; };
+      g.userData.altura = .8;
+    },
+    quadraBasquete(g, n) {
+      calcada(g);
+      const q = new THREE.Mesh(new THREE.PlaneGeometry(.8, .54), new THREE.MeshStandardMaterial({ map: texQuadra('basquete'), roughness: .8 }));
+      q.rotation.x = -Math.PI / 2; q.position.y = .032; g.add(q);
+      [-1, 1].forEach(s0 => {
+        g.add(cilindro(.01, .01, .32, '#455A64', s0 * .43, .03, 0, 6)); g.add(caixa(.01, .08, .12, '#FAFAFA', s0 * .41, .3, 0));
+        const aro = malha(new THREE.TorusGeometry(.025, .004, 6, 14), mat('#E65100'), s0 * .38, .29, 0); aro.rotation.x = Math.PI / 2; g.add(aro);
+      });
+      const jogo = jogadores(g, 4, .7, .4, ['#F9A825', '#6A1B9A'], n, .032);
+      g.userData.tick = jogo; g.userData.altura = .45;
+    },
+    quadraFutsal(g, n) {
+      calcada(g);
+      const q = new THREE.Mesh(new THREE.PlaneGeometry(.84, .56), new THREE.MeshStandardMaterial({ map: texQuadra('futsal'), roughness: .8 }));
+      q.rotation.x = -Math.PI / 2; q.position.y = .032; g.add(q);
+      [-1, 1].forEach(s0 => { const trave = new THREE.Group(); trave.add(caixa(.008, .08, .008, '#FAFAFA', 0, .032, -.06)); trave.add(caixa(.008, .08, .008, '#FAFAFA', 0, .032, .06)); trave.add(caixa(.008, .008, .13, '#FAFAFA', 0, .11, 0)); trave.position.x = s0 * .41; g.add(trave); });
+      // alambrado
+      [[0, -.33, .9, .01], [0, .33, .9, .01], [-.46, 0, .01, .66], [.46, 0, .01, .66]].forEach(([x, z, w, d]) => g.add(caixa(w, .2, d, mat('#90A4AE', { transparent: true, opacity: .35 }), x, .03, z)));
+      const jogo = jogadores(g, 6, .76, .46, ['#FAFAFA', '#2E7D32'], n, .032);
+      g.userData.tick = jogo; g.userData.altura = .45;
+    },
+    pistaAtletismo(g, n) {
+      g.add(caixa(.96, .03, .96, '#9E9E9E'));
+      const pista = malha(new THREE.RingGeometry(.3, .44, 40), mat('#C0392B', { roughness: .9 }), 0, .036, 0); pista.rotation.x = -Math.PI / 2; pista.scale.set(1, .75, 1); g.add(pista);
+      [.33, .37, .41].forEach(r => { const l = malha(new THREE.RingGeometry(r, r + .004, 40), mat('#FAFAFA'), 0, .037, 0); l.rotation.x = -Math.PI / 2; l.scale.set(1, .75, 1); g.add(l); });
+      const gr = malha(new THREE.CircleGeometry(.3, 32), mat('#4CAF50'), 0, .035, 0); gr.rotation.x = -Math.PI / 2; gr.scale.set(1, .75, 1); g.add(gr);
+      const corredores = [0, 1, 2].map(k => { const p = criarPessoa(n + k * 5, false); p.scale.setScalar(.8); g.add(p); return { p, r: .33 + k * .04 + .02, v: .8 + k * .12 }; });
+      g.userData.tick = t => corredores.forEach(({ p, r, v }, k) => {
+        const a = t * v + k * .4; p.position.set(Math.cos(a) * r, .036, Math.sin(a) * r * .75); p.rotation.y = -a; animarPasso(p, t * 14 + k, true);
+      });
+      g.userData.altura = .3;
+    },
+    academiaAoAr(g, n) {
+      calcada(g);
+      const verde = mat('#00897B', { metalness: .3 }), amarelo = mat('#F9A825', { metalness: .3 });
+      [[-.25, -.2], [.2, -.2], [-.2, .2], [.25, .2]].forEach(([x, z], k) => {
+        g.add(cilindro(.012, .012, .24, k % 2 ? verde : amarelo, x, .03, z, 8));
+        g.add(caixa(.16, .012, .012, k % 2 ? amarelo : verde, x, .24, z));
+        g.add(caixa(.07, .01, .05, '#455A64', x + .04, .12, z));
+      });
+      const p = criarPessoa(n + 3, false); p.position.set(-.25, .03, -.13); g.add(p);
+      g.userData.tick = t => { animarPasso(p, t * 4, true); };
+      g.userData.altura = .35;
+    },
+  });
+
   /* ── Trajeto das avenidas: centro de cada lote, com arcos nas curvas e a estrada além da borda ── */
   const centroLote = i => [posX(i % LARGURA), posZ(Math.floor(i / LARGURA))];
   // lados do lote ligados a outro lote da mesma avenida (ruas locais não entram)
@@ -2511,7 +2663,7 @@ const Cena = (() => {
   const FREQUENTADORES = {
     parque: { n: 5, criancas: 2, raio: .33 }, praca: { n: 3, raio: .28 }, escola: { n: 4, criancas: 4, raio: .44 },
     mercado: { n: 2, raio: .47 }, terminal: { n: 3, parados: true }, banco: { n: 3, fila: true }, inss: { n: 3, fila: true },
-    pontoAcessivel: { n: 3, parados: true }, rodoviaria: { n: 4, parados: true }, templo: { n: 2, raio: .47 }, cultura: { n: 3, raio: .47 }, condominio: { n: 2, raio: .47 }, saude: { n: 2, fila: true },
+    pontoAcessivel: { n: 3, parados: true }, shopping: { n: 5, raio: .46 }, teatro: { n: 4, fila: true }, museu: { n: 3, raio: .46 }, biblioteca: { n: 2, raio: .46 }, rodoviaria: { n: 4, parados: true }, templo: { n: 2, raio: .47 }, cultura: { n: 3, raio: .47 }, condominio: { n: 2, raio: .47 }, saude: { n: 2, fila: true },
     lagoa: { n: 3, criancas: 1, raio: .47 }, pontoOnibus: { n: 2, parados: true }, iluminacao: { n: 2, raio: .33 },
   };
   function criarFrequentadores(g, tipo, semente) {
@@ -2711,7 +2863,8 @@ const Cena = (() => {
     aluguel: ['EDIFÍCIO', .3, .04, 0, .27, .332, '#40536E'],
     cooperativa: ['COOPERATIVA', .4, .06, 0, .2, -.02, '#2E7D32'], galpao: ['LOGÍSTICA', .36, .06, 0, .29, .072, '#455A64'],
     pontoTaxi: ['TÁXI', .16, .05, -.28, .15, -.2, '#F9A825', '#212121'], posto: ['CONVENIÊNCIA', .24, .045, -.3, .17, .25, '#C62828'],
-    estacaoTrem: ['ESTAÇÃO', .3, .05, 0, .17, .43, '#00897B'], rodoviaria: ['RODOVIÁRIA', .46, .065, 0, .3, -.149, '#1565C0'], motofrete: ['MOTOFRETE', .4, .06, -.1, .2, -.038, '#E65100'], aeroporto: ['AEROPORTO', .3, .04, -.16, .175, -.188, '#283593'],
+    estacaoTrem: ['ESTAÇÃO', .3, .05, 0, .17, .43, '#00897B'], shopping: ['SHOPPING', .4, .07, 0, .36, .152, '#AD1457'],
+    teatro: ['TEATRO MUNICIPAL', .48, .05, 0, .47, .274, '#4A148C'], museu: ['MUSEU', .3, .05, 0, .44, .262, '#5D4037'], biblioteca: ['BIBLIOTECA', .36, .06, 0, .3, .135, '#5D4037'], rodoviaria: ['RODOVIÁRIA', .46, .065, 0, .3, -.149, '#1565C0'], motofrete: ['MOTOFRETE', .4, .06, -.1, .2, -.038, '#E65100'], aeroporto: ['AEROPORTO', .3, .04, -.16, .175, -.188, '#283593'],
   };
   const cacheLetreiro = {};
   function letreiro(g, tipo, n) {
