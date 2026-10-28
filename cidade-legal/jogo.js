@@ -411,8 +411,9 @@ function renderDica(c) {
     const p = PREDIOS[s.selecionado];
     h = `Construindo <b>${p.icone} ${p.nome}</b> — clique num terreno vazio.${p.efeito.renda ? ' Ao lado da rua rende <b>+20%</b>!' : ''} <button class="link" id="cancelar-sel">Cancelar</button>`;
   } else if (s.pendentes.length) {
-    const p = PREDIOS[s.mapa[s.pendentes[0].tile].tipo];
-    h = `❗ <b>${s.pendentes.length} cidadão(s)</b> esperando atendimento — clique no balão sobre ${p.icone} ${p.nome}.`;
+    const pe = s.pendentes.find(x => x.oc) || s.pendentes[0], l = s.mapa[pe.tile], p = l && (PREDIOS[l.tipo] || PREDIOS[l.via]);
+    h = pe.oc ? `🚨 <b>${pe.oc === 'incendio' ? 'Incêndio' : 'Acidente'}</b> na cidade — clique no balão para agir.`
+      : `❗ <b>${s.pendentes.length} cidadão(s)</b> esperando atendimento — clique no balão${p ? ` sobre ${p.icone} ${p.nome}` : ''}.`;
   } else if (c.faltas.length) {
     h = `⚠️ Faltam serviços públicos: ${c.faltas.map(k => SERVICOS[k]).join(', ')}.`;
   } else {
@@ -899,6 +900,7 @@ function proximoMes() {
       registrar(`🗄️ O projeto "<b>${pl.titulo}</b>" ficou parado na mesa do prefeito e foi arquivado.`);
       return false;
     }
+    if (p.oc) return false; // ocorrências se encerram sozinhas no fim do mês
     if (p.aud !== undefined) { registrar('⚖️ A audiência no Fórum ficou sem decisão e o processo atrasou. Justiça lenta deixa a cidade insatisfeita.'); return false; }
     registrar(`😤 Um cidadão desistiu de esperar no caso "<b>${CASOS[p.caso].titulo}</b>". A cidade ficou insatisfeita.`);
     return false;
@@ -914,7 +916,7 @@ function proximoMes() {
   const btn = $('btn-mes');
   btn.classList.remove('girar'); void btn.offsetWidth; btn.classList.add('girar');
   if (novo) {
-    const p = PREDIOS[s.mapa[novo.tile].tipo];
+    const l = s.mapa[novo.tile], p = PREDIOS[CASOS[novo.caso].predio] || PREDIOS[l.tipo]; // caso de um item da rua: o lote é a rua
     setTimeout(() => { som('alerta'); toast(`❗ Um cidadão precisa de ajuda em ${p.icone} ${p.nome}`); }, 500);
   }
 }
@@ -1081,6 +1083,7 @@ function abrirCaso(pend) {
   if (Mapa.focar) Mapa.focar(pend.tile, true);
   if (pend.lei) return abrirProjeto(pend);
   if (pend.aud !== undefined) return abrirAudiencia(pend);
+  if (pend.oc) return abrirOcorrencia(pend);
   const i = pend.caso, c = CASOS[i], p = PREDIOS[c.predio];
   const restam = pend.expira - s.mes;
   const ordem = embaralhar(c.ops.map((t, k) => ({ t, i: k })));

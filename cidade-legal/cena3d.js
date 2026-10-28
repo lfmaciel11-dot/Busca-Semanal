@@ -1404,7 +1404,9 @@ const Cena = (() => {
   const COMPRIMENTO = { moto: .2, bike: .16, patinete: .14, onibus: .62, caminhao: .54, bombeiro: .54, lixo: .54, ambulancia: .38, trator: .24 };
   function sincronizarCarros() {
     const desejado = [];
-    const n = 2 + Math.min(8, Math.floor((s.pop || 0) / 20));
+    // hora do rush (7h–9h e 17h–19h) enche as avenidas; de madrugada quase ninguém circula
+    const rush = (hora >= 7 && hora < 9) || (hora >= 17 && hora < 19), madrugada = hora >= 23 || hora < 5;
+    const n = Math.round((2 + Math.min(8, Math.floor((s.pop || 0) / 20))) * (rush ? 1.7 : madrugada ? .35 : 1));
     for (let i = 0; i < n; i++) desejado.push('carro');
     const vezes = (tipo, q) => { for (let i = 0; i < q; i++) desejado.push(tipo); };
     vezes('onibus', Math.min(3, conta(s, 'terminal') + conta(s, 'estacaoTrem')));
@@ -1483,13 +1485,14 @@ const Cena = (() => {
         posicionarCarro(k, k.sentido * k.lat);
         return;
       }
-      let passo = reduzido ? 0 : k.v * k.sentido * dt;
+      const emerg = emergenciaAtiva() && ['ambulancia', 'bombeiro', 'policia'].includes(k.tipo);
+      let passo = reduzido ? 0 : k.v * (emerg ? 1.5 : 1) * k.sentido * dt;
       // semáforo do cruzamento das avenidas; com rotatória, cede a vez a quem já está nela
       const ate = ((centroDe(k) - k.sentido * .66) - k.p) * k.sentido;
       if (cruzRot) {
         const naRotatoria = frota.some(o => o.horizontal !== k.horizontal && Math.abs(o.p - centroDe(o)) < .5);
         if (naRotatoria && ate >= 0 && ate < .3) passo = 0;
-      } else if (sinal[eixo] !== 'verde' && ate >= 0 && ate < .3) passo = 0;
+      } else if (sinal[eixo] !== 'verde' && ate >= 0 && ate < .3 && !emerg) passo = 0; // socorro com sirene tem livre passagem (CTB, art. 29, VII)
       // perto do radar todos reduzem; na faixa de pedestres, param enquanto alguém atravessa
       if (vias[eixo].radar.some(r => Math.abs(r - k.p) < 1.6)) passo *= .55;
       vias[eixo].faixa.forEach(f => { const a = ((f.s - k.sentido * .55) - k.p) * k.sentido; if (a >= 0 && a < .3 && travessia(f.i, agora) >= 0) passo = 0; });
@@ -1498,6 +1501,9 @@ const Cena = (() => {
       let alvo = LENTOS.includes(k.tipo) ? 1 : (k.faixa || 0);
       if (k.tipo !== 'onibus' && vias[eixo].onibus.some(sO => Math.abs(sO - k.p) < 1)) alvo = 0;
       if (k.plano) alvo = 0; // vai converter à esquerda: aproxima-se do eixo da via
+      if (emerg) alvo = 0;
+      // sirene atrás: deixa livre a faixa da esquerda (CTB, art. 29, VII, "b")
+      if (!emerg && frota.some(o => o.sentido === k.sentido && o.horizontal === k.horizontal && ['ambulancia', 'bombeiro', 'policia'].includes(o.tipo) && emergenciaAtiva() && (k.p - o.p) * k.sentido > 0 && (k.p - o.p) * k.sentido < 2)) { alvo = 1; passo *= .6; }
       // bicicleta ou patinete à frente: ultrapassa pela faixa da esquerda, com distância (CTB, art. 201)
       if (!MICRO.includes(k.tipo) && frota.some(o => MICRO.includes(o.tipo) && o.horizontal === k.horizontal && o.sentido === k.sentido && (o.p - k.p) * k.sentido > 0 && (o.p - k.p) * k.sentido < 1.4)) alvo = 0;
       const dLat = (MICRO.includes(k.tipo) ? LAT_MICRO : FAIXAS_AV[alvo]) - k.lat; k.lat += Math.sign(dLat) * Math.min(Math.abs(dLat), dt * .35);
@@ -1547,7 +1553,7 @@ const Cena = (() => {
       posicionarCarro(k, k.sentido * (k.lat + (.37 - k.lat) * w));
       k.obj.visible = k.p > .15 && k.p < tr.len - .15;
       animarDuasRodas(k.obj, agora, passo !== 0);
-      if (k.obj.userData.sirene) k.obj.userData.sirene.emissiveIntensity = Math.floor(agora * 4) % 2 ? 1.6 : .1;
+      if (k.obj.userData.sirene) k.obj.userData.sirene.emissiveIntensity = emerg && Math.floor(agora * 4) % 2 ? 1.8 : .1;
     });
   }
   // pedal da bicicleta e rodas das motos, bicicletas e patinetes
@@ -1556,6 +1562,7 @@ const Cena = (() => {
     if (u.ciclista) animarPasso(u.ciclista, t * 10, andando);
     if (u.rodas && andando && !reduzido) u.rodas.forEach(r => { r.rotation.z = -t * 12; });
   }
+  const emergenciaAtiva = () => (s.ocorrencias || []).length > 0;
   // lado do lote (0 a 3) que fica à direita de quem anda no trajeto na posição p
   function ladoDireito(tr, p, sentido) {
     const [, , tx, tz] = pontoNoTrajeto(tr, p), hx = tx * sentido, hz = tz * sentido, rx = -hz, rz = hx;
@@ -1891,6 +1898,50 @@ const Cena = (() => {
     },
   });
 
+  /* ── Ocorrências no mapa: incêndio e acidente, com socorro a caminho ─────── */
+  const cenasOcorrencia = {};
+  function criarOcorrencia(o) {
+    const g = new THREE.Group(), [x, z] = centroLote(o.tile), ticks = [];
+    g.position.set(x, 0, z);
+    if (o.tipo === 'incendio') {
+      const alt = (predios[o.tile] && predios[o.tile].userData.altura) || .8, chamas = [], fumaca = [];
+      for (let k = 0; k < 7; k++) {
+        const m = malha(new THREE.ConeGeometry(.07, .22, 8), new THREE.MeshBasicMaterial({ color: k % 2 ? '#FF7A00' : '#FFC400', transparent: true, opacity: .9 }), 0, 0, 0);
+        m.castShadow = false; m.userData = { x: (Math.random() - .5) * .5, z: (Math.random() - .5) * .5, f: Math.random() * 6 }; chamas.push(m); g.add(m);
+      }
+      for (let k = 0; k < 6; k++) { const b = malha(new THREE.SphereGeometry(.1, 8, 6), new THREE.MeshStandardMaterial({ color: '#4A4A4A', transparent: true, opacity: .6, roughness: 1 })); b.castShadow = false; fumaca.push(b); g.add(b); }
+      const luz = new THREE.PointLight('#FF8A00', 1.2, 2.5); luz.position.y = alt; g.add(luz);
+      ticks.push(t => {
+        chamas.forEach(m => { const u = m.userData; m.position.set(u.x, alt * .6 + Math.abs(Math.sin(t * 7 + u.f)) * .08, u.z); m.scale.set(1, .7 + Math.abs(Math.sin(t * 9 + u.f)) * .6, 1); });
+        fumaca.forEach((b, k) => { const f = (t * .25 + k / fumaca.length) % 1; b.position.set(Math.sin(k) * .1 + f * .3, alt + f * 1.4, Math.cos(k) * .1); b.scale.setScalar(.7 + f * 2); b.material.opacity = .55 * (1 - f); });
+        luz.intensity = 1 + Math.sin(t * 13) * .3;
+      });
+    } else {
+      const c1 = criarVeiculo('carro', '#E53935'), c2 = criarVeiculo('carro', '#1E88E5');
+      c1.position.set(-.08, 0, .1); c1.rotation.y = .5; c2.position.set(.1, 0, -.02); c2.rotation.set(0, -1.1, .06);
+      g.add(c1, c2);
+      const tri = malha(new THREE.ConeGeometry(.035, .05, 3), mat('#E53935', { emissive: '#B71C1C', emissiveIntensity: .6 }), -.38, .025, .1); g.add(tri); // triângulo de sinalização (CTB, art. 46)
+      const vidros = []; for (let k = 0; k < 6; k++) { const v = caixa(.015, .003, .015, '#CFE9F7', (Math.random() - .5) * .3, .002, (Math.random() - .5) * .2); vidros.push(v); g.add(v); }
+    }
+    // socorro: o veículo de emergência estaciona ao lado com a sirene ligada
+    const socorro = o.tipo === 'incendio' ? (conta(s, 'bombeiros') ? 'bombeiro' : null) : (conta(s, 'saude') ? 'ambulancia' : conta(s, 'delegacia') ? 'policia' : null);
+    if (socorro) {
+      const v = criarVeiculo(socorro); v.position.set(.38, .013, .3); v.rotation.y = Math.PI / 2; g.add(v);
+      if (v.userData.sirene) ticks.push(t => { v.userData.sirene.emissiveIntensity = Math.floor(t * 4) % 2 ? 1.8 : .1; });
+      if (socorro === 'bombeiro') { // jato de água na direção do fogo
+        const jato = []; for (let k = 0; k < 8; k++) { const b = malha(new THREE.SphereGeometry(.015, 6, 4), new THREE.MeshBasicMaterial({ color: '#B3E5FC', transparent: true, opacity: .8 })); b.castShadow = false; jato.push(b); g.add(b); }
+        ticks.push(t => jato.forEach((b, k) => { const f = (t * 1.5 + k / jato.length) % 1; b.position.set(.38 - f * .38, .25 + Math.sin(f * Math.PI) * .25, .3 - f * .3); }));
+      }
+    }
+    g.userData.tick = t => ticks.forEach(f => f(t));
+    return g;
+  }
+  function sincronizarOcorrencias() {
+    const quer = new Set((s.ocorrencias || []).map(o => o.tile + o.tipo + (o.socorro || '')));
+    Object.keys(cenasOcorrencia).forEach(k => { if (!quer.has(k)) { scene.remove(cenasOcorrencia[k]); delete cenasOcorrencia[k]; } });
+    (s.ocorrencias || []).forEach(o => { const k = o.tile + o.tipo + (o.socorro || ''); if (!cenasOcorrencia[k]) { cenasOcorrencia[k] = criarOcorrencia(o); scene.add(cenasOcorrencia[k]); } });
+  }
+
   /* ── Trajeto das avenidas: centro de cada lote, com arcos nas curvas e a estrada além da borda ── */
   const centroLote = i => [posX(i % LARGURA), posZ(Math.floor(i / LARGURA))];
   // lados do lote ligados a outro lote da mesma avenida (ruas locais não entram)
@@ -2116,7 +2167,7 @@ const Cena = (() => {
 
     // postes de luz ao longo das avenidas
     const lampada = new THREE.MeshStandardMaterial({ color: '#FFF6D0', emissive: '#FFD27A', emissiveIntensity: 0 });
-    materiaisNoturnos.push(lampada); lampada.userData = { farol: true };
+    materiaisNoturnos.push(lampada); lampada.userData = { farol: true, poste: true };
     const poste = (x, z) => {
       const g = new THREE.Group();
       g.add(cilindro(.015, .02, .55, '#4A5260', 0, 0, 0, 6));
@@ -2388,8 +2439,9 @@ const Cena = (() => {
     }
   }
   function moverFrequentadores(g, dt, t, luzes) {
+    const l = s.mapa[g.userData.tile], fechado = l && ['mercado', 'banco', 'inss', 'empresa', 'cartorio', 'escola', 'cultura'].includes(l.tipo) && (hora >= 22 || hora < 6);
     (g.userData.gente || []).forEach((e, k) => {
-      e.obj.visible = !(luzes > .6 && k % 2);
+      e.obj.visible = !fechado && !(luzes > .6 && k % 2);
       if (e.modo === 'roda') {
         if (!reduzido) e.ang += e.v * dt;
         e.obj.position.set(Math.cos(e.ang) * e.raio, .03, Math.sin(e.ang) * e.raio);
@@ -2529,7 +2581,8 @@ const Cena = (() => {
     hemi.intensity = .3 + .42 * dia;
     hemi.color.copy(lerpCor('#4A5E96', '#D6EEFF', dia)); hemi.groundColor.copy(lerpCor('#1A2233', '#5E7F45', dia));
     estrelas.material.opacity = 1 - dia;
-    materiaisNoturnos.forEach(m => { m.emissiveIntensity = m.userData.farol ? luzes * 1.8 : luzes * .95; });
+    const iluminada = conta(s, 'iluminacao') > 0; // sem iluminação pública, os postes ficam quase apagados
+    materiaisNoturnos.forEach(m => { m.emissiveIntensity = m.userData.poste ? luzes * (iluminada ? 1.8 : .15) : m.userData.farol ? luzes * 1.8 : luzes * .95; });
     nuvens.forEach(n => n.children.forEach(b => { b.material.color.copy(lerpCor('#3A4763', '#FFFFFF', dia)).lerp(new THREE.Color('#FFC59A'), crep * .5); b.material.opacity = .3 + .65 * dia; if (nublado) b.material.color.lerp(new THREE.Color('#6B7380'), .6); }));
     return luzes;
   }
@@ -2733,11 +2786,12 @@ const Cena = (() => {
     });
     sincronizarBairros();
     sincronizarSemaforos();
+    sincronizarOcorrencias();
     if (visaoAtiva) desenharVisao();
     aplicarEstacao((s.mes - 1) % 12);
     // balões ❗ dos cidadãos
     const pend = new Set((s.pendentes || []).map(p => p.tile));
-    const alvo = i => predios[i] || vias[i] || acessos[i];
+    const alvo = i => predios[i] || vias[i] || acessos[i] || cenasOcorrencia[Object.keys(cenasOcorrencia).find(k => parseInt(k) === +i)];
     Object.keys(baloes).forEach(i => { if (!pend.has(+i) || !alvo(i)) { scene.remove(baloes[i]); delete baloes[i]; } });
     pend.forEach(i => {
       if (baloes[i] || !alvo(i)) return;
@@ -2854,7 +2908,8 @@ const Cena = (() => {
     const luzes = aplicarHora(hora);
     atualizarAmbiente();
     const hh = Math.floor(hora), mm = Math.floor((hora % 1) * 60);
-    relogioEl.textContent = `${hora >= 6 && hora < 19 ? '☀️' : '🌙'} ${String(hh).padStart(2, '0')}:${String(mm - mm % 10).padStart(2, '0')}`;
+    const rushAgora = (hora >= 7 && hora < 9) || (hora >= 17 && hora < 19);
+    relogioEl.textContent = `${hora >= 6 && hora < 19 ? '☀️' : '🌙'} ${String(hh).padStart(2, '0')}:${String(mm - mm % 10).padStart(2, '0')}${rushAgora ? ' · 🚗 hora do rush' : emergenciaAtiva() ? ' · 🚨 emergência' : ''}`;
 
     const sinal = acenderSemaforos(t);
     sincronizarCarros(); moverCarros(dt, sinal); moverCarrosLocais(dt, sinal);
@@ -2878,7 +2933,7 @@ const Cena = (() => {
       if (g.userData.tick && !reduzido) g.userData.tick(t);
       if (g.userData.gente) moverFrequentadores(g, dt, t, luzes);
     });
-    [...Object.values(vias), ...Object.values(acessos)].forEach(g => { if (g.userData.tick && !reduzido) g.userData.tick(t); });
+    [...Object.values(vias), ...Object.values(acessos), ...Object.values(cenasOcorrencia)].forEach(g => { if (g.userData.tick && !reduzido) g.userData.tick(t); });
     moverChuva(dt);
     moverBarcosEPassaros(dt, t);
     moverFolhas(dt, t);
@@ -3216,6 +3271,10 @@ const Cena = (() => {
       return graficosAltos;
     },
     passeio() { controls.autoRotate = !controls.autoRotate; controls.autoRotateSpeed = .7; return controls.autoRotate; },
+    hora: () => hora,
+    emergencia: () => emergenciaAtiva(),
+    alvoCamera: () => controls && { x: controls.target.x + LARGURA / 2 - .5, z: controls.target.z + ALTURA / 2 - .5, dist: camera.position.distanceTo(controls.target) },
+    imagem() { desenhar(); return renderer.domElement.toDataURL('image/jpeg', .92); },
     foto(nome) {
       desenhar();
       const a = document.createElement('a');

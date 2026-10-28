@@ -12,11 +12,31 @@ O tempo passa de verdade: o sol cruza o céu, entardece e anoitece (janelas e po
 |---|---|
 | `dados.js` | Conteúdo jurídico: prédios, aulas, perguntas, casos, missões |
 | `jogo.js` | Regras, economia, interface e salvamento |
+| `cidade-viva.js` | Indicadores, desafios, Fórum, licitação, ocorrências, turma, minimapa, sons e acessibilidade |
 | `cena3d.js` | Cidade em 3D (modelos dos prédios, câmera, trânsito, dia/noite) |
 | `isometrico.js` | Versão 2.5D em canvas, usada quando não há WebGL |
 | `texturas.js` | Texturas PBR (cor + relevo) embutidas, geradas por `ferramentas/gerar_texturas.py` |
 | `texturas/` | As mesmas texturas em JPG: grama, asfalto, piso, tijolo, reboco, concreto, telha, madeira, pedra portuguesa, terra e água |
 | `vendor/` | Three.js r147, OrbitControls e pós-processamento — SSAO e Bloom (licença MIT) |
+
+## Cidade viva (desafios, Fórum, licitação, turma e acessibilidade)
+
+Tudo em `cidade-viva.js`:
+
+- **📊 Painel da cidade** (aba Missões): mobilidade, acessibilidade, meio ambiente, segurança e saúde, de 0 a 100, e o índice geral.
+- **🏁 Desafios com prazo**: bairro acessível, meta do saneamento, trânsito seguro, cidade verde e mobilidade para todos, cada um com prêmio e um ponto de lei.
+- **🥇 Medalhas** por área do Direito (4 acertos ou mais, com 70% de aproveitamento).
+- **⚖️ Audiências no Fórum**: o jogador ouve as duas partes e dá a sentença (consumidor, vizinhança, trabalho doméstico, pensão alimentícia e dano ambiental).
+- **📑 Licitação** das obras públicas (Lei 14.133/2021): escolher entre a proposta habilitada, a do parente do prefeito e a sem documentos. A escolha certa barateia a obra.
+- **🗳️ Orçamento participativo** a cada 6 meses (Estatuto da Cidade, art. 44): a população vota a prioridade e o prefeito assume um compromisso.
+- **🏘️ Bairros que crescem**: com a cidade feliz e sem faltar serviços, as moradias sobem de nível sozinhas.
+- **🔁 Revisão espaçada**: o que foi errado volta como pergunta semanas depois, até fixar.
+- **🚨 Ocorrências**: incêndios e acidentes aparecem no mapa, com fogo e fumaça, carros batidos e triângulo de sinalização. Com Bombeiros, posto de saúde ou delegacia, o socorro chega de sirene ligada, os outros carros abrem a faixa da esquerda (CTB, art. 29, VII) e o veículo de emergência passa no vermelho. Sem eles, há prejuízo. Cada ocorrência traz uma pergunta (Lei Kiss, omissão de socorro, CTB arts. 46, 176, 178, 304 e 305).
+- **🚗 Hora do rush** (7h–9h e 17h–19h) com mais carros, e madrugada quase vazia; o comércio fecha à noite; sem 💡 Iluminação Pública, os postes ficam quase apagados.
+- **🗺️ Minimapa** clicável e **🖼️ cartão-postal** da cidade.
+- **🔊 Sons ambientes**: trânsito (mais forte no rush e de perto), chuva, pássaros de dia, sirene nas emergências e o bipe do semáforo sonoro.
+- **👩‍🏫 Turma** (Modo professor): o aluno copia um **código de entrega**; o professor cola os códigos no **Painel da turma** (ranking, medalhas e áreas que a turma mais erra). Na **Competição**, todos digitam a mesma semente e começam com a mesma cidade.
+- **♿ Acessibilidade do jogo**: 🔊 Ouvir (leitura em voz alta de aulas, casos e ocorrências), letras maiores, alto contraste, menos animação e atalhos de teclado (**?** mostra a lista; **Shift+M** passa o mês).
 
 ## Ciclo do jogo
 

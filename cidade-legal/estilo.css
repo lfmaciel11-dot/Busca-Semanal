@@ -624,3 +624,11 @@ html.alto-contraste[data-theme="dark"] .hud, html.alto-contraste[data-theme="dar
 /* menos animação */
 html.sem-animacao *, html.sem-animacao *::before, html.sem-animacao *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* minimapa e cartão-postal */
+.minimapa { position: absolute; z-index: 14; left: max(var(--gap-hud), env(safe-area-inset-left, 0px)); top: calc(var(--topo-h) + var(--gap-hud) * 2 + 48px);
+  width: 192px; height: 144px; border-radius: 12px; padding: 0; cursor: pointer; display: none; image-rendering: pixelated; }
+.app.com-minimapa .minimapa { display: block; }
+#btn-minimapa.ativo, .app.com-minimapa #btn-minimapa { background: var(--accent); color: var(--accent-ink); }
+.cartao-postal { width: 100%; border-radius: 10px; box-shadow: var(--shadow); }
+@media (max-width: 760px) { .minimapa { width: 160px; height: 120px; top: calc(var(--topo-h) + 64px); } }

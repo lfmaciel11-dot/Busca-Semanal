@@ -273,6 +273,8 @@ function abrirRevisao() {
 
 /* ── Passagem do mês: todos os sistemas da cidade viva ────────────────────── */
 function aoPassarMes() {
+  encerrarOcorrencias();
+  gerarOcorrencia();
   verificarDesafio(true);
   verificarOrcamentoParticipativo();
   crescerBairros();
@@ -391,6 +393,7 @@ function abrirAtalhos() {
 
 document.addEventListener('DOMContentLoaded', () => {
   aplicarAcess();
+  $('btn-minimapa').onclick = () => { som('clique'); document.querySelector('.app').classList.toggle('com-minimapa'); desenharMinimapa(); };
   $('btn-acess').onclick = () => { som('clique'); abrirAcessibilidade(); };
   // "Ouvir": lê em voz alta o bloco indicado
   $('modal-caixa').addEventListener('click', e => {
@@ -407,4 +410,183 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   // painel da aba Missões: desafios
   $('aba-missoes').addEventListener('click', e => { const b = e.target.closest('[data-desafio]'); if (b) aceitarDesafio(b.dataset.desafio); });
+});
+
+/* ── Ocorrências: incêndios e acidentes, e o que a lei manda fazer ────────── */
+const OCORRENCIAS = {
+  incendio: [
+    { titulo: 'Incêndio no prédio', quem: '🚒 Defesa Civil', texto: 'Um prédio da cidade pegou fogo. A vistoria mostrou que o alvará do Corpo de Bombeiros estava vencido havia dois anos. O que a lei diz?',
+      ops: ['Nada, foi azar', 'Imóveis de uso coletivo precisam de licença dos Bombeiros em dia; a prefeitura deve fiscalizar e o dono responde pela irregularidade', 'Só os Bombeiros podem ser culpados'], c: 1,
+      exp: 'A Lei Kiss obriga os municípios a exigir as medidas de prevenção e combate a incêndio, com aprovação do Corpo de Bombeiros, e a fiscalizar os estabelecimentos.', base: 'Lei 13.425/2017, arts. 2º e 3º' },
+    { titulo: 'Quem ajuda?', quem: '🧯 Morador vizinho', texto: 'Vi o fogo começando e uma pessoa presa na janela, mas fiquei com medo e fui embora sem chamar ninguém. Fiz algo errado?',
+      ops: ['Não, ninguém é obrigado a nada', 'Sim: deixar de prestar socorro, ou de pedir ajuda às autoridades quando é possível fazê-lo sem risco, é crime de omissão de socorro', 'Só os bombeiros precisam agir'], c: 1,
+      exp: 'Ninguém precisa se arriscar, mas quem pode deve ao menos pedir socorro à autoridade pública (ligar 193). Não fazer nada é omissão de socorro.', base: 'Código Penal, art. 135' },
+  ],
+  acidente: [
+    { titulo: 'Batida na avenida', quem: '🚓 Agente de trânsito', texto: 'Dois carros bateram sem feridos e os motoristas querem deixar os carros no meio da pista até a perícia chegar. Está certo?',
+      ops: ['Sim, não se pode mexer em nada', 'Não: sem vítimas, os carros devem ser retirados da pista para liberar o trânsito, e o acidente é registrado depois', 'Só se for de noite'], c: 1,
+      exp: 'Em acidente sem vítima, o condutor deve adotar providências para remover o veículo do local quando necessário para a segurança e a fluidez do trânsito.', base: 'CTB, art. 178' },
+    { titulo: 'Fugiu do local', quem: '🚑 Socorrista', texto: 'Um motorista atropelou um ciclista e foi embora sem prestar socorro. O que ele fez?',
+      ops: ['Nada demais, não era obrigado a parar', 'Cometeu crime: deixar de prestar socorro à vítima e fugir do local do acidente são crimes de trânsito', 'Só uma infração leve'], c: 1,
+      exp: 'O condutor envolvido em acidente com vítima deve prestar socorro (ou pedir ajuda) e não pode fugir para escapar da responsabilidade.', base: 'CTB, arts. 176, 304 e 305' },
+    { titulo: 'Sinalizar o acidente', quem: '🛻 Motorista envolvido', texto: 'Meu carro quebrou depois da batida e ficou parado na pista. Preciso fazer alguma coisa antes de o guincho chegar?',
+      ops: ['Não, é só esperar', 'Sim: ligar o pisca-alerta e colocar o triângulo de sinalização a uma distância que avise quem vem atrás', 'Só sair do carro e ir embora'], c: 1,
+      exp: 'O veículo imobilizado na via deve ser sinalizado com o pisca-alerta e o triângulo, para evitar novos acidentes.', base: 'CTB, arts. 40, V, e 46' },
+  ],
+};
+function gerarOcorrencia() {
+  if ((s.ocorrencias || []).length) return;
+  const c = calcular(), v = indicadores();
+  const predios = [], ruas = [];
+  s.mapa.forEach((l, i) => {
+    if (!l || !liberado(i)) return;
+    if (PREDIOS[l.tipo] && PREDIOS[l.tipo].cat !== 'enfeite' && !PREDIOS[l.tipo].via && !['prefeitura', 'ruaLocal', 'ponteLocal', 'bombeiros'].includes(l.tipo)) predios.push(i);
+    if (['rua', 'ruaLocal'].includes(l.tipo) && !l.via) ruas.push(i);
+  });
+  let tipo = null;
+  if (predios.length >= 5 && Math.random() < .12 * (1.4 - v.seguranca / 100)) tipo = 'incendio';
+  else if (c.pop >= 40 && ruas.length && Math.random() < .18 * (1.4 - v.seguranca / 100)) tipo = 'acidente';
+  if (!tipo) return;
+  const lista = tipo === 'incendio' ? predios : ruas, tile = lista[Math.floor(Math.random() * lista.length)];
+  const q = Math.floor(Math.random() * OCORRENCIAS[tipo].length);
+  s.ocorrencias = [{ tipo, tile, q, mes: s.mes }];
+  s.pendentes = s.pendentes.filter(p => p.tile !== tile);
+  s.pendentes.push({ oc: tipo, q, tile, expira: s.mes + 1 });
+  const socorro = tipo === 'incendio' ? conta(s, 'bombeiros') : conta(s, 'saude') + conta(s, 'delegacia');
+  registrar(tipo === 'incendio'
+    ? `🔥 Incêndio em ${PREDIOS[s.mapa[tile].tipo].icone} ${PREDIOS[s.mapa[tile].tipo].nome}! ${socorro ? 'Os Bombeiros já estão no local.' : 'A cidade não tem Bombeiros: o prejuízo pode ser grande.'}`
+    : `💥 Acidente de trânsito! ${socorro ? 'O socorro está a caminho, e os carros abrem passagem para a sirene.' : 'Sem posto de saúde nem delegacia, o socorro demora.'}`);
+  setTimeout(() => { som('alerta'); toast(tipo === 'incendio' ? '🔥 Incêndio na cidade! Clique no balão para agir.' : '💥 Acidente de trânsito! Clique no balão para agir.', true); if (Mapa.focar) Mapa.focar(tile, true); }, 900);
+}
+function encerrarOcorrencias() {
+  (s.ocorrencias || []).forEach(o => {
+    if (o.tipo === 'incendio') {
+      const l = s.mapa[o.tile];
+      if (conta(s, 'bombeiros')) registrar('🚒 Os Bombeiros controlaram o incêndio. Ninguém se feriu.');
+      else if (l && PREDIOS[l.tipo]) {
+        const preju = Math.round(PREDIOS[l.tipo].custo * .4);
+        s.dinheiro -= preju; s.reputacao = Math.max(-30, s.reputacao - 5);
+        if ((l.nivel || 1) > 1) l.nivel--;
+        registrar(`🔥 Sem Bombeiros na cidade, o incêndio causou prejuízo de 💰 ${fmt(preju)}. A Defesa Civil é dever do poder público (Lei 12.608/2012).`);
+      }
+    } else if (!(conta(s, 'saude') + conta(s, 'delegacia'))) { s.reputacao = Math.max(-30, s.reputacao - 3); registrar('🚑 O socorro ao acidente demorou: a cidade precisa de posto de saúde e delegacia.'); }
+  });
+  s.ocorrencias = [];
+}
+function abrirOcorrencia(pend) {
+  const o = OCORRENCIAS[pend.oc][pend.q], ordem = embaralhar(o.ops.map((t, k) => ({ t, i: k })));
+  abrirModal(`<div class="cab-modal" style="--cor:#C62828"><span class="icone-grande">${pend.oc === 'incendio' ? '🔥' : '💥'}</span>
+      <div><small>Ocorrência · ${pend.oc === 'incendio' ? 'Defesa Civil' : 'Trânsito'}</small><h2>${o.titulo}</h2></div></div>
+    <button class="btn pequeno ouvir" data-ler=".cena" title="Ouvir em voz alta">🔊 Ouvir</button>
+    <div class="cena"><span class="avatar">${o.quem.split(' ')[0]}</span><blockquote class="fala"><b>${o.quem.split(' ').slice(1).join(' ')}</b>${o.texto}</blockquote></div>
+    ${htmlOpcoes(ordem, 'k')}<div id="feedback"></div>`, cx => {
+    cx.querySelectorAll('.opcao').forEach(b => b.onclick = () => {
+      const certo = +b.dataset.k === o.c;
+      registrarDesempenho(pend.oc === 'incendio' ? 'Defesa Civil e Direito Penal' : 'Trânsito (CTB)', 'caso', certo);
+      s.pendentes = s.pendentes.filter(x => x !== pend);
+      cx.querySelectorAll('.opcao').forEach(x => { x.disabled = true; if (+x.dataset.k === o.c) x.classList.add('certa'); });
+      if (certo) { ganharXp(15); s.reputacao = Math.min(30, s.reputacao + 2); som('certo'); } else { b.classList.add('errada'); ganharXp(5); som('erro'); }
+      cx.querySelector('#feedback').innerHTML = `<div class="explicacao ${certo ? 'ok' : 'erro'}"><b>${certo ? '✅ Isso mesmo! +15 XP' : '❌ Não é assim. +5 XP'}</b> ${o.exp}<small class="base">📌 ${o.base}</small></div>
+        <div class="botoes"><button class="btn primario" id="m-ok">Continuar</button></div>`;
+      cx.querySelector('#m-ok').onclick = () => { fecharModal(); verificarMissoes(); render(); };
+    });
+  });
+}
+
+/* ── Minimapa ─────────────────────────────────────────────────────────────── */
+const CORES_MINI = { agua: '#3FA7DE', ponte: '#8D6E63', rua: '#5B6474', ruaLocal: '#7A8394', ponteLocal: '#8D6E63', arvore: '#2E7D32', parque: '#43A047', praca: '#9CCC65', canteiro: '#AED581', lagoa: '#4FC3F7' };
+function corMini(l) {
+  if (!l) return null;
+  if (CORES_MINI[l.tipo]) return CORES_MINI[l.tipo];
+  const p = PREDIOS[l.tipo];
+  return p ? (RESIDENCIAIS.includes(l.tipo) ? '#F4A261' : p.cat === 'rural' ? '#C9B24A' : p.cat === 'industria' ? '#90A4AE' : p.cor || '#FFFFFF') : null;
+}
+function desenharMinimapa() {
+  const cv = $('minimapa');
+  if (!cv || cv.offsetParent === null) return;
+  const E = 5, ctx = cv.getContext('2d');
+  ctx.fillStyle = '#6FB14F'; ctx.fillRect(0, 0, cv.width, cv.height);
+  s.mapa.forEach((l, i) => {
+    const r = Math.floor(i / LARGURA), c = i % LARGURA, cor = corMini(l);
+    if (!s.bairros[bairroDe(i).id]) { ctx.fillStyle = 'rgba(14,26,16,.35)'; ctx.fillRect(c * E, r * E, E, E); }
+    if (cor) { ctx.fillStyle = cor; ctx.fillRect(c * E, r * E, E, E); }
+  });
+  (s.pendentes || []).forEach(p => { ctx.fillStyle = '#E53935'; ctx.beginPath(); ctx.arc((p.tile % LARGURA + .5) * E, (Math.floor(p.tile / LARGURA) + .5) * E, 3, 0, Math.PI * 2); ctx.fill(); });
+  const a = Mapa.alvoCamera && Mapa.alvoCamera();
+  if (a) { const w = Math.min(cv.width, a.dist * 1.6 * E), h = w * .7; ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2; ctx.strokeRect((a.x + .5) * E - w / 2, (a.z + .5) * E - h / 2, w, h); }
+}
+
+/* ── Cartão-postal ────────────────────────────────────────────────────────── */
+function abrirCartaoPostal() {
+  if (!Mapa.imagem) return;
+  const img = new Image(), v = indicadores();
+  img.onload = () => {
+    const W = 1200, H = Math.round(W * img.height / img.width) + 120, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#FFFDF6'; ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(img, 24, 24, W - 48, H - 144);
+    ctx.fillStyle = '#12233A'; ctx.font = '700 44px Fredoka, Nunito, sans-serif'; ctx.fillText(`Lembranças de ${s.nome}`, 32, H - 66);
+    ctx.font = '500 24px Nunito, sans-serif'; ctx.fillStyle = '#50698A';
+    ctx.fillText(`${fmt(s.pop)} habitantes · índice da cidade ${v.geral}/100 · ${nomeMes(s.mes)} do Ano ${anoDe(s.mes)}${s.aluno ? ' · prefeito(a) ' + s.aluno : ''}`, 32, H - 28);
+    const url = cv.toDataURL('image/jpeg', .9);
+    abrirModal(`<div class="cab-modal" style="--cor:#F2B705"><span class="icone-grande">🖼️</span><div><small>Cartão-postal</small><h2>${esc(s.nome)}</h2></div></div>
+      <img class="cartao-postal" src="${url}" alt="Cartão-postal da cidade ${esc(s.nome)}">
+      <p class="nota">Toque e segure (ou clique com o botão direito) na imagem para salvar ou compartilhar.</p>
+      <div class="botoes"><a class="btn so-arquivo" download="${esc(s.nome.replace(/[^\w\-]+/g, '-').toLowerCase() || 'cidade')}.jpg" href="${url}">⬇️ Baixar</a><button class="btn primario" id="m-fechar">Fechar</button></div>`,
+      cx => { cx.querySelector('#m-fechar').onclick = fecharModal; });
+  };
+  img.src = Mapa.imagem();
+}
+
+/* ── Sons ambientes da cidade ─────────────────────────────────────────────── */
+const Ambiente = (() => {
+  let ctx = null, ruido = null, transito = null, chuva = null, ultimoPassaro = 0, ultimaSirene = 0, ultimoBipe = 0;
+  function iniciar() {
+    if (ctx) return;
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = buf.getChannelData(0);
+    let ult = 0; for (let k = 0; k < d.length; k++) { const b = Math.random() * 2 - 1; ult = (ult + .02 * b) / 1.02; d[k] = ult * 3.5; } // ruído marrom
+    const fonte = (freq, tipo) => {
+      const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = tipo; f.frequency.value = freq;
+      const g = ctx.createGain(); g.gain.value = 0; src.connect(f).connect(g).connect(ctx.destination); src.start(); return g;
+    };
+    transito = fonte(320, 'lowpass'); chuva = fonte(2600, 'highpass');
+  }
+  function bip(freq, dur, vol = .05, tipo = 'sine', glide) {
+    const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = tipo; o.frequency.setValueAtTime(freq, t); if (glide) o.frequency.linearRampToValueAtTime(glide, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0005, t + dur);
+    o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + dur);
+  }
+  function atualizar() {
+    if (!ctx) return;
+    const ligado = s && s.som && document.visibilityState === 'visible' && Mapa.hora;
+    if (!ligado) { transito.gain.value = 0; chuva.gain.value = 0; return; }
+    if (ctx.state === 'suspended') ctx.resume();
+    const h = Mapa.hora(), rush = (h >= 7 && h < 9) || (h >= 17 && h < 19), noite = h >= 22 || h < 5;
+    const dist = (Mapa.alvoCamera() || { dist: 15 }).dist, perto = Math.max(.25, 1.4 - dist / 30);
+    transito.gain.setTargetAtTime(Math.min(.09, (.012 + (s.pop || 0) / 9000) * (rush ? 1.8 : noite ? .3 : 1) * perto), ctx.currentTime, .5);
+    chuva.gain.setTargetAtTime(s.chuva ? .05 : 0, ctx.currentTime, .8);
+    const agora = performance.now();
+    if (h >= 6 && h < 18 && !s.chuva && agora - ultimoPassaro > 4000 + Math.random() * 6000) { ultimoPassaro = agora; [0, 140, 260].forEach(ms => setTimeout(() => bip(2400 + Math.random() * 900, .09, .025, 'sine', 3000), ms)); }
+    if (Mapa.emergencia && Mapa.emergencia() && agora - ultimaSirene > 3000) { ultimaSirene = agora; bip(700, 1.4, .03, 'triangle', 1100); setTimeout(() => bip(1100, 1.4, .03, 'triangle', 700), 1400); }
+    if (conta(s, 'semaforoSonoro') && dist < 9 && agora - ultimoBipe > 1000) { ultimoBipe = agora; bip(1800, .06, .02, 'square'); }
+  }
+  return { iniciar, atualizar };
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+  const cv = $('minimapa');
+  if (cv) {
+    cv.addEventListener('click', e => {
+      const b = cv.getBoundingClientRect(), c = Math.floor((e.clientX - b.left) / b.width * LARGURA), r = Math.floor((e.clientY - b.top) / b.height * ALTURA);
+      if (Mapa.focar) Mapa.focar(r * LARGURA + c);
+    });
+    setInterval(desenharMinimapa, 500);
+  }
+  if (Mapa.imagem) $('btn-foto').onclick = () => { som('clique'); abrirCartaoPostal(); };
+  const comecar = () => { try { Ambiente.iniciar(); } catch (e) { /* sem áudio */ } };
+  addEventListener('pointerdown', comecar, { once: true }); addEventListener('keydown', comecar, { once: true });
+  setInterval(() => { try { Ambiente.atualizar(); } catch (e) { /* sem áudio */ } }, 1000);
 });
