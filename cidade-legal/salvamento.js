@@ -136,7 +136,7 @@ async function abrirMinhasCidades() {
     <ul class="minhas-cidades">${lista.map(c => `<li class="${c.id === s.idCidade ? 'atual' : ''}">
       <span class="icone-cidade">${c.id === s.idCidade ? '⭐' : '🏙️'}</span>
       <div><b>${esc(c.nome || 'Cidade')}</b><small>${nomeMes(c.mes || 1)} do Ano ${anoDe(c.mes || 1)} · ${fmt(c.pop || 0)} hab. · ${fmt(c.xp || 0)} XP${c.atualizado ? ' · ' + quando(c.atualizado) : ''}${c.conta ? ' · ☁️' : ''}</small></div>
-      ${c.id === s.idCidade ? '<span class="selo ok">jogando</span>' : `<button class="btn pequeno primario" data-abrir="${c.id}">Continuar</button><button class="btn pequeno" data-excluir="${c.id}" title="Excluir esta cidade" aria-label="Excluir ${esc(c.nome || 'cidade')}">🗑️</button>`}
+      ${c.id === s.idCidade ? '<button class="btn pequeno" id="m-renomear" title="Alterar o nome da cidade">✏️ Renomear</button><span class="selo ok">jogando</span>' : `<button class="btn pequeno primario" data-abrir="${c.id}">Continuar</button><button class="btn pequeno" data-excluir="${c.id}" title="Excluir esta cidade" aria-label="Excluir ${esc(c.nome || 'cidade')}">🗑️</button>`}
     </li>`).join('')}</ul>
     <div class="botoes esquerda"><button class="btn" id="m-nova">➕ Nova cidade</button></div>
     <details class="levar"><summary>📲 Levar para outro aparelho ${Nuvem.ativa() ? '(sem conta)' : ''}</summary>
@@ -178,6 +178,7 @@ async function abrirMinhasCidades() {
       });
     });
     cx.querySelector('#m-nova').onclick = novaCidade;
+    cx.querySelector('#m-renomear').onclick = () => abrirRenomear(abrirMinhasCidades);
     cx.querySelector('#m-copiar').onclick = async () => copiarTexto(await gerarCodigo(), cx.querySelector('#m-texto'), '📋 Código copiado! Cole no outro aparelho, em "Abrir pelo código".');
     const comp = cx.querySelector('#m-compartilhar');
     if (comp) comp.onclick = async () => { try { await navigator.share({ title: `Minha cidade: ${s.nome}`, text: `Código da minha cidade no Cidade Legal (Educa Direito):\n${await gerarCodigo()}` }); } catch (e) { /* cancelado */ } };
@@ -196,6 +197,30 @@ async function abrirMinhasCidades() {
       leitor.onload = () => { try { const est = lerCidade(leitor.result); est.idCidade = est.idCidade || novoIdCidade(); abrirCidadeGuardada(est); } catch (x) { erro('Não consegui ler esse arquivo.'); } };
       leitor.readAsText(f);
     };
+  });
+}
+// alterar o nome da cidade em jogo (placas das entradas, cartão-postal e Minhas cidades acompanham)
+function abrirRenomear(aoTerminar) {
+  abrirModal(`<div class="cab-modal" style="--cor:#7C4DFF"><span class="icone-grande">✏️</span>
+      <div><small>${nomeMes(s.mes)} do Ano ${anoDe(s.mes)} · ${fmt(s.pop)} habitantes</small><h2>Alterar o nome da cidade</h2></div></div>
+    <label class="campo">Novo nome<input id="m-novo-nome" maxlength="30" value="${esc(s.nome)}" autocomplete="off"></label>
+    <p class="nota" id="m-erro" role="alert"></p>
+    <div class="botoes"><button class="btn" id="m-cancelar">Cancelar</button><button class="btn primario" id="m-ok">Salvar nome</button></div>`, cx => {
+    const campo = cx.querySelector('#m-novo-nome');
+    campo.focus(); campo.select();
+    const voltar = () => (aoTerminar ? aoTerminar() : fecharModal());
+    const salvarNome = () => {
+      const nome = campo.value.replace(/\s+/g, ' ').trim();
+      if (!nome) { cx.querySelector('#m-erro').textContent = 'Digite um nome para a cidade.'; return; }
+      if (nome !== s.nome) {
+        registrar(`✏️ A cidade <b>${esc(s.nome)}</b> passou a se chamar <b>${esc(nome)}</b>.`);
+        s.nome = nome; render(); toast(`✏️ Agora a cidade se chama ${nome}.`);
+      }
+      voltar();
+    };
+    cx.querySelector('#m-cancelar').onclick = voltar;
+    cx.querySelector('#m-ok').onclick = salvarNome;
+    campo.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); salvarNome(); } };
   });
 }
 // nova cidade: a atual continua guardada em "Minhas cidades"
@@ -232,6 +257,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (nova) { Object.assign(s, nova); localStorage.removeItem('cidade-legal-nova'); semJogoLocal = false; }
   } catch (e) { /* ignora */ }
   if (!s.idCidade) { s.idCidade = novoIdCidade(); }
+  $('btn-renomear').onclick = () => { som('clique'); abrirRenomear(); };
   guardarNoSlot(); mostrarStatusSalvo();
   // link com código (#cidade=...): oferece abrir a cidade recebida
   if (location.hash.startsWith('#cidade=')) {

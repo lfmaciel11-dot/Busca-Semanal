@@ -659,3 +659,10 @@ details.levar { margin-top: 10px; border-top: 1px solid var(--border); padding-t
 details.levar > summary, details.avancado > summary { cursor: pointer; font-weight: 700; }
 details.avancado { margin-top: 8px; font-size: 14px; }
 details.avancado > summary { font-weight: 500; color: var(--muted); }
+
+/* alterar o nome da cidade */
+.marca h1 { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.marca h1 #nome-cidade { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn-renomear { flex: none; border: 0; background: transparent; cursor: pointer; font-size: 13px; padding: 2px 4px; border-radius: 6px; opacity: .55; line-height: 1; }
+.btn-renomear:hover, .btn-renomear:focus-visible { opacity: 1; background: var(--panel2); }
+#mes, .status-salvo { white-space: nowrap; display: inline-block; }
