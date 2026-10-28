@@ -1352,7 +1352,7 @@ function linhasDesempenho() {
 }
 function relatorioTexto() {
   const ls = linhasDesempenho(), total = ls.reduce((n, l) => n + l.total, 0), ok = ls.reduce((n, l) => n + l.ok, 0);
-  return [`Cidade Legal — relatório de desempenho`, `Aluno(a): ${s.aluno || '(sem nome)'} · Turma: ${s.turma || '(sem turma)'}`,
+  return [`Educa Direito · Cidade Legal — relatório de desempenho`, `Aluno(a): ${s.aluno || '(sem nome)'} · Turma: ${s.turma || '(sem turma)'}`,
     `Cidade: ${s.nome} · ${nomeMes(s.mes)} do Ano ${anoDe(s.mes)} · Título: ${NIVEIS[nivelAtual()].titulo} · ${fmt(s.xp)} XP`,
     `Aproveitamento geral: ${total ? Math.round(ok / total * 100) : 0}% (${ok} de ${total} respostas)`, '',
     ...ls.map(l => `${l.area}: ${l.pct}% — provas ${l.provaOk}/${l.prova}, casos ${l.casoOk}/${l.caso}`)].join('\n');
@@ -1467,7 +1467,8 @@ function abrirSalvar() {
 
 /* ── Início ───────────────────────────────────────────────────────────────── */
 function boasVindas() {
-  abrirModal(`<div class="resultado"><span class="icone-grande pulando">🏛️</span>
+  abrirModal(`<div class="resultado"><img class="logo-marca logo-claro" src="marca/logo-roxo.png" alt="Educa Direito — Democratizando o Direito"><img class="logo-marca logo-escuro" src="marca/logo-escuro.png" alt="">
+      <p class="sub-marca">apresenta <b>Cidade Legal</b></p>
       <h2>Bem-vindo(a), Prefeito(a)!</h2>
       <p>Construa sua cidade e aprenda, na prática, como funciona a legislação brasileira.</p></div>
     <ol class="como-jogar">

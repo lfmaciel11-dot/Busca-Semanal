@@ -632,3 +632,15 @@ html.sem-animacao *, html.sem-animacao *::before, html.sem-animacao *::after { a
 #btn-minimapa.ativo, .app.com-minimapa #btn-minimapa { background: var(--accent); color: var(--accent-ink); }
 .cartao-postal { width: 100%; border-radius: 10px; box-shadow: var(--shadow); }
 @media (max-width: 760px) { .minimapa { width: 160px; height: 120px; top: calc(var(--topo-h) + 64px); } }
+
+/* marca Educa Direito */
+.marca-logo { padding: 0; overflow: hidden; background: #8245FC !important; display: grid; place-items: center; text-decoration: none; }
+.marca-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.logo-marca { display: block; width: min(300px, 80%); height: auto; margin: 0 auto 2px; }
+.logo-escuro { display: none; }
+.sub-marca { margin: 0 0 8px; color: var(--muted); font-size: 14px; letter-spacing: .04em; }
+.sub-marca b { color: #8245FC; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .logo-claro { display: none; } :root:not([data-theme="light"]) .logo-escuro { display: block; } }
+:root[data-theme="dark"] .logo-claro { display: none; }
+:root[data-theme="dark"] .logo-escuro { display: block; }
+:root[data-theme="dark"] .sub-marca b { color: #B39DFF; }

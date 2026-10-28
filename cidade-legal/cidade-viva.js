@@ -391,8 +391,16 @@ function abrirAtalhos() {
     <div class="botoes"><button class="btn primario" id="m-fechar">Fechar</button></div>`, cx => { cx.querySelector('#m-fechar').onclick = fecharModal; });
 }
 
+function abrirSobre() {
+  abrirModal(`<div class="resultado"><img class="logo-marca logo-claro" src="marca/logo-roxo.png" alt="Educa Direito — Democratizando o Direito"><img class="logo-marca logo-escuro" src="marca/logo-escuro.png" alt="">
+      <p class="sub-marca"><b>Cidade Legal</b> é um jogo do Educa Direito</p></div>
+    <p>Aprenda a legislação brasileira de forma simples, governando a sua própria cidade: cada construção traz uma aula, cada cidadão traz um caso, e cada decisão mostra a lei na prática.</p>
+    <p class="nota">Conteúdo educativo e simplificado: não substitui orientação jurídica profissional.</p>
+    <div class="botoes"><button class="btn primario" id="m-fechar">Voltar ao jogo</button></div>`, cx => { cx.querySelector('#m-fechar').onclick = fecharModal; });
+}
 document.addEventListener('DOMContentLoaded', () => {
   aplicarAcess();
+  $('btn-sobre').onclick = e => { e.preventDefault(); som('clique'); abrirSobre(); };
   $('btn-minimapa').onclick = () => { som('clique'); document.querySelector('.app').classList.toggle('com-minimapa'); desenharMinimapa(); };
   $('btn-acess').onclick = () => { som('clique'); abrirAcessibilidade(); };
   // "Ouvir": lê em voz alta o bloco indicado
@@ -528,6 +536,8 @@ function abrirCartaoPostal() {
     ctx.fillStyle = '#12233A'; ctx.font = '700 44px Fredoka, Nunito, sans-serif'; ctx.fillText(`Lembranças de ${s.nome}`, 32, H - 66);
     ctx.font = '500 24px Nunito, sans-serif'; ctx.fillStyle = '#50698A';
     ctx.fillText(`${fmt(s.pop)} habitantes · índice da cidade ${v.geral}/100 · ${nomeMes(s.mes)} do Ano ${anoDe(s.mes)}${s.aluno ? ' · prefeito(a) ' + s.aluno : ''}`, 32, H - 28);
+    const marca = document.querySelector('#btn-sobre img');
+    if (marca && marca.complete) { ctx.drawImage(marca, W - 100, H - 104, 72, 72); ctx.font = '700 16px Nunito, sans-serif'; ctx.fillStyle = '#7C4DFF'; ctx.textAlign = 'right'; ctx.fillText('Educa Direito', W - 110, H - 40); ctx.textAlign = 'left'; }
     const url = cv.toDataURL('image/jpeg', .9);
     abrirModal(`<div class="cab-modal" style="--cor:#F2B705"><span class="icone-grande">🖼️</span><div><small>Cartão-postal</small><h2>${esc(s.nome)}</h2></div></div>
       <img class="cartao-postal" src="${url}" alt="Cartão-postal da cidade ${esc(s.nome)}">

@@ -1,4 +1,7 @@
-# 🏛️ Cidade Legal
+# 🏛️ Cidade Legal · um jogo do Educa Direito
+
+<img src="marca/logo-roxo.png" alt="Educa Direito — Democratizando o Direito" width="260">
+
 
 Jogo educativo de construção de cidade em que o jogador, como prefeito(a), aprende a legislação brasileira de forma simplificada.
 
@@ -17,6 +20,7 @@ O tempo passa de verdade: o sol cruza o céu, entardece e anoitece (janelas e po
 | `isometrico.js` | Versão 2.5D em canvas, usada quando não há WebGL |
 | `texturas.js` | Texturas PBR (cor + relevo) embutidas, geradas por `ferramentas/gerar_texturas.py` |
 | `texturas/` | As mesmas texturas em JPG: grama, asfalto, piso, tijolo, reboco, concreto, telha, madeira, pedra portuguesa, terra e água |
+| `marca/` | Logos do Educa Direito: originais (azul, roxo e fundo roxo), versões com fundo transparente, versão para tema escuro e ícone do app |
 | `vendor/` | Three.js r147, OrbitControls e pós-processamento — SSAO e Bloom (licença MIT) |
 
 ## Cidade viva (desafios, Fórum, licitação, turma e acessibilidade)
