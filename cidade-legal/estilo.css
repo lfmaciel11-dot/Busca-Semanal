@@ -666,3 +666,19 @@ details.avancado > summary { font-weight: 500; color: var(--muted); }
 .btn-renomear { flex: none; border: 0; background: transparent; cursor: pointer; font-size: 13px; padding: 2px 4px; border-radius: 6px; opacity: .55; line-height: 1; }
 .btn-renomear:hover, .btn-renomear:focus-visible { opacity: 1; background: var(--panel2); }
 #mes, .status-salvo { white-space: nowrap; display: inline-block; }
+
+/* guia do primeiro acesso */
+.guia { position: fixed; inset: 0; z-index: 9000; }
+.guia-holofote { position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(8, 14, 30, .62), 0 0 0 3px #8245FC, 0 0 24px 6px rgba(130, 69, 252, .55);
+  transition: left .35s ease, top .35s ease, width .35s ease, height .35s ease; pointer-events: none; }
+.guia-balao { position: fixed; width: min(360px, calc(100vw - 24px)); padding: 14px 16px 12px; border-radius: 16px; background: var(--vidro-forte, var(--panel));
+  border: 2px solid #8245FC !important; transition: left .35s ease, top .35s ease; }
+.guia-balao h3 { margin: 6px 0 4px; font-size: 17px; }
+.guia-texto { margin: 0 0 10px; font-size: 14px; line-height: 1.45; }
+.guia-balao .botoes { display: flex; align-items: center; gap: 6px; margin: 0; }
+.guia-balao .espaco { flex: 1; }
+.guia-passos { display: flex; gap: 4px; }
+.guia-passos i { flex: 1; height: 4px; border-radius: 2px; background: var(--border); }
+.guia-passos i.feito { background: #B39DFF; }
+.guia-passos i.agora { background: #8245FC; }
+html.sem-animacao .guia-holofote, html.sem-animacao .guia-balao { transition: none; }

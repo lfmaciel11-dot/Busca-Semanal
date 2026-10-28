@@ -388,7 +388,10 @@ function abrirAtalhos() {
     ['Shift + M', 'passar para o próximo mês'], ['Ctrl + Z', 'desfazer a última ação do mês'], ['Esc', 'fechar janela ou sair do modo demolir'], ['?', 'esta lista de atalhos']];
   abrirModal(`<div class="cab-modal" style="--cor:#1565C0"><span class="icone-grande">⌨️</span><div><small>Teclado</small><h2>Atalhos</h2></div></div>
     <table class="tabela-desempenho">${t.map(([k, d]) => `<tr><td><kbd>${k}</kbd></td><td>${d}</td></tr>`).join('')}</table>
-    <div class="botoes"><button class="btn primario" id="m-fechar">Fechar</button></div>`, cx => { cx.querySelector('#m-fechar').onclick = fecharModal; });
+    <div class="botoes"><button class="btn" id="m-guia">🧭 Ver o guia</button><button class="btn primario" id="m-fechar">Fechar</button></div>`, cx => {
+    cx.querySelector('#m-fechar').onclick = fecharModal;
+    cx.querySelector('#m-guia').onclick = () => { fecharModal(); iniciarGuia(); };
+  });
 }
 
 function abrirSobre() {
@@ -396,7 +399,10 @@ function abrirSobre() {
       <p class="sub-marca"><b>Cidade Legal</b> é um jogo do Educa Direito</p></div>
     <p>Aprenda a legislação brasileira de forma simples, governando a sua própria cidade: cada construção traz uma aula, cada cidadão traz um caso, e cada decisão mostra a lei na prática.</p>
     <p class="nota">Conteúdo educativo e simplificado: não substitui orientação jurídica profissional.</p>
-    <div class="botoes"><button class="btn primario" id="m-fechar">Voltar ao jogo</button></div>`, cx => { cx.querySelector('#m-fechar').onclick = fecharModal; });
+    <div class="botoes"><button class="btn" id="m-guia">🧭 Ver o guia</button><button class="btn primario" id="m-fechar">Voltar ao jogo</button></div>`, cx => {
+    cx.querySelector('#m-fechar').onclick = fecharModal;
+    cx.querySelector('#m-guia').onclick = () => { fecharModal(); iniciarGuia(); };
+  });
 }
 document.addEventListener('DOMContentLoaded', () => {
   aplicarAcess();

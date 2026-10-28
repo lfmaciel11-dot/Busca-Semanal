@@ -1486,6 +1486,7 @@ function boasVindas() {
       s.nome = cx.querySelector('#m-nome').value.trim() || 'Cidade Legal';
       registrar(`🏛️ Fundação de <b>${esc(s.nome)}</b>. A Prefeitura abre as portas — clique nela para a primeira aula.`);
       fecharModal(); confete(60); som('nivel'); render();
+      if (typeof iniciarGuia === 'function' && !guiaJaVisto()) setTimeout(iniciarGuia, 900); // primeiro acesso: tour guiado
     };
   });
 }

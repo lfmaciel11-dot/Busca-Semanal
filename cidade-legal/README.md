@@ -23,6 +23,10 @@ O tempo passa de verdade: o sol cruza o céu, entardece e anoitece (janelas e po
 | `marca/` | Logos do Educa Direito: originais (azul, roxo e fundo roxo), versões com fundo transparente, versão para tema escuro e ícone do app |
 | `vendor/` | Three.js r147, OrbitControls e pós-processamento — SSAO e Bloom (licença MIT) |
 
+## Guia do primeiro acesso
+
+Na primeira cidade, depois de "Começar mandato", um **tour guiado** (`guia.js`) destaca com um holofote cada parte da tela: a Prefeitura, os números da cidade, o painel de construção, o botão de passar o mês, os balões dos cidadãos, missões, bairros, controles do mapa, celular do prefeito, Minhas cidades e acessibilidade. Dá para usar Voltar, Próximo ou as setas, e pular com Esc. Para rever, clique no ícone do Educa Direito (janela Sobre) ou tecle **?**.
+
 ## Salvar o progresso
 
 - **Salva sozinho** a cada ação; o topo mostra "✓ salvo" (neste aparelho) ou "☁️ salvo" (na conta).
