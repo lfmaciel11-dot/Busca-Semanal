@@ -919,6 +919,28 @@ const Cena = (() => {
       g.add(caixa(.12, .1, .1, '#E65100', .36, .03, -.2)); g.add(caixa(.11, .02, .11, '#BF360C', .36, .13, -.2)); // baú de entrega
       g.userData.altura = .5;
     },
+    rodoviaria(g) {
+      g.add(caixa(.96, .03, .96, '#BDBDBD'));
+      g.add(caixa(.9, .22, .3, fachada('#ECEFF1', 6, 1, { vidro: '#90CAF9' }), 0, .03, -.3));
+      // cobertura ondulada das plataformas
+      g.add(caixa(.94, .025, .42, mat('#1565C0', { roughness: .5 }), 0, .33, .14)); g.add(caixa(.94, .04, .03, '#0D47A1', 0, .31, .35));
+      [-.42, -.14, .14, .42].forEach(x => g.add(cilindro(.014, .014, .3, '#ECEFF1', x, .03, .3, 6)));
+      [-.3, 0, .3].forEach(x => { g.add(caixa(.22, .015, .16, '#F5F5F5', x, .03, .2)); g.add(caixa(.22, .016, .02, '#F2C200', x, .03, .29)); }); // plataformas com piso de alerta
+      ['#1565C0', '#C62828'].forEach((c, k) => { const o = criarVeiculo('rodoviario', c); o.scale.setScalar(.7); o.rotation.y = Math.PI / 2; o.position.set(-.3 + k * .6, .03, .1); g.add(o); });
+      g.add(caixa(.5, .07, .02, '#1565C0', 0, .27, -.149));
+      g.add(cilindro(.01, .01, .55, '#455A64', .44, .03, -.44, 6)); g.add(caixa(.18, .1, .02, '#1565C0', .44, .55, -.44));
+      g.userData.altura = .7;
+    },
+    portal(g) {
+      calcada(g);
+      const pedra = IMG.reboco_cor ? pbr('reboco', 1, 1, { color: '#D7C9B4' }) : mat('#C8BBA8');
+      g.add(caixa(.4, .12, .4, pedra, 0, .03, 0)); g.add(caixa(.18, .5, .18, pedra, 0, .15, 0));
+      const brasao = malha(new THREE.CylinderGeometry(.11, .11, .025, 6), mat('#F2B705', { metalness: .5, roughness: .3 }), 0, .45, .1); brasao.rotation.x = Math.PI / 2; g.add(brasao);
+      g.add(caixa(.11, .11, .012, '#1565C0', 0, .45, .115));
+      [[-.32, '#2E7D32'], [.32, '#1565C0'], [0, '#F2B705']].forEach(([x, c]) => { g.add(cilindro(.008, .008, .7, '#ECEFF1', x, .03, -.35, 6)); g.add(caixa(.003, .1, .16, c, x, .62, -.27)); });
+      for (let k = 0; k < 6; k++) g.add(caixa(.05, .05, .05, ['#E91E63', '#FDD835', '#FF7043'][k % 3], -.25 + k * .1, .03, .32));
+      g.userData.altura = .8;
+    },
     pontoAcessivel(g) {
       calcada(g);
       g.add(caixa(.84, .05, .28, '#C9C9C9', 0, .03, .3));                       // plataforma no nível do piso do ônibus
@@ -1277,6 +1299,16 @@ const Cena = (() => {
       const c = cilindro(.016, .016, .028, '#B0BEC5', x, 0, z, 10); c.rotation.x = Math.PI / 2; c.position.y = .034; g.add(c);
     };
     if (tipo === 'moto') return criarMoto(cor, true, CORES_CARRO.indexOf(cor));
+    if (tipo === 'rodoviario') { // ônibus de viagem: mais comprido e alto, com faixa e vidros escuros
+      g.add(caixa(.76, .25, .21, mat('#FAFAFA', { roughness: .35, metalness: .2 }), 0, .045));
+      g.add(caixa(.762, .05, .212, cor === '#E53935' ? '#C62828' : '#1565C0', 0, .09));
+      g.add(caixa(.62, .07, .214, mat('#1C2836', { roughness: .1, metalness: .5 }), -.05, .2));
+      g.add(caixa(.004, .12, .18, mat('#1C2836', { roughness: .1, metalness: .5 }), .381, .16, 0));
+      [-.27, -.15, .25].forEach(x => { roda(x, .1); roda(x, -.1); });
+      const farolR = new THREE.MeshStandardMaterial({ color: '#FFF6C8', emissive: '#FFF0A0', emissiveIntensity: 0 }); materiaisNoturnos.push(farolR); farolR.userData = { farol: true };
+      g.add(caixa(.008, .02, .04, farolR, .383, .07, .07)); g.add(caixa(.008, .02, .04, farolR, .383, .07, -.07));
+      return g;
+    }
     if (tipo === 'bike') return criarBicicleta(Math.max(0, CORES_CARRO.indexOf(cor)));
     if (tipo === 'patinete') return criarPatinete(true, Math.max(0, CORES_CARRO.indexOf(cor)));
     if (tipo === 'onibus') { // piso baixo, símbolo de acessibilidade e rampa na porta da direita (+z)
@@ -1401,7 +1433,7 @@ const Cena = (() => {
     return g;
   }
   // tamanho de cada veículo na faixa (para manter distância do da frente)
-  const COMPRIMENTO = { moto: .2, bike: .16, patinete: .14, onibus: .62, caminhao: .54, bombeiro: .54, lixo: .54, ambulancia: .38, trator: .24 };
+  const COMPRIMENTO = { rodoviario: .76, moto: .2, bike: .16, patinete: .14, onibus: .62, caminhao: .54, bombeiro: .54, lixo: .54, ambulancia: .38, trator: .24 };
   function sincronizarCarros() {
     const desejado = [];
     // hora do rush (7h–9h e 17h–19h) enche as avenidas; de madrugada quase ninguém circula
@@ -1410,6 +1442,7 @@ const Cena = (() => {
     for (let i = 0; i < n; i++) desejado.push('carro');
     const vezes = (tipo, q) => { for (let i = 0; i < q; i++) desejado.push(tipo); };
     vezes('onibus', Math.min(3, conta(s, 'terminal') + conta(s, 'estacaoTrem')));
+    vezes('rodoviario', conta(s, 'rodoviaria') ? 3 : 0); // viagens que chegam e partem pelas estradas
     vezes('taxi', Math.min(4, conta(s, 'pontoTaxi') * 2));
     vezes('caminhao', Math.min(4, conta(s, 'fabrica') + conta(s, 'galpao') * 2 + conta(s, 'industria') + conta(s, 'porto') * 2));
     vezes('moto', Math.min(5, 1 + Math.floor((s.pop || 0) / 80) + conta(s, 'motofrete') * 2));
@@ -1427,7 +1460,7 @@ const Cena = (() => {
       const horizontal = i % 2 === 0, sentido = i % 4 < 2 ? 1 : -1;
       const obj = criarVeiculo(tipo, CORES_CARRO[i % CORES_CARRO.length]);
       scene.add(obj);
-      const v = { onibus: .6, trator: .35, caminhao: .75, lixo: .55, bombeiro: 1.1, ambulancia: 1.1, bike: .32, patinete: .4, moto: 1.2 + Math.random() * .3 }[tipo] || .9 + Math.random() * .6;
+      const v = { rodoviario: .75, onibus: .6, trator: .35, caminhao: .75, lixo: .55, bombeiro: 1.1, ambulancia: 1.1, bike: .32, patinete: .4, moto: 1.2 + Math.random() * .3 }[tipo] || .9 + Math.random() * .6;
       // a posição é a distância percorrida no trajeto da avenida, que segue pela estrada além da cidade
       const faixa = LENTOS.includes(tipo) || MICRO.includes(tipo) || i % 3 === 0 ? 1 : 0;
       carros[i] = { tipo, obj, horizontal, sentido, comp: COMPRIMENTO[tipo] || .34, p: Math.random() * trajetoAvenida(horizontal ? 'h' : 'v').len, v, faixa, lat: MICRO.includes(tipo) ? LAT_MICRO : FAIXAS_AV[faixa] };
@@ -1452,6 +1485,7 @@ const Cena = (() => {
       [0, 1, 2, 3].forEach(d => { // pontos de ônibus e ruas locais ao lado da avenida
         const j = vizinhoNa(i, d); if (j < 0 || av.has(j)) return;
         if (s.mapa[j] && ['pontoOnibus', 'pontoAcessivel', 'terminal'].includes(s.mapa[j].tipo)) v[e].paradas.push({ s: tr.tileS[i], d });
+        if (s.mapa[j] && s.mapa[j].tipo === 'rodoviaria') v[e].paradas.push({ s: tr.tileS[i], d, rodo: true });
         if (ehLocal(j)) v[e].juncoes.push({ s: tr.tileS[i], i, d });
       });
     }); });
@@ -1459,7 +1493,7 @@ const Cena = (() => {
   }
   // avenidas com duas faixas em cada sentido: interna (esquerda, mais rápida) e externa (direita, ônibus e caminhões)
   const FAIXAS_AV = [.1, .29];
-  const LENTOS = ['onibus', 'caminhao', 'lixo', 'trator', 'bombeiro'];
+  const LENTOS = ['onibus', 'rodoviario', 'caminhao', 'lixo', 'trator', 'bombeiro'];
   const MICRO = ['bike', 'patinete'], LAT_MICRO = .345; // bicicletas e patinetes no bordo da pista (CTB, art. 58)
   function moverCarros(dt, sinal) {
     const vias = viasNasAvenidas(), agora = relogio();
@@ -1514,8 +1548,8 @@ const Cena = (() => {
         if (folga > 0 && folga < (k.comp + o.comp) / 2 + .12) passo = 0;
       });
       // ônibus para no ponto que fica à sua direita
-      if (k.tipo === 'onibus' && passo) {
-        const par = vias[eixo].paradas.find(pa => (pa.s - k.p) * k.sentido > 0 && (pa.s - k.p - passo) * k.sentido <= 0 && ladoDireito(tr, pa.s, k.sentido) === pa.d);
+      if (['onibus', 'rodoviario'].includes(k.tipo) && passo) {
+        const par = vias[eixo].paradas.find(pa => (k.tipo === 'onibus' || pa.rodo) && (pa.s - k.p) * k.sentido > 0 && (pa.s - k.p - passo) * k.sentido <= 0 && ladoDireito(tr, pa.s, k.sentido) === pa.d);
         if (par) { k.p = par.s; k.parado = 2.8; posicionarCarro(k, k.sentido * k.lat); return; }
       }
       // retorno permitido: às vezes o carro da faixa interna dá meia-volta, se o outro sentido estiver livre
@@ -1940,6 +1974,61 @@ const Cena = (() => {
     const quer = new Set((s.ocorrencias || []).map(o => o.tile + o.tipo + (o.socorro || '')));
     Object.keys(cenasOcorrencia).forEach(k => { if (!quer.has(k)) { scene.remove(cenasOcorrencia[k]); delete cenasOcorrencia[k]; } });
     (s.ocorrencias || []).forEach(o => { const k = o.tile + o.tipo + (o.socorro || ''); if (!cenasOcorrencia[k]) { cenasOcorrencia[k] = criarOcorrencia(o); scene.add(cenasOcorrencia[k]); } });
+  }
+
+  /* ── Entradas da cidade: placa de boas-vindas ou pórtico (com o Portal da cidade) ── */
+  const entradas = [];
+  let chaveEntradas = '';
+  function texBoasVindas(cima, nome, baixo, fundo = '#1F3A5F', corTexto = '#FFFFFF', W = 1024, H = 256) {
+    return canvasTex(W, H, ctx => {
+      ctx.fillStyle = fundo; ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = '#F2B705'; ctx.lineWidth = 10; ctx.strokeRect(12, 12, W - 24, H - 24);
+      ctx.fillStyle = corTexto; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `700 ${H * .15}px Nunito, "Segoe UI", sans-serif`; ctx.fillText(cima, W / 2, H * .24);
+      let fs = H * .36; ctx.font = `900 ${fs}px Fredoka, Nunito, sans-serif`;
+      while (ctx.measureText(nome).width > W * .88 && fs > 20) { fs -= 4; ctx.font = `900 ${fs}px Fredoka, Nunito, sans-serif`; }
+      ctx.fillText(nome, W / 2, H * .55);
+      ctx.font = `600 ${H * .12}px Nunito, "Segoe UI", sans-serif`; ctx.fillStyle = '#FFE082'; ctx.fillText(baixo, W / 2, H * .82);
+    });
+  }
+  function sincronizarEntradas() {
+    const portal = conta(s, 'portal') > 0, pop = Math.round((s.pop || 0) / 10) * 10;
+    const chave = [s.nome, pop, portal, s.avenidas].join('|');
+    if (chave === chaveEntradas) return;
+    chaveEntradas = chave;
+    entradas.forEach(g => scene.remove(g)); entradas.length = 0;
+    const nome = (s.nome || 'Cidade Legal').toUpperCase();
+    const frente = new THREE.MeshStandardMaterial({ map: texBoasVindas('BEM-VINDO(A) A', nome, `${fmt(pop)} habitantes · cidade de todos`), roughness: .5 });
+    const verso = new THREE.MeshStandardMaterial({ map: texBoasVindas('OBRIGADO PELA VISITA', nome, 'volte sempre!', '#2E7D32'), roughness: .5 });
+    saidasAvenidas().forEach(o => {
+      const g = new THREE.Group(), L = [-o.dz, o.dx];
+      g.position.set(o.x + o.dx * 2.3, 0, o.z + o.dz * 2.3);
+      g.rotation.y = Math.atan2(o.dx, o.dz); // a frente da placa olha para quem chega de fora
+      if (!portal) {
+        const lado = .78;
+        [-.2, .2].forEach(x => g.add(cilindro(.014, .016, .42, '#455A64', lado + x, 0, 0, 6)));
+        const placa = new THREE.Mesh(new THREE.BoxGeometry(.62, .18, .02), [mat('#455A64'), mat('#455A64'), mat('#455A64'), mat('#455A64'), frente, verso]);
+        placa.position.set(lado, .48, 0); placa.castShadow = true; g.add(placa);
+        g.add(caixa(.6, .04, .16, '#6D4C41', lado, 0, .14)); for (let k = 0; k < 5; k++) g.add(caixa(.05, .05, .05, ['#E91E63', '#FDD835', '#FFFFFF'][k % 3], lado - .22 + k * .11, .04, .14));
+      } else {
+        const pedra = IMG.reboco_cor ? pbr('reboco', 1, 2, { color: '#D7C9B4' }) : mat('#C8BBA8'), larg = .72;
+        [-1, 1].forEach(sx => {
+          g.add(caixa(.16, .9, .16, pedra, sx * larg, 0, 0));
+          g.add(caixa(.2, .06, .2, '#8D6E63', sx * larg, .9, 0));
+          const luz = new THREE.MeshStandardMaterial({ color: '#FFF6D0', emissive: '#FFD27A', emissiveIntensity: 0 }); luz.userData = { farol: true };
+          materiaisNoturnos.push(luz); g.add(malha(new THREE.SphereGeometry(.05, 10, 8), luz, sx * larg, 1.0, 0));
+          g.add(cilindro(.008, .008, .5, '#ECEFF1', sx * (larg + .3), 0, -.1, 6));
+          const bandeira = caixa(.003, .12, .18, sx < 0 ? '#2E7D32' : '#1565C0', sx * (larg + .3), .38, -.01); g.add(bandeira);
+          g.add(caixa(.34, .06, .22, '#6D4C41', sx * (larg + .1), 0, .26));
+          for (let k = 0; k < 4; k++) g.add(caixa(.05, .05, .05, ['#E91E63', '#FDD835', '#FF7043'][k % 3], sx * (larg + .1) - .12 + k * .08, .06, .26));
+        });
+        const viga = new THREE.Mesh(new THREE.BoxGeometry(1.6, .24, .1), [mat('#5D4037'), mat('#5D4037'), mat('#5D4037'), mat('#5D4037'), frente, verso]);
+        viga.position.y = .74; viga.castShadow = true; g.add(viga);
+        g.add(caixa(1.7, .05, .14, '#4E342E', 0, .86, 0));
+        const brasao = malha(new THREE.CylinderGeometry(.09, .09, .02, 6), mat('#F2B705', { metalness: .5, roughness: .3 }), 0, 1.0, 0); brasao.rotation.x = Math.PI / 2; g.add(brasao);
+      }
+      scene.add(g); entradas.push(g);
+    });
   }
 
   /* ── Trajeto das avenidas: centro de cada lote, com arcos nas curvas e a estrada além da borda ── */
@@ -2422,7 +2511,7 @@ const Cena = (() => {
   const FREQUENTADORES = {
     parque: { n: 5, criancas: 2, raio: .33 }, praca: { n: 3, raio: .28 }, escola: { n: 4, criancas: 4, raio: .44 },
     mercado: { n: 2, raio: .47 }, terminal: { n: 3, parados: true }, banco: { n: 3, fila: true }, inss: { n: 3, fila: true },
-    pontoAcessivel: { n: 3, parados: true }, templo: { n: 2, raio: .47 }, cultura: { n: 3, raio: .47 }, condominio: { n: 2, raio: .47 }, saude: { n: 2, fila: true },
+    pontoAcessivel: { n: 3, parados: true }, rodoviaria: { n: 4, parados: true }, templo: { n: 2, raio: .47 }, cultura: { n: 3, raio: .47 }, condominio: { n: 2, raio: .47 }, saude: { n: 2, fila: true },
     lagoa: { n: 3, criancas: 1, raio: .47 }, pontoOnibus: { n: 2, parados: true }, iluminacao: { n: 2, raio: .33 },
   };
   function criarFrequentadores(g, tipo, semente) {
@@ -2622,7 +2711,7 @@ const Cena = (() => {
     aluguel: ['EDIFÍCIO', .3, .04, 0, .27, .332, '#40536E'],
     cooperativa: ['COOPERATIVA', .4, .06, 0, .2, -.02, '#2E7D32'], galpao: ['LOGÍSTICA', .36, .06, 0, .29, .072, '#455A64'],
     pontoTaxi: ['TÁXI', .16, .05, -.28, .15, -.2, '#F9A825', '#212121'], posto: ['CONVENIÊNCIA', .24, .045, -.3, .17, .25, '#C62828'],
-    estacaoTrem: ['ESTAÇÃO', .3, .05, 0, .17, .43, '#00897B'], motofrete: ['MOTOFRETE', .4, .06, -.1, .2, -.038, '#E65100'], aeroporto: ['AEROPORTO', .3, .04, -.16, .175, -.188, '#283593'],
+    estacaoTrem: ['ESTAÇÃO', .3, .05, 0, .17, .43, '#00897B'], rodoviaria: ['RODOVIÁRIA', .46, .065, 0, .3, -.149, '#1565C0'], motofrete: ['MOTOFRETE', .4, .06, -.1, .2, -.038, '#E65100'], aeroporto: ['AEROPORTO', .3, .04, -.16, .175, -.188, '#283593'],
   };
   const cacheLetreiro = {};
   function letreiro(g, tipo, n) {
@@ -2787,6 +2876,7 @@ const Cena = (() => {
     sincronizarBairros();
     sincronizarSemaforos();
     sincronizarOcorrencias();
+    sincronizarEntradas();
     if (visaoAtiva) desenharVisao();
     aplicarEstacao((s.mes - 1) % 12);
     // balões ❗ dos cidadãos

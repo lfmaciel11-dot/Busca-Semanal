@@ -123,6 +123,11 @@ A aba **🚸 Sinalização** reúne o que é instalado sobre as ruas:
 | 🚦 Semáforo de pedestres | Trecho reto, fora da ponte | Obedecer ao foco de pedestres (CTB, art. 69, III, "a"); quem não terminou a travessia tem preferência (art. 70, parágrafo único); sinal vermelho (art. 208). Os carros param no vermelho e os pedestres atravessam |
 | 〰️ Lombada | Ruas locais, trecho reto | Só nos padrões do Contran (CTB, art. 94, parágrafo único; Resolução 600/2016); obra na via depende de permissão (art. 95). Os carros reduzem e sobem a lombada |
 
+### Entrada da cidade e rodoviária
+
+- Nas quatro estradas que chegam à cidade há uma placa **"Bem-vindo(a) a [nome da cidade]"** com o número de habitantes; do lado de dentro, "Obrigado pela visita · volte sempre". O **🏛️ Portal da cidade** troca as placas por pórticos iluminados, com canteiros e bandeiras (aula: símbolos municipais, CF art. 13, §2º; Lei Orgânica, art. 29; criação de municípios, art. 18, §4º).
+- A **🚍 Rodoviária** (passa por licitação) recebe ônibus de viagem que chegam pelas estradas, param na plataforma e partem para outras cidades (aula: ANTT, gratuidade de idosos e jovens de baixa renda, passe livre e viagem de criança desacompanhada, ECA art. 83).
+
 ### Motos, bicicletas e patinetes
 
 Motos (com capacete) circulam nas avenidas e ruas; bicicletas e patinetes elétricos andam no bordo da pista (CTB, art. 58), e os carros e ônibus que vêm atrás passam para a faixa da esquerda para ultrapassar com distância (art. 201). Duas construções ensinam as regras: 🛴 **Estação de bikes e patinetes** (Resolução Contran 996/2023, CTB art. 59, Lei 12.587/2012 art. 18, responsabilidade civil) e 🏍️ **Central de motofrete** (capacete, CTB arts. 54, 55 e 244; categoria A; Lei 12.009/2009).

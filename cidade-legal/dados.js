@@ -1051,6 +1051,50 @@ const PREDIOS = {
     ],
   },
 
+  rodoviaria: {
+    nome: 'Rodoviária', icone: '🚍', area: 'Transporte rodoviário de passageiros', cor: '#1565C0', cat: 'transporte', unico: true,
+    custo: 450, nivel: 2,
+    efeito: { renda: 40, manutencao: 12, pop: 0, felicidade: 6 },
+    bonus: 'Ônibus de viagem chegam de outras cidades e partem pelas estradas. Rende mais se ficar na beira da avenida.',
+    aula: {
+      resumo: 'A rodoviária liga a cidade ao resto do país. As viagens entre estados são reguladas pela União, e os passageiros têm direitos garantidos em lei.',
+      pontos: [
+        'O transporte de passageiros entre estados é regulado e fiscalizado pela ANTT (Lei 10.233/2001); entre cidades do mesmo estado, pelo Estado; dentro da cidade, pelo Município (CF, art. 30, V).',
+        'No ônibus interestadual, cada viagem reserva 2 vagas gratuitas para idosos de baixa renda e dá 50% de desconto aos demais idosos que excederem essas vagas (Estatuto da Pessoa Idosa, art. 40).',
+        'Jovens de 15 a 29 anos de baixa renda, com o ID Jovem, têm 2 vagas gratuitas e 2 com desconto de 50% por viagem interestadual (Estatuto da Juventude, Lei 12.852/2013, art. 32).',
+        'Pessoas com deficiência de baixa renda têm passe livre no transporte coletivo interestadual (Lei 8.899/1994).',
+        'Criança ou adolescente menor de 16 anos não pode viajar para fora da comarca onde mora sem os pais ou responsável, salvo com autorização expressa deles ou do juiz (ECA, art. 83, com a Lei 13.812/2019).',
+      ],
+      pratica: 'Uma senhora de 70 anos, de baixa renda, quer viajar para outro estado e as duas vagas gratuitas já foram usadas? Ela tem direito a pelo menos 50% de desconto na passagem.',
+    },
+    licenca: [
+      { p: 'Quem fiscaliza o ônibus que vai para outro estado?', ops: ['O Município', 'A ANTT', 'A ANAC', 'O Detran'], c: 1, exp: 'A Agência Nacional de Transportes Terrestres (Lei 10.233/2001).' },
+      { p: 'Quantas vagas gratuitas para idosos de baixa renda cada ônibus interestadual deve reservar?', ops: ['Nenhuma', '2', '10', 'Todas'], c: 1, exp: 'Estatuto da Pessoa Idosa, art. 40, I.' },
+      { p: 'Um menino de 14 anos pode viajar sozinho para outra cidade, fora da comarca?', ops: ['Sim, sempre', 'Não, sem os pais ou responsável só com autorização expressa deles ou do juiz', 'Sim, se tiver dinheiro da passagem', 'Só de avião'], c: 1, exp: 'ECA, art. 83 (redação da Lei 13.812/2019).' },
+    ],
+  },
+  portal: {
+    nome: 'Portal da cidade', icone: '🏛️', area: 'Organização do Município', cor: '#6D4C41', cat: 'comunidade', unico: true,
+    custo: 260, nivel: 1,
+    efeito: { renda: 6, manutencao: 3, pop: 0, felicidade: 6 },
+    bonus: 'Troca as placas das quatro entradas da cidade por pórticos iluminados com o nome do município. Atrai turistas.',
+    aula: {
+      resumo: 'O Município é um ente da federação, com território, símbolos e autonomia próprios.',
+      pontos: [
+        'A República Federativa do Brasil é formada pela União, pelos Estados, pelo Distrito Federal e pelos Municípios, todos autônomos (CF, arts. 1º e 18).',
+        'Os Municípios podem ter símbolos próprios, como bandeira, brasão e hino (CF, art. 13, §2º).',
+        'O Município se organiza por uma Lei Orgânica, votada pela Câmara Municipal (CF, art. 29).',
+        'Criar, fundir ou desmembrar Municípios exige lei estadual, estudo de viabilidade e plebiscito com a população envolvida (CF, art. 18, §4º).',
+      ],
+      pratica: 'Um bairro quer se separar e virar uma nova cidade? Não basta a vontade dos moradores: são exigidos lei estadual, estudo de viabilidade e plebiscito.',
+    },
+    licenca: [
+      { p: 'O Município pode ter bandeira e hino próprios?', ops: ['Não, só o país', 'Sim, a Constituição permite símbolos próprios', 'Só as capitais', 'Só com autorização do presidente'], c: 1, exp: 'CF, art. 13, §2º.' },
+      { p: 'Qual é a "constituição" do Município?', ops: ['O Código Civil', 'A Lei Orgânica', 'O Plano Diretor', 'O regimento da prefeitura'], c: 1, exp: 'CF, art. 29.' },
+      { p: 'O que é preciso para um bairro virar uma nova cidade?', ops: ['Um abaixo-assinado', 'Lei estadual, estudo de viabilidade e plebiscito', 'Decreto do prefeito', 'Nada'], c: 1, exp: 'CF, art. 18, §4º.' },
+    ],
+  },
+
   /* ── Zona rural ── */
   lavoura: {
     nome: 'Lavoura', icone: '🌾', area: 'Direito Agrário', cor: '#8D7B2A',
@@ -1364,6 +1408,7 @@ const MISSOES = [
   { id: 'm17', texto: 'Cidade para todos: Ciclofaixa, Rampa de acessibilidade e Piso tátil', ok: s => ['ciclovia', 'rampa', 'pisoTatil'].every(k => conta(s, k) >= 1), xp: 30, din: 150 },
   { id: 'm18', texto: 'Transporte para todos: Ponto de ônibus acessível e Faixa exclusiva de ônibus', ok: s => conta(s, 'pontoAcessivel') >= 1 && conta(s, 'faixaOnibus') >= 1, xp: 30, din: 200 },
   { id: 'm19', texto: 'Travessia segura: Semáforo de pedestres e Lombada', ok: s => conta(s, 'semaforoPedestre') >= 1 && conta(s, 'lombada') >= 1, xp: 25, din: 120 },
+  { id: 'm20', texto: 'Receba os visitantes: construa a Rodoviária e o Portal da cidade', ok: s => conta(s, 'rodoviaria') >= 1 && conta(s, 'portal') >= 1, xp: 40, din: 250 },
   { id: 'm11', texto: 'Compre todos os bairros da cidade', ok: s => BAIRROS.every(b => (s.bairros || {})[b.id]), xp: 120, din: 0 },
 ];
 
@@ -2016,6 +2061,21 @@ const CASOS = [
     ops: ['Podem, a rua é de quem mora nela', 'Não: devem pedir à prefeitura, que avalia e instala dentro do padrão do Contran, com sinalização', 'Podem, se for bem alta'], c: 1,
     exp: 'Obras na via dependem de permissão do órgão de trânsito, e as lombadas seguem os padrões do Contran. Uma lombada fora do padrão pode causar acidentes.',
     base: 'CTB, arts. 94 e 95; Resolução Contran 600/2016' },
+  { predio: 'rodoviaria', titulo: 'Gratuidade negada', quem: '👵 Dona Cida, 72 anos',
+    texto: 'Fui comprar passagem para visitar minha filha em outro estado. Disseram que as vagas gratuitas acabaram e que eu teria que pagar o preço cheio. Está certo?',
+    ops: ['Está, acabou a vaga, acabou o direito', 'Não: esgotadas as 2 vagas gratuitas, o idoso de baixa renda tem desconto de pelo menos 50% na passagem', 'Ela só viaja de graça se for de avião'], c: 1,
+    exp: 'No transporte interestadual, são 2 vagas gratuitas por veículo para idosos de baixa renda e, para os que excederem, desconto mínimo de 50%.',
+    base: 'Estatuto da Pessoa Idosa, art. 40' },
+  { predio: 'rodoviaria', titulo: 'Viagem sozinho', quem: '🧒 Lucas, 13 anos',
+    texto: 'Quero ir sozinho visitar meu avô em outra cidade, longe daqui. Tenho o dinheiro da passagem. O guichê pode me vender?',
+    ops: ['Pode, se ele tiver o dinheiro', 'Sem os pais ou responsável, ele só viaja para fora da comarca com autorização expressa deles ou do juiz', 'Pode, se o avô buscar na chegada'], c: 1,
+    exp: 'Menor de 16 anos não pode viajar para fora da comarca onde mora desacompanhado dos pais ou responsável sem autorização expressa deles ou judicial.',
+    base: 'ECA, art. 83 (Lei 13.812/2019)' },
+  { predio: 'portal', titulo: 'O bairro quer se separar', quem: '📣 Líder comunitário',
+    texto: 'Nosso bairro cresceu muito e queremos virar uma cidade separada. O prefeito pode assinar um decreto criando o novo município?',
+    ops: ['Pode, basta o decreto', 'Não: criar município exige lei estadual, estudo de viabilidade e plebiscito com a população', 'Basta um abaixo-assinado'], c: 1,
+    exp: 'A criação de municípios segue regras rígidas da Constituição para evitar cidades sem condições de se manter.',
+    base: 'CF, art. 18, §4º' },
 ];
 
 /* Projetos de lei: chegam à Prefeitura quando há Câmara Municipal. O jogador sanciona
