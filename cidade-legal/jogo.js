@@ -206,6 +206,8 @@ function novoEstado(nome) {
 
 /* ── Persistência ─────────────────────────────────────────────────────────── */
 function salvar() {
+  if (window.trocandoCidade) return; // a página vai recarregar com outra cidade: não grava a atual por cima
+  if (typeof aoSalvar === 'function') aoSalvar(); // marca a hora, guarda em "Minhas cidades" e na conta (salvamento.js)
   try { localStorage.setItem(CHAVE_SAVE, JSON.stringify(s)); } catch (e) { /* sem storage: segue sem salvar */ }
 }
 function carregar() {
@@ -1433,6 +1435,7 @@ function carregarCidade(obj) {
   }
 }
 function abrirSalvar() {
+  if (typeof abrirMinhasCidades === 'function') return abrirMinhasCidades();
   abrirModal(`<div class="cab-modal" style="--cor:#0D7896"><span class="icone-grande">💾</span>
       <div><small>${esc(s.nome)} · ${nomeMes(s.mes)} do Ano ${anoDe(s.mes)}</small><h2>Salvar e carregar a cidade</h2></div></div>
     <p>O jogo já salva sozinho neste navegador. Para continuar em outro aparelho ou entregar ao professor, guarde a cidade num arquivo ou num código.</p>
@@ -1535,6 +1538,7 @@ document.addEventListener('DOMContentLoaded', () => {
   aplicarTema(tema);
 
   const salvo = carregar();
+  window.jogoNovo = !salvo;
   s = salvo || novoEstado();
   migrarEstado();
   if (window.THREE && Cena.init($('mapa'), clicarLote, clicarPessoa)) Mapa = Cena;
@@ -1564,7 +1568,13 @@ document.addEventListener('DOMContentLoaded', () => {
     try { localStorage.setItem('cidade-legal-tema', novo); } catch (e) { /* ignora */ }
   };
   // confirmação dentro do jogo (confirm() é bloqueado quando a página roda embutida)
-  $('btn-reiniciar').onclick = () => abrirModal(`<div class="resultado"><span class="icone-grande">🔄</span>
+  if (typeof novaCidade === 'function') $('btn-reiniciar').onclick = () => abrirModal(`<div class="resultado"><span class="icone-grande">🏙️</span>
+      <h2>Começar uma cidade nova?</h2><p><b>${esc(s.nome)}</b> continua guardada em 💾 Minhas cidades, e você pode voltar a ela quando quiser.</p></div>
+    <div class="botoes"><button class="btn" id="m-fechar">Cancelar</button><button class="btn primario" id="m-nova">➕ Nova cidade</button></div>`, cx => {
+    cx.querySelector('#m-fechar').onclick = fecharModal;
+    cx.querySelector('#m-nova').onclick = novaCidade;
+  });
+  else $('btn-reiniciar').onclick = () => abrirModal(`<div class="resultado"><span class="icone-grande">🔄</span>
       <h2>Reiniciar o jogo?</h2><p>Todo o progresso de <b>${esc(s.nome)}</b> será perdido.</p></div>
     <div class="botoes"><button class="btn" id="m-fechar">Cancelar</button><button class="btn perigo" id="m-reiniciar">Reiniciar</button></div>`, cx => {
     cx.querySelector('#m-fechar').onclick = fecharModal;

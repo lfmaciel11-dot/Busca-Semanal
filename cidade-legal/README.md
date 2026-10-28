@@ -23,6 +23,13 @@ O tempo passa de verdade: o sol cruza o céu, entardece e anoitece (janelas e po
 | `marca/` | Logos do Educa Direito: originais (azul, roxo e fundo roxo), versões com fundo transparente, versão para tema escuro e ícone do app |
 | `vendor/` | Three.js r147, OrbitControls e pós-processamento — SSAO e Bloom (licença MIT) |
 
+## Salvar o progresso
+
+- **Salva sozinho** a cada ação; o topo mostra "✓ salvo" (neste aparelho) ou "☁️ salvo" (na conta).
+- **☁️ Na página publicada no Claude**, o progresso vai para a conta da pessoa, num espaço privado só dela. Ao abrir o jogo em outro aparelho, ele pergunta "Continuar de onde parou?".
+- **💾 Minhas cidades**: várias cidades guardadas; continuar qualquer uma, começar uma nova (a atual fica guardada) ou excluir.
+- **📲 Levar para outro aparelho sem arquivo**: código curto e comprimido (começa com `CL2.`), botão Compartilhar (WhatsApp, e-mail) e, quando o jogo roda num site, link que já abre a cidade. Códigos antigos continuam valendo. O arquivo `.json` ficou em "Opções avançadas".
+
 ## Cidade viva (desafios, Fórum, licitação, turma e acessibilidade)
 
 Tudo em `cidade-viva.js`:

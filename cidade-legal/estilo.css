@@ -644,3 +644,18 @@ html.sem-animacao *, html.sem-animacao *::before, html.sem-animacao *::after { a
 :root[data-theme="dark"] .logo-claro { display: none; }
 :root[data-theme="dark"] .logo-escuro { display: block; }
 :root[data-theme="dark"] .sub-marca b { color: #B39DFF; }
+
+/* salvamento: indicador e Minhas cidades */
+.status-salvo { font-size: 11px; font-weight: 700; color: var(--ok); white-space: nowrap; margin-left: 4px; }
+.status-salvo.salvando { color: var(--muted); }
+.status-salvo.erro { color: var(--accent-esc); }
+.minhas-cidades { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; }
+.minhas-cidades li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 12px; }
+.minhas-cidades li.atual { border: 2px solid #8245FC; background: var(--panel2); }
+.minhas-cidades li > div { flex: 1; min-width: 0; }
+.minhas-cidades small { display: block; color: var(--muted); font-size: 12px; }
+.minhas-cidades .icone-cidade { font-size: 22px; }
+details.levar { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; }
+details.levar > summary, details.avancado > summary { cursor: pointer; font-weight: 700; }
+details.avancado { margin-top: 8px; font-size: 14px; }
+details.avancado > summary { font-weight: 500; color: var(--muted); }
