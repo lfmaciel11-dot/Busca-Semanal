@@ -965,6 +965,49 @@ const PREDIOS = {
     ],
   },
 
+  micromobilidade: {
+    nome: 'Estação de bikes e patinetes', icone: '🛴', area: 'Micromobilidade', cor: '#00897B', cat: 'transporte',
+    custo: 110, nivel: 1,
+    efeito: { renda: 8, manutencao: 0, pop: 0, felicidade: 4 },
+    bonus: 'Bicicletas e patinetes elétricos compartilhados passam a circular pelas ruas e ciclofaixas.',
+    aula: {
+      resumo: 'Bicicletas e patinetes compartilhados ajudam a cidade a se mover sem poluição, mas também seguem regras de trânsito.',
+      pontos: [
+        'O patinete elétrico é um "equipamento de mobilidade individual autopropelido": não exige habilitação nem placa, mas tem velocidade máxima definida pelo Contran (Resolução Contran 996/2023).',
+        'Na calçada, o pedestre tem prioridade. Bicicleta só pode andar na calçada onde houver sinalização autorizando (CTB, art. 59).',
+        'Cabe ao Município planejar a mobilidade e regulamentar os serviços de transporte urbano, como as estações de compartilhamento e onde estacionar (Lei 12.587/2012, art. 18).',
+        'Quem causa dano a outra pessoa com bicicleta ou patinete deve indenizar (Código Civil, arts. 186 e 927).',
+      ],
+      pratica: 'Um patinete elétrico atropelou um pedestre na calçada? Quem pilotava responde pelos danos, e a prefeitura pode regulamentar onde os patinetes podem andar.',
+    },
+    licenca: [
+      { p: 'Precisa de carteira de motorista para andar de patinete elétrico autopropelido?', ops: ['Sim, categoria A', 'Não, mas há limite de velocidade e regras de circulação', 'Sim, categoria B', 'Só para quem tem mais de 70 anos'], c: 1, exp: 'Resolução Contran 996/2023.' },
+      { p: 'Na calçada, quem tem prioridade?', ops: ['O patinete', 'A bicicleta', 'O pedestre', 'Quem estiver mais rápido'], c: 2, exp: 'A calçada é do pedestre; bicicleta só anda nela com sinalização autorizando (CTB, art. 59).' },
+      { p: 'Quem regulamenta as estações de bicicletas e patinetes compartilhados?', ops: ['O Município', 'A ONU', 'Os fabricantes', 'Ninguém'], c: 0, exp: 'Lei 12.587/2012, art. 18.' },
+    ],
+  },
+  motofrete: {
+    nome: 'Central de motofrete', icone: '🏍️', area: 'Trânsito: motocicletas', cor: '#E65100', cat: 'transporte',
+    custo: 160, nivel: 2,
+    efeito: { renda: 22, manutencao: 0, pop: 0, felicidade: 0 },
+    bonus: 'Mais motos circulando pela cidade, levando entregas.',
+    aula: {
+      resumo: 'A moto é ágil e útil, mas quem pilota está mais exposto: capacete e regras salvam vidas.',
+      pontos: [
+        'Quem pilota e quem vai na garupa só podem circular com capacete com viseira ou óculos de proteção (CTB, arts. 54, I, e 55, I).',
+        'Andar de moto sem capacete é infração gravíssima, com suspensão do direito de dirigir (CTB, art. 244, I).',
+        'Para pilotar moto é preciso habilitação na categoria A (CTB, art. 143, I).',
+        'O motofrete é profissão regulamentada: exige pelo menos 21 anos, 2 anos de habilitação na categoria A e curso especializado (Lei 12.009/2009, art. 2º).',
+      ],
+      pratica: 'O entregador vai "só ali na esquina" sem capacete? É infração gravíssima, com suspensão do direito de dirigir, e um risco enorme para a vida dele.',
+    },
+    licenca: [
+      { p: 'Andar de moto sem capacete é:', ops: ['Permitido em trajetos curtos', 'Infração gravíssima, com suspensão do direito de dirigir', 'Infração leve', 'Permitido de dia'], c: 1, exp: 'CTB, art. 244, I.' },
+      { p: 'Qual categoria de habilitação é exigida para pilotar moto?', ops: ['A', 'B', 'C', 'Nenhuma'], c: 0, exp: 'CTB, art. 143, I.' },
+      { p: 'Qual destes é requisito para trabalhar com motofrete?', ops: ['Ter 18 anos', 'Ter pelo menos 21 anos, 2 anos de habilitação na categoria A e curso especializado', 'Ter carro próprio', 'Nenhum'], c: 1, exp: 'Lei 12.009/2009, art. 2º.' },
+    ],
+  },
+
   /* ── Zona rural ── */
   lavoura: {
     nome: 'Lavoura', icone: '🌾', area: 'Direito Agrário', cor: '#8D7B2A',
@@ -1909,6 +1952,16 @@ const CASOS = [
     ops: ['Do outro, porque eu sinalizei', 'Em regra, de quem converteu: na conversão à esquerda é preciso ceder passagem a quem vem em sentido contrário', 'De ninguém, a seta resolve'], c: 1,
     exp: 'A seta avisa a manobra, mas não dá preferência. Quem converte à esquerda espera os veículos do sentido contrário, os pedestres e os ciclistas.',
     base: 'CTB, art. 38, parágrafo único' },
+  { predio: 'micromobilidade', titulo: 'Patinete na calçada', quem: '👵 Dona Zilda',
+    texto: 'Um rapaz de patinete elétrico, correndo pela calçada, me derrubou e quebrou meus óculos. Ele disse que patinete não é carro e que não tem nada a ver. E agora?',
+    ops: ['Ele tem razão, patinete não tem regra', 'Ele deve indenizar o dano, e na calçada a prioridade é do pedestre', 'Só a prefeitura paga'], c: 1,
+    exp: 'Quem causa dano a outra pessoa por imprudência deve repará-lo. Na calçada, o pedestre tem prioridade, e o Município pode limitar onde e como os patinetes circulam.',
+    base: 'Código Civil, arts. 186 e 927; Resolução Contran 996/2023' },
+  { predio: 'motofrete', titulo: 'Entrega sem capacete', quem: '📦 Gerente da central de motofrete',
+    texto: 'Um entregador novo quer sair sem capacete porque está calor e a entrega é perto. Posso deixar?',
+    ops: ['Pode, é rapidinho', 'Não: sem capacete é infração gravíssima com suspensão, e a empresa deve exigir o equipamento de segurança', 'Só se ele assinar um termo'], c: 1,
+    exp: 'O capacete é obrigatório para quem pilota e para o passageiro. A atividade de motofrete exige ainda curso e equipamentos de segurança.',
+    base: 'CTB, art. 244, I; Lei 12.009/2009' },
 ];
 
 /* Projetos de lei: chegam à Prefeitura quando há Câmara Municipal. O jogador sanciona

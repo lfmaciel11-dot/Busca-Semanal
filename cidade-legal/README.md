@@ -101,6 +101,15 @@ A aba **🚸 Sinalização** reúne o que é instalado sobre as ruas:
 | 🚸 Faixa de pedestres | Trecho reto | Preferência do pedestre (CTB, arts. 70 e 214); os carros param quando alguém atravessa |
 | 📸 Radar | Trecho reto | Limites de velocidade (CTB, art. 61) e infração pelo excesso (art. 218); os carros reduzem perto dele |
 
+### Motos, bicicletas e patinetes
+
+Motos (com capacete) circulam nas avenidas e ruas; bicicletas e patinetes elétricos andam no bordo da pista (CTB, art. 58), e os carros e ônibus que vêm atrás passam para a faixa da esquerda para ultrapassar com distância (art. 201). Duas construções ensinam as regras: 🛴 **Estação de bikes e patinetes** (Resolução Contran 996/2023, CTB art. 59, Lei 12.587/2012 art. 18, responsabilidade civil) e 🏍️ **Central de motofrete** (capacete, CTB arts. 54, 55 e 244; categoria A; Lei 12.009/2009).
+
+### Demolir e desfazer
+
+- **🧨 Demolir** (botão nos controles do mapa, ou na janela de cada prédio): clique no que quer tirar (prédio, rua, ponte ou itens instalados na rua) e volta para o caixa **metade de tudo o que foi investido** no lote, incluindo ampliações. O lote fica livre para reconstruir. A prefeitura e as avenidas principais não podem ser demolidas, só o que foi instalado nelas.
+- **↩️ Desfazer** (ou Ctrl+Z): corrige a última ação do mês. Uma construção desfeita devolve o valor gasto; uma demolição desfeita reconstrói o que estava lá (e devolve o reembolso).
+
 ### Pistas, emendas e transporte coletivo acessível
 
 - **Avenidas com duas faixas em cada sentido**: faixa dupla amarela no meio e linha branca tracejada entre as faixas. Ônibus e caminhões andam pela direita; os mais rápidos, pela esquerda (CTB, art. 29, IV). Onde há vagas, a baia de estacionamento funciona como uma terceira faixa, sem tirar espaço de quem circula.

@@ -557,7 +557,8 @@ html:has(body.tela-jogo), body.tela-jogo { height: 100%; overflow: hidden; }
   .painel.recolhido .painel-alca .ico { transform: rotate(-90deg); }
   .app .controles-mapa { flex-direction: row; right: max(var(--gap-hud), env(safe-area-inset-right, 0px)); bottom: calc(var(--painel-h) + 30px); transition: bottom .35s; }
   .app.painel-fechado .controles-mapa { right: max(var(--gap-hud), env(safe-area-inset-right, 0px)); bottom: 70px; }
-  .app .controles-mapa .btn { width: 36px; height: 36px; }
+  .app .controles-mapa { gap: 3px; padding: 4px; max-width: calc(100% - 16px); overflow-x: auto; }
+  .app .controles-mapa .btn { width: 33px; height: 33px; flex: none; }
   .visoes { right: auto; left: max(var(--gap-hud), env(safe-area-inset-left, 0px)); bottom: calc(var(--painel-h) + 84px); flex-direction: row; flex-wrap: wrap; max-width: calc(100% - 16px); }
   .app.painel-fechado .visoes { right: auto; bottom: 124px; }
   .app .ajuda-mapa { display: none; }
@@ -580,3 +581,8 @@ html:has(body.tela-jogo), body.tela-jogo { height: 100%; overflow: hidden; }
 .dispositivo h3 small { font-weight: 500; color: var(--muted); font-size: 12px; margin-left: 4px; }
 .dispositivo details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin: 4px 0; }
 .dispositivo .btn { margin-top: 6px; }
+
+/* modo demolir */
+body.demolindo #mapa { cursor: crosshair; }
+#btn-demolir.ativo { background: #C62828; color: #FFFFFF; border-color: #8E1B1B; }
+#btn-desfazer:disabled { opacity: .4; cursor: default; }

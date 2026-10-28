@@ -123,8 +123,10 @@ function instalarVia(i) {
   const erro = validarVia(tipo, i);
   if (erro) { toast(erro); return; }
   if (s.dinheiro < p.custo) { toast('💸 Orçamento insuficiente.'); s.selecionado = null; render(); return; }
+  const antes = copia(s.mapa[i]);
   s.dinheiro -= p.custo;
   if (p.acess) (s.mapa[i].acess = s.mapa[i].acess || []).push(tipo); else s.mapa[i].via = tipo;
+  anotar(i, antes, -p.custo, `${p.icone} ${p.nome}`);
   som('construir');
   if (conta(s, tipo) === 1) registrar(`🚦 Instalado(a): <b>${p.icone} ${p.nome}</b>.`);
   if (s.dinheiro < p.custo) s.selecionado = null;
@@ -143,11 +145,12 @@ function abrirVia(i) {
     <div class="botoes"><button class="btn primario" id="m-fechar">Fechar</button></div>`, cx => {
     cx.querySelector('#m-fechar').onclick = fecharModal;
     cx.querySelectorAll('[data-remover]').forEach(b => b.onclick = () => {
-      const k = b.dataset.remover;
+      const k = b.dataset.remover, antes = copia(l), pendAntes = s.pendentes.filter(x => x.tile === i).map(copia);
       if (l.via === k) delete l.via; else l.acess = (l.acess || []).filter(x => x !== k);
       if (l.acess && !l.acess.length) delete l.acess;
       s.dinheiro += Math.floor(PREDIOS[k].custo / 2);
       if (!dispositivos(l).length) s.pendentes = s.pendentes.filter(x => x.tile !== i);
+      anotar(i, antes, Math.floor(PREDIOS[k].custo / 2), `remoção de ${PREDIOS[k].icone} ${PREDIOS[k].nome}`, pendAntes);
       fecharModal(); render();
     });
   });
@@ -425,6 +428,7 @@ function renderMapa() {
 
 function clicarLote(i) {
   if (!liberado(i)) return abrirBairro(bairroDe(i));
+  if (modoDemolir) return pedirDemolicao(i);
   const t = s.mapa[i];
   if (ehDispositivo(s.selecionado)) return instalarVia(i);
   const caso = s.pendentes.find(p => p.tile === i);
@@ -473,6 +477,7 @@ function renderConstruir(c) {
   el.querySelectorAll('[data-licenca]').forEach(b => b.onclick = () => { som('clique'); abrirAula(b.dataset.licenca, true); });
   el.querySelectorAll('[data-construir]').forEach(b => b.onclick = () => {
     som('clique');
+    if (modoDemolir) alternarDemolir(false);
     s.selecionado = s.selecionado === b.dataset.construir ? null : b.dataset.construir;
     render();
     if (s.selecionado && window.innerWidth < 900) $('mapa').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -710,8 +715,10 @@ function construirEm(i) {
   if (tipo === 'aeroporto' && vizinhos(i, 2).some(residencial)) { toast('✈️ Zona de ruído: o aeroporto precisa ficar a pelo menos 2 lotes de moradias (Código Brasileiro de Aeronáutica, arts. 43 a 46).'); return; }
   if (RESIDENCIAIS.includes(tipo) && vizinhos(i, 2).some(aeroporto)) { toast('✈️ Zona de ruído do aeroporto: moradias precisam ficar a pelo menos 2 lotes de distância.'); return; }
   if (s.dinheiro < p.custo) { toast('💸 Orçamento insuficiente.'); s.selecionado = null; render(); return; }
+  const antes = copia(s.mapa[i]);
   s.dinheiro -= p.custo;
   s.mapa[i] = { tipo };
+  anotar(i, antes, -p.custo, `${p.icone} ${p.nome}`);
   ultimoConstruido = i;
   som('construir');
   if (conta(s, tipo) === 1) {
@@ -735,7 +742,7 @@ function abrirPredio(i) {
       <small>${(s.mapa[i].nivel || 1) < MAX_NIVEL ? 'Ampliar soma +50% aos efeitos (renda, moradores, felicidade e atendimento).' : 'Nível máximo.'}</small></div>` : ''}
     ${p.aula ? htmlAula(p) : `<p class="resumo">${p.cat === 'enfeite' ? 'Enfeites deixam a cidade mais agradável: cada um soma felicidade (até um limite de +12 no total).' : 'Obra de infraestrutura da cidade.'}${p.bonus ? ' ' + p.bonus : ''}</p>`}${extra}
     <div class="botoes">
-      ${tipo !== 'prefeitura' ? `<button class="btn perigo" id="m-demolir">Demolir (+${Math.floor(p.custo / 2)})</button>` : ''}
+      ${tipo !== 'prefeitura' ? `<button class="btn perigo" id="m-demolir">🧨 Demolir (+${fmt(Math.floor(valorInvestido(s.mapa[i]) / 2))})</button>` : ''}
       ${ampliavel(tipo) && (s.mapa[i].nivel || 1) < MAX_NIVEL ? `<button class="btn" id="m-ampliar" ${s.dinheiro < custoAmpliar(s.mapa[i]) ? 'disabled' : ''}>⬆️ Ampliar (💰 ${fmt(custoAmpliar(s.mapa[i]))})</button>` : ''}
       <button class="btn primario" id="m-fechar">Fechar</button>
     </div>`, cx => {
@@ -744,8 +751,10 @@ function abrirPredio(i) {
     if (amp) amp.onclick = () => {
       const custo = custoAmpliar(s.mapa[i]);
       if (s.dinheiro < custo) return;
+      const antes = copia(s.mapa[i]);
       s.dinheiro -= custo;
       s.mapa[i].nivel = (s.mapa[i].nivel || 1) + 1;
+      anotar(i, antes, -custo, `ampliação de ${p.icone} ${p.nome}`);
       if (Mapa.focar) Mapa.focar(i);
       ultimoConstruido = i;
       registrar(`⬆️ ${p.icone} ${p.nome} ampliado(a) para o nível ${s.mapa[i].nivel}.`);
@@ -753,13 +762,92 @@ function abrirPredio(i) {
       flutuar(i, `−${fmt(custo)} 💰`, 'neg');
     };
     const d = cx.querySelector('#m-demolir');
-    if (d) d.onclick = () => {
-      s.mapa[i] = tipo === 'ponteLocal' ? { tipo: 'agua' } : null; s.dinheiro += Math.floor(p.custo / 2);
-      s.pendentes = s.pendentes.filter(x => x.tile !== i);
-      registrar(`🚧 Demolido(a): ${p.icone} ${p.nome}.`);
-      fecharModal(); render();
-    };
+    if (d) d.onclick = () => { fecharModal(); demolir(i); };
   });
+}
+
+/* ── Demolir e desfazer ──────────────────────────────────────────────────────
+   Demolir devolve metade do que foi investido no lote (construção, ampliações e itens da rua).
+   Desfazer corrige a última ação do mês: devolve o valor gasto ou, se foi demolição, reconstrói. */
+let modoDemolir = false;
+const pilhaDesfazer = [];
+const copia = l => (l ? JSON.parse(JSON.stringify(l)) : null);
+function valorInvestido(l) {
+  if (!l) return 0;
+  let v = 0;
+  const p = PREDIOS[l.tipo];
+  if (p) { v += p.custo; for (let n = 1; n < (l.nivel || 1); n++) v += Math.round(p.custo * .8 * n); }
+  dispositivos(l).forEach(k => { v += PREDIOS[k].custo; });
+  return v;
+}
+// o que existe no lote e pode ser demolido ('' se nada)
+function podeDemolir(i) {
+  const l = s.mapa[i];
+  if (!l || l.tipo === 'agua' || l.tipo === 'prefeitura') return false;
+  if (['rua', 'ponte'].includes(l.tipo)) return dispositivos(l).length > 0; // avenida: só o que foi instalado nela
+  return !!PREDIOS[l.tipo] || dispositivos(l).length > 0;
+}
+function anotar(i, antes, delta, texto, pendAntes) {
+  pilhaDesfazer.push({ i, antes, depois: copia(s.mapa[i]), delta, texto, mes: s.mes, pend: pendAntes || [] });
+  if (pilhaDesfazer.length > 30) pilhaDesfazer.shift();
+  atualizarDesfazer();
+}
+function atualizarDesfazer() {
+  const a = pilhaDesfazer[pilhaDesfazer.length - 1], b = $('btn-desfazer');
+  if (!b) return;
+  b.disabled = !(a && a.mes === s.mes);
+  b.title = b.disabled ? 'Desfazer: nada para desfazer neste mês' : `Desfazer: ${a.texto} (Ctrl+Z)`;
+}
+function desfazerUltima() {
+  const a = pilhaDesfazer[pilhaDesfazer.length - 1];
+  if (!a || a.mes !== s.mes) { toast('↩️ Nada para desfazer neste mês. Para tirar algo antigo, use 🧨 Demolir (volta metade do valor).'); return; }
+  if (JSON.stringify(s.mapa[a.i]) !== JSON.stringify(a.depois)) { pilhaDesfazer.pop(); atualizarDesfazer(); toast('↩️ Esse lote mudou depois, então essa ação não pode mais ser desfeita.'); return; }
+  if (s.dinheiro - a.delta < 0) { toast('💸 Não há dinheiro em caixa para reconstruir o que foi demolido.'); return; }
+  pilhaDesfazer.pop();
+  s.mapa[a.i] = copia(a.antes); s.dinheiro -= a.delta;
+  a.pend.forEach(p => { if (!s.pendentes.some(x => x.tile === p.tile && x.caso === p.caso)) s.pendentes.push(p); });
+  som('clique'); toast(`↩️ Desfeito: ${a.texto} (${a.delta < 0 ? '+' : '−'}${fmt(Math.abs(a.delta))} 💰)`);
+  render(); atualizarDesfazer();
+}
+function demolir(i) {
+  const l = s.mapa[i];
+  if (!podeDemolir(i)) return;
+  const antes = copia(l), pendAntes = s.pendentes.filter(x => x.tile === i).map(copia), valor = Math.floor(valorInvestido(l) / 2);
+  const nome = PREDIOS[l.tipo] ? `${PREDIOS[l.tipo].icone} ${PREDIOS[l.tipo].nome}` : dispositivos(l).map(k => PREDIOS[k].icone).join(' ') + ' na avenida';
+  if (['rua', 'ponte'].includes(l.tipo)) { delete l.via; delete l.acess; }
+  else s.mapa[i] = l.tipo === 'ponteLocal' ? { tipo: 'agua' } : null;
+  s.dinheiro += valor;
+  s.pendentes = s.pendentes.filter(x => x.tile !== i);
+  registrar(`🚧 Demolido(a): ${nome} (+${fmt(valor)} 💰).`);
+  anotar(i, antes, valor, `demolição de ${nome}`, pendAntes);
+  som('clique'); render();
+  flutuar(i, `+${fmt(valor)} 💰`, 'pos');
+}
+function pedirDemolicao(i) {
+  if (!podeDemolir(i)) {
+    const l = s.mapa[i];
+    toast(l && l.tipo === 'prefeitura' ? '🏛️ A prefeitura não pode ser demolida.' : l && ['rua', 'ponte'].includes(l.tipo) ? '🛣️ As avenidas principais não podem ser demolidas, só o que foi instalado nelas.' : 'Não há nada para demolir aqui.');
+    return;
+  }
+  const l = s.mapa[i], valor = Math.floor(valorInvestido(l) / 2);
+  const itens = [PREDIOS[l.tipo] && `${PREDIOS[l.tipo].icone} ${PREDIOS[l.tipo].nome}${l.nivel > 1 ? ` (nível ${l.nivel})` : ''}`, ...dispositivos(l).map(k => `${PREDIOS[k].icone} ${PREDIOS[k].nome}`)].filter(Boolean);
+  abrirModal(`<div class="cab-modal" style="--cor:#C62828"><span class="icone-grande">🧨</span>
+      <div><small>Demolir</small><h2>${itens.length === 1 ? itens[0] : 'Este lote'}</h2></div></div>
+    ${itens.length > 1 ? `<ul>${itens.map(t => `<li>${t}</li>`).join('')}</ul>` : ''}
+    <p>Foram investidos <b>💰 ${fmt(valorInvestido(l))}</b> aqui. Ao demolir, volta para o caixa <b>metade: 💰 ${fmt(valor)}</b>. O lote fica livre para construir de novo.</p>
+    <p class="nota">Se mudar de ideia ainda neste mês, use ↩️ Desfazer.</p>
+    <div class="botoes"><button class="btn" id="m-cancelar">Cancelar</button><button class="btn perigo" id="m-demolir">🧨 Demolir (+${fmt(valor)})</button></div>`, cx => {
+    cx.querySelector('#m-cancelar').onclick = fecharModal;
+    cx.querySelector('#m-demolir').onclick = () => { fecharModal(); demolir(i); };
+  });
+}
+function alternarDemolir(ligar = !modoDemolir) {
+  modoDemolir = ligar;
+  if (ligar) s.selecionado = null;
+  document.body.classList.toggle('demolindo', ligar);
+  $('btn-demolir').classList.toggle('ativo', ligar);
+  if (ligar) toast('🧨 Modo demolir: clique no que quer demolir. Volta metade do valor investido. Esc para sair.');
+  render();
 }
 
 /* ── Passagem do tempo ────────────────────────────────────────────────────── */
@@ -1501,6 +1589,9 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-zoom-mais').onclick = () => Mapa.zoom(.5);
   $('btn-zoom-menos').onclick = () => Mapa.zoom(-.5);
   $('btn-zoom-reset').onclick = () => Mapa.zoom(0);
+  $('btn-demolir').onclick = () => { som('clique'); alternarDemolir(); };
+  $('btn-desfazer').onclick = desfazerUltima;
+  atualizarDesfazer();
   $('btn-placas').onclick = () => { const todas = Mapa.alternarPlacas(); renderMapa(); toast(todas ? '🏷️ Mostrando as placas de todos os prédios' : '🏷️ Placas só quando importa (casos, obras e mouse)'); };
   if (Mapa.passeio) {
     $('btn-passeio').onclick = () => { const on = Mapa.passeio(); $('btn-passeio').classList.toggle('ativo', on); };
@@ -1515,6 +1606,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   } else $('btn-graficos').hidden = true;
   document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) { e.preventDefault(); desfazerUltima(); return; }
+    if (e.key === 'Escape' && modoDemolir && $('modal').classList.contains('oculto')) { alternarDemolir(false); return; }
     if (e.key === 'Escape') {
       // provas não podem ser puladas com Esc; aulas, informações e casos ainda não respondidos sim
       const cx = $('modal-caixa');
