@@ -696,6 +696,52 @@ details.avancado > summary { font-weight: 500; color: var(--muted); }
 .guia-passos i.agora { background: #8245FC; }
 html.sem-animacao .guia-holofote, html.sem-animacao .guia-balao { transition: none; }
 
+/* confiabilidade do conteúdo */
+.rodape-conteudo { margin: 10px 0 0; padding-top: 6px; border-top: 1px dashed var(--borda, rgba(127,127,127,.35)); font-size: 12px; color: var(--muted); }
+.rodape-conteudo .link { background: none; border: 0; padding: 0; font: inherit; color: #E65100; cursor: pointer; text-decoration: underline; }
+.mudancas-legais { margin: 0 0 10px; padding: 8px 10px; background: var(--panel2); border-radius: 10px; font-size: 13px; }
+.mudancas-legais summary { cursor: pointer; }
+.mudancas-legais ul { margin: 8px 0 4px; padding-left: 18px; display: grid; gap: 6px; }
+.opcoes-reporte { display: grid; gap: 6px; margin: 8px 0; font-size: 14px; }
+.opcoes-reporte label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.lista-reportes { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; max-height: 180px; overflow: auto; }
+.lista-reportes li { display: flex; flex-direction: column; padding: 6px 10px; background: var(--panel2); border-radius: 10px; font-size: 13px; }
+.lista-reportes small { color: var(--muted); }
+.botoes.esquerda { justify-content: flex-start; }
+.oculto-reporte { display: none !important; }
+
+/* trilhas, glossário e modo campanha */
+.rotulo-campo { margin: 10px 0 4px; font-weight: 700; font-size: 14px; }
+.trilhas { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 6px; }
+.trilha { display: flex; gap: 8px; align-items: flex-start; padding: 7px 9px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; font-size: 13px; }
+.trilha:has(input:checked) { border-color: var(--accent, #7B40E8); background: var(--panel2); }
+.trilha input { margin-top: 3px; }
+.trilha small { display: block; color: var(--muted); font-size: 12px; }
+.opcao.eliminada { opacity: .35; text-decoration: line-through; }
+.btn-dica { margin-top: 6px; }
+.termo { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: help; text-decoration: underline dotted; text-decoration-thickness: 2px; text-underline-offset: 3px; text-decoration-color: #7B40E8; }
+.termo:hover, .termo:focus-visible { background: rgba(123,64,232,.12); border-radius: 4px; }
+.pop-termo { position: fixed; z-index: 400; max-width: min(320px, calc(100vw - 16px)); padding: 10px 12px; border-radius: 14px; font-size: 14px; line-height: 1.45; background: var(--panel); color: var(--ink); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.pop-termo p { margin: 4px 0 8px; }
+.glossario { margin: 0 0 10px; padding: 8px 10px; background: var(--panel2); border-radius: 10px; font-size: 13px; }
+.glossario summary { cursor: pointer; }
+.glossario dl { margin: 8px 0 4px; max-height: 320px; overflow: auto; }
+.glossario dt { font-weight: 800; margin-top: 6px; }
+.glossario dd { margin: 0 0 0 10px; color: var(--muted); }
+.cartao-historia { padding: 10px 12px; margin-bottom: 10px; border-radius: 12px; background: linear-gradient(135deg, rgba(0,137,123,.14), rgba(123,64,232,.1)); border: 1px solid rgba(0,137,123,.35); font-size: 14px; }
+.cartao-historia p { margin: 4px 0 8px; color: var(--muted); }
+.objetivos { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
+.objetivos li { display: flex; gap: 8px; align-items: center; }
+.objetivos li.feito { color: var(--muted); text-decoration: line-through; }
+.historia-texto { font-style: italic; }
+.app .chip-historia { position: absolute; z-index: 15; left: max(var(--gap-hud), env(safe-area-inset-left, 0px)); bottom: calc(max(var(--gap-hud), env(safe-area-inset-bottom, 0px)) + 70px);
+  max-width: min(360px, calc(100% - var(--painel-l) - 80px)); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px; color: var(--ink); cursor: pointer; text-align: left; border: 1px solid rgba(0,137,123,.45); }
+.app.com-visao .chip-historia { display: none; }
+@media (max-width: 760px) {
+  .app .chip-historia { bottom: calc(var(--painel-h) + 74px); max-width: calc(100% - 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: bottom .35s; }
+  .app.painel-fechado .chip-historia { bottom: 114px; }
+}
+
 </style>
 </head>
 <body class="tela-jogo">
@@ -6071,12 +6117,204 @@ const PREDIOS = {
 };
 
 /* Categorias do menu de construção */
+/* Rede de proteção, justiça e cidadania digital */
+Object.assign(PREDIOS, {
+  delegaciaMulher: {
+    nome: 'Delegacia da Mulher', icone: '💜', area: 'Violência contra a mulher (Lei Maria da Penha)', cor: '#8E24AA', cat: 'servicos',
+    custo: 320, nivel: 2, servico: 'seguranca',
+    efeito: { renda: 0, manutencao: 16, pop: 0, felicidade: 7 },
+    aula: {
+      resumo: 'A Lei Maria da Penha protege a mulher contra a violência doméstica e familiar, que vai muito além da agressão física.',
+      pontos: [
+        'Violência doméstica não é só bater: a lei reconhece cinco formas — física, psicológica, sexual, patrimonial e moral (Lei 11.340/2006, art. 7º).',
+        'A vítima pode pedir medidas protetivas de urgência, como afastar o agressor do lar e proibir que ele se aproxime; o juiz decide em até 48 horas (arts. 18 e 22).',
+        'As medidas protetivas valem mesmo sem boletim de ocorrência, sem processo e sem que a violência seja um crime específico (art. 19, §§ 4º e 5º, incluídos pela Lei 14.550/2023).',
+        'Descumprir uma medida protetiva é crime (art. 24-A). Nos casos de violência doméstica não se aplicam os Juizados Especiais nem a troca da pena por cesta básica (arts. 17 e 41).',
+        'A lei protege a mulher em qualquer relação de afeto ou convivência, independentemente de orientação sexual (art. 5º). Denúncias: Ligue 180, gratuito e sigiloso.',
+      ],
+      pratica: 'O companheiro controla o celular, xinga e quebra os objetos da mulher, mas "nunca bateu". Isso é violência psicológica, moral e patrimonial, e ela pode pedir medida protetiva.',
+    },
+    licenca: [
+      { p: 'Quais são as formas de violência previstas na Lei Maria da Penha?', ops: ['Só a física', 'Física e sexual', 'Física, psicológica, sexual, patrimonial e moral', 'Só a que deixa marcas'], c: 2, exp: 'Lei 11.340/2006, art. 7º.' },
+      { p: 'Para pedir medida protetiva, a mulher precisa antes registrar boletim de ocorrência?', ops: ['Sim, sempre', 'Não: a medida pode ser concedida mesmo sem BO ou processo', 'Só se houver testemunhas', 'Só se houver lesão'], c: 1, exp: 'Lei 11.340/2006, art. 19, §5º (Lei 14.550/2023).' },
+      { p: 'Em quanto tempo o juiz deve decidir sobre a medida protetiva?', ops: ['48 horas', '30 dias', '6 meses', 'Não há prazo'], c: 0, exp: 'Lei 11.340/2006, art. 18.' },
+      { p: 'O agressor descumpriu a ordem de não se aproximar. Isso é:', ops: ['Permitido, se ele pedir desculpas', 'Crime de descumprimento de medida protetiva', 'Só falta de educação', 'Problema só da família'], c: 1, exp: 'Lei 11.340/2006, art. 24-A.' },
+    ],
+  },
+  conselhoTutelar: {
+    nome: 'Conselho Tutelar', icone: '🧒', area: 'ECA: proteção da criança e do adolescente', cor: '#F57C00', cat: 'social',
+    custo: 220, nivel: 1,
+    efeito: { renda: 0, manutencao: 10, pop: 0, felicidade: 5 },
+    aula: {
+      resumo: 'Crianças e adolescentes têm prioridade absoluta, e o Conselho Tutelar é quem zela por esses direitos no município.',
+      pontos: [
+        'É dever da família, da sociedade e do Estado garantir, com absoluta prioridade, os direitos da criança e do adolescente (CF, art. 227; ECA, art. 4º).',
+        'O Conselho Tutelar é um órgão permanente e autônomo, não judicial, encarregado de zelar pelos direitos das crianças e adolescentes (ECA, art. 131). Cada município tem pelo menos um, com 5 conselheiros escolhidos pela comunidade para mandato de 4 anos (art. 132).',
+        'Suspeita de maus-tratos deve ser comunicada ao Conselho Tutelar (ECA, art. 13); professor ou médico que deixa de comunicar comete infração (art. 245).',
+        'É proibido qualquer trabalho a menores de 16 anos, salvo como aprendiz a partir dos 14; trabalho noturno, perigoso ou insalubre é proibido a menores de 18 (CF, art. 7º, XXXIII).',
+        'A criança tem direito de ser educada sem castigo físico ou tratamento cruel (ECA, art. 18-A, Lei Menino Bernardo).',
+      ],
+      pratica: 'Um menino de 12 anos vende balas no semáforo todo dia em vez de ir à escola. Isso é trabalho infantil, e o Conselho Tutelar deve ser acionado.',
+    },
+    licenca: [
+      { p: 'A partir de que idade é permitido trabalhar como aprendiz?', ops: ['10 anos', '12 anos', '14 anos', '18 anos'], c: 2, exp: 'CF, art. 7º, XXXIII: proibido trabalho a menores de 16, salvo aprendiz a partir de 14.' },
+      { p: 'O Conselho Tutelar é:', ops: ['Um tribunal que julga adolescentes', 'Órgão permanente e autônomo, não judicial, que zela pelos direitos das crianças', 'Uma ONG particular', 'Uma delegacia'], c: 1, exp: 'ECA, art. 131.' },
+      { p: 'O professor desconfia que um aluno sofre maus-tratos em casa. Ele deve:', ops: ['Não se envolver', 'Comunicar ao Conselho Tutelar', 'Esperar o aluno contar', 'Falar só com os vizinhos'], c: 1, exp: 'ECA, arts. 13 e 245.' },
+    ],
+  },
+  creche: {
+    nome: 'Creche municipal', icone: '🍼', area: 'Educação infantil: vaga em creche', cor: '#FBC02D', cat: 'social',
+    custo: 240, nivel: 1, servico: 'educacao',
+    efeito: { renda: 0, manutencao: 12, pop: 10, felicidade: 7 },
+    aula: {
+      resumo: 'Vaga em creche e pré-escola é direito da criança e dever do município, e pode ser cobrada na Justiça.',
+      pontos: [
+        'O Estado deve garantir educação infantil em creche (até 3 anos) e pré-escola (4 e 5 anos) (CF, art. 208, IV; ECA, art. 54, IV).',
+        'A educação é obrigatória e gratuita dos 4 aos 17 anos: os pais devem matricular os filhos (CF, art. 208, I; LDB, art. 6º).',
+        'Os municípios atuam prioritariamente no ensino fundamental e na educação infantil (CF, art. 211, §2º).',
+        'O STF decidiu que a vaga em creche é um direito exigível: se o município não oferece, a família pode pedir na Justiça (RE 1.008.166, Tema 548, 2022).',
+      ],
+      pratica: 'A mãe precisa trabalhar e a prefeitura diz que "não há vaga" para o bebê de 2 anos. Ela pode procurar a Defensoria e exigir a vaga na Justiça.',
+    },
+    licenca: [
+      { p: 'Até que idade a criança frequenta a creche?', ops: ['Até 3 anos', 'Até 6 anos', 'Até 10 anos', 'Não existe limite'], c: 0, exp: 'CF, art. 208, IV: creche até 3 anos; pré-escola aos 4 e 5.' },
+      { p: 'A prefeitura negou vaga em creche por falta de lugar. A família:', ops: ['Não pode fazer nada', 'Pode exigir a vaga na Justiça', 'Deve pagar escola particular', 'Precisa esperar a criança fazer 6 anos'], c: 1, exp: 'STF, Tema 548 (RE 1.008.166): o direito à creche é exigível judicialmente.' },
+      { p: 'A partir de que idade a matrícula escolar é obrigatória?', ops: ['2 anos', '4 anos', '7 anos', '10 anos'], c: 1, exp: 'CF, art. 208, I: educação básica obrigatória dos 4 aos 17 anos.' },
+    ],
+  },
+  defensoria: {
+    nome: 'Defensoria Pública', icone: '🛡️', area: 'Defensoria Pública e justiça gratuita', cor: '#2E7D32', cat: 'governo',
+    custo: 300, nivel: 2, servico: 'justica',
+    efeito: { renda: 0, manutencao: 14, pop: 0, felicidade: 7 },
+    aula: {
+      resumo: 'Quem não pode pagar advogado tem direito a assistência jurídica integral e gratuita, prestada pela Defensoria Pública.',
+      pontos: [
+        'O Estado presta assistência jurídica integral e gratuita aos que comprovarem insuficiência de recursos (CF, art. 5º, LXXIV).',
+        'A Defensoria Pública orienta, defende e promove os direitos humanos dos necessitados, em todos os graus, de forma judicial e extrajudicial (CF, art. 134; LC 80/1994).',
+        'A gratuidade da justiça dispensa custas e honorários; a declaração de insuficiência da pessoa física presume-se verdadeira (CPC, arts. 98 e 99, §3º).',
+        'A Defensoria também pode entrar com ação civil pública para defender grupos inteiros, como moradores sem água ou famílias sem vaga em creche (Lei 7.347/1985, art. 5º, II).',
+      ],
+      pratica: 'Seu Joaquim foi despejado sem processo e não tem dinheiro para advogado. A Defensoria pode defendê-lo de graça.',
+    },
+    licenca: [
+      { p: 'Quem atende de graça quem não pode pagar advogado?', ops: ['O Ministério Público', 'A Defensoria Pública', 'O juiz', 'A polícia'], c: 1, exp: 'CF, arts. 5º, LXXIV, e 134.' },
+      { p: 'Para pedir gratuidade da justiça, a pessoa física precisa:', ops: ['Provar que é miserável com 10 documentos', 'Declarar que não pode pagar; a declaração presume-se verdadeira', 'Ter menos de 18 anos', 'Pagar uma taxa'], c: 1, exp: 'CPC, art. 99, §3º.' },
+      { p: 'A Defensoria pode defender um grupo inteiro de moradores?', ops: ['Não, só uma pessoa por vez', 'Sim, por ação civil pública', 'Só se o prefeito autorizar', 'Só em crimes'], c: 1, exp: 'Lei 7.347/1985, art. 5º, II.' },
+    ],
+  },
+  ministerioPublico: {
+    nome: 'Ministério Público', icone: '📜', area: 'Ministério Público e defesa da sociedade', cor: '#B71C1C', cat: 'governo',
+    custo: 360, nivel: 3, servico: 'justica',
+    efeito: { renda: 0, manutencao: 16, pop: 0, felicidade: 6 },
+    aula: {
+      resumo: 'O Ministério Público defende a sociedade: acusa nos crimes, protege direitos coletivos e fiscaliza o cumprimento da lei.',
+      pontos: [
+        'O MP defende a ordem jurídica, o regime democrático e os interesses sociais e individuais indisponíveis (CF, art. 127).',
+        'É o titular da ação penal pública: é o promotor de justiça quem acusa nos crimes, não a vítima nem o delegado (CF, art. 129, I).',
+        'Pode abrir inquérito civil e propor ação civil pública para proteger o meio ambiente, o patrimônio público, o consumidor e outros direitos coletivos (CF, art. 129, III).',
+        'Faz o controle externo da atividade policial (art. 129, VII). Seus membros têm independência funcional: não recebem ordens do prefeito nem do governador (art. 127, §1º).',
+      ],
+      pratica: 'A prefeitura despeja esgoto no rio. Qualquer morador pode representar ao Ministério Público, que pode abrir inquérito civil e processar o município.',
+    },
+    licenca: [
+      { p: 'Quem acusa o réu na ação penal pública?', ops: ['O delegado', 'A vítima', 'O Ministério Público', 'O juiz'], c: 2, exp: 'CF, art. 129, I.' },
+      { p: 'O MP pode processar a prefeitura por poluir um rio?', ops: ['Não, o MP é do governo', 'Sim, por ação civil pública', 'Só com autorização do prefeito', 'Só se houver morte'], c: 1, exp: 'CF, art. 129, III; Lei 7.347/1985.' },
+      { p: 'O prefeito pode mandar o promotor arquivar uma investigação?', ops: ['Sim, é chefe dele', 'Não: o MP tem independência funcional', 'Só em ano eleitoral', 'Só por decreto'], c: 1, exp: 'CF, art. 127, §§1º e 2º.' },
+    ],
+  },
+  procon: {
+    nome: 'Procon', icone: '🧾', area: 'Defesa do consumidor na prática', cor: '#1565C0', cat: 'social',
+    custo: 200, nivel: 1,
+    efeito: { renda: 4, manutencao: 9, pop: 0, felicidade: 6 },
+    aula: {
+      resumo: 'O Procon recebe reclamações, chama a empresa para negociar e pode multar quem desrespeita o Código de Defesa do Consumidor.',
+      pontos: [
+        'Os Procons fazem parte do Sistema Nacional de Defesa do Consumidor e podem aplicar sanções administrativas, como multa e suspensão de atividade (CDC, arts. 55 a 57 e 105).',
+        'Produto com defeito: o fornecedor tem 30 dias para consertar; se não consertar, o consumidor escolhe entre troca, dinheiro de volta ou abatimento no preço (CDC, art. 18, §1º).',
+        'Prazo para reclamar de defeito aparente: 30 dias para produtos não duráveis e 90 dias para duráveis (CDC, art. 26).',
+        'Quem paga uma cobrança indevida tem direito de receber em dobro o que pagou a mais, salvo engano justificável (CDC, art. 42, parágrafo único). Venda casada é proibida (art. 39, I).',
+      ],
+      pratica: 'A geladeira nova parou em 2 meses e a loja manda "falar com o fabricante". A loja também responde, e o Procon pode chamar as duas para resolver.',
+    },
+    licenca: [
+      { p: 'O produto quebrou e não foi consertado em 30 dias. O consumidor pode:', ops: ['Nada', 'Escolher troca, dinheiro de volta ou abatimento', 'Só esperar mais', 'Só reclamar com o fabricante'], c: 1, exp: 'CDC, art. 18, §1º.' },
+      { p: 'Qual o prazo para reclamar de defeito aparente em produto durável?', ops: ['7 dias', '30 dias', '90 dias', '5 anos'], c: 2, exp: 'CDC, art. 26, II.' },
+      { p: 'O Procon pode multar uma empresa?', ops: ['Não, só a Justiça', 'Sim, aplicando sanções administrativas do CDC', 'Só se o prefeito mandar', 'Só bancos'], c: 1, exp: 'CDC, arts. 56 e 57.' },
+    ],
+  },
+  cras: {
+    nome: 'CRAS', icone: '🤝', area: 'Assistência social: Bolsa Família e BPC', cor: '#EF6C00', cat: 'social',
+    custo: 240, nivel: 1,
+    efeito: { renda: 0, manutencao: 12, pop: 0, felicidade: 8 },
+    aula: {
+      resumo: 'A assistência social é para quem precisa, sem exigir contribuição. O CRAS é a porta de entrada: cadastra as famílias e encaminha aos programas.',
+      pontos: [
+        'A assistência social é prestada a quem dela necessitar, independentemente de contribuição à seguridade social (CF, art. 203; Lei 8.742/1993, LOAS).',
+        'O Benefício de Prestação Continuada (BPC) paga 1 salário mínimo por mês à pessoa com deficiência e ao idoso a partir de 65 anos que não tenham meios de se manter (CF, art. 203, V; LOAS, art. 20). Não é aposentadoria e exige inscrição no CadÚnico.',
+        'O Bolsa Família atende famílias em situação de pobreza e exige compromissos: frequência escolar, vacinação em dia, pré-natal e acompanhamento nutricional das crianças (Lei 14.601/2023, art. 10).',
+        'O Cadastro Único (CadÚnico), feito no CRAS, identifica as famílias de baixa renda e dá acesso a vários programas sociais.',
+      ],
+      pratica: 'Dona Lúcia, 67 anos, nunca contribuiu para o INSS e não tem renda. Ela pode ter direito ao BPC: o primeiro passo é se inscrever no CadÚnico no CRAS.',
+    },
+    licenca: [
+      { p: 'Para receber o BPC, a pessoa precisa ter contribuído para o INSS?', ops: ['Sim, por 15 anos', 'Não: é assistência social, sem contribuição', 'Só 1 ano', 'Só se for idosa'], c: 1, exp: 'CF, art. 203; LOAS, art. 20.' },
+      { p: 'Qual é o valor do BPC?', ops: ['Meio salário mínimo', '1 salário mínimo', '2 salários mínimos', 'Depende da contribuição'], c: 1, exp: 'CF, art. 203, V.' },
+      { p: 'Qual destes é um compromisso das famílias do Bolsa Família?', ops: ['Comprar em certas lojas', 'Manter as crianças na escola e a vacinação em dia', 'Trabalhar para a prefeitura', 'Votar no prefeito'], c: 1, exp: 'Lei 14.601/2023, art. 10.' },
+    ],
+  },
+  hospital: {
+    nome: 'Hospital e UPA 24h', icone: '🚑', area: 'Urgência e direitos do paciente', cor: '#D32F2F', cat: 'servicos',
+    custo: 560, nivel: 3, servico: 'saude',
+    efeito: { renda: 0, manutencao: 26, pop: 0, felicidade: 10 },
+    aula: {
+      resumo: 'Na urgência, ninguém pode ser recusado ou obrigado a deixar cheque, e o paciente tem direito à informação, ao prontuário e a acompanhante.',
+      pontos: [
+        'Exigir cheque-caução, nota promissória ou qualquer garantia como condição para atender uma emergência é crime (CP, art. 135-A).',
+        'Na emergência, o atendimento segue a classificação de risco: primeiro os casos mais graves, não a ordem de chegada.',
+        'O paciente tem direito de acessar seu prontuário e receber cópia (Código de Ética Médica, art. 88). O prontuário é sigiloso e deve ser guardado por no mínimo 20 anos (Lei 13.787/2018, art. 6º).',
+        'Têm direito a acompanhante: crianças e adolescentes (ECA, art. 12), pessoas idosas (Estatuto da Pessoa Idosa, art. 16), pessoas com deficiência (LBI, art. 22) e a gestante no parto (Lei 8.080/1990, art. 19-J).',
+        'Plano de saúde: a carência máxima para urgência e emergência é de 24 horas (Lei 9.656/1998, art. 12, V, c).',
+      ],
+      pratica: 'O hospital particular quer um cheque-caução para atender um infartado. Isso é crime: o atendimento de emergência não pode depender de garantia.',
+    },
+    licenca: [
+      { p: 'O hospital pode exigir cheque-caução para atender uma emergência?', ops: ['Sim, se for particular', 'Não, isso é crime', 'Só à noite', 'Só se o paciente não tiver plano'], c: 1, exp: 'CP, art. 135-A.' },
+      { p: 'O paciente pode pedir cópia do seu prontuário?', ops: ['Não, é do hospital', 'Sim, é direito dele', 'Só com ordem judicial', 'Só o médico pode ver'], c: 1, exp: 'Código de Ética Médica, art. 88.' },
+      { p: 'Qual a carência máxima do plano de saúde para urgência e emergência?', ops: ['24 horas', '30 dias', '180 dias', '2 anos'], c: 0, exp: 'Lei 9.656/1998, art. 12, V, c.' },
+      { p: 'Uma pessoa idosa internada tem direito a acompanhante?', ops: ['Não', 'Sim', 'Só se pagar', 'Só se tiver mais de 90 anos'], c: 1, exp: 'Estatuto da Pessoa Idosa, art. 16.' },
+    ],
+  },
+  direitoDigital: {
+    nome: 'Delegacia de Crimes Cibernéticos', icone: '💻', area: 'Direito Digital: crimes na internet', cor: '#283593', cat: 'servicos',
+    custo: 340, nivel: 3, servico: 'seguranca',
+    efeito: { renda: 0, manutencao: 15, pop: 0, felicidade: 6 },
+    aula: {
+      resumo: 'A internet não é terra sem lei: golpes, invasões, vazamento de fotos íntimas e cyberbullying são crimes.',
+      pontos: [
+        'Bullying e cyberbullying são crimes: a intimidação sistemática feita pela internet tem pena de 2 a 4 anos de reclusão (CP, art. 146-A, Lei 14.811/2024).',
+        'Golpe pelo celular ou pela internet, como o falso Pix ou o falso parente no WhatsApp, é fraude eletrônica, com pena de 4 a 8 anos (CP, art. 171, §2º-A).',
+        'Caiu num golpe? Avise o banco imediatamente para acionar o Mecanismo Especial de Devolução (MED) do Pix e registre boletim de ocorrência. O banco responde por fraudes ligadas às suas falhas de segurança (STJ, Súmula 479).',
+        'Invadir celular ou computador alheio é crime (CP, art. 154-A, Lei Carolina Dieckmann). Divulgar foto ou vídeo íntimo sem consentimento também é crime (CP, art. 218-C).',
+        'Dados pessoais são protegidos pela LGPD (Lei 13.709/2018), e o ECA Digital (Lei 15.211/2025) obriga aplicativos e jogos a proteger crianças e adolescentes.',
+      ],
+      pratica: 'Um colega cria um perfil falso para humilhar outro aluno todos os dias. É cyberbullying: a escola deve agir, e a família pode registrar ocorrência.',
+    },
+    licenca: [
+      { p: 'Cyberbullying é crime no Brasil?', ops: ['Não, é só brincadeira', 'Sim, desde a Lei 14.811/2024', 'Só se houver agressão física', 'Só para adultos'], c: 1, exp: 'CP, art. 146-A, parágrafo único.' },
+      { p: 'Você fez um Pix para um golpista. O que fazer primeiro?', ops: ['Nada, o dinheiro sumiu', 'Avisar o banco na hora para acionar o MED e registrar BO', 'Pagar de novo para testar', 'Postar o caso e esperar'], c: 1, exp: 'Regulamento do Pix (Banco Central) e CP, art. 171, §2º-A.' },
+      { p: 'Divulgar foto íntima de alguém sem permissão é:', ops: ['Permitido, se a foto foi enviada a você', 'Crime', 'Só falta de educação', 'Problema só da vítima'], c: 1, exp: 'CP, art. 218-C.' },
+    ],
+  },
+});
+
+
 const CATEGORIAS = [
   { id: 'todos', nome: 'Todos', icone: '✨' },
   { id: 'moradia', nome: 'Moradia', icone: '🏠' },
   { id: 'economia', nome: 'Economia', icone: '🏪' },
   { id: 'servicos', nome: 'Serviços', icone: '🏥' },
   { id: 'governo', nome: 'Governo', icone: '⚖️' },
+  { id: 'social', nome: 'Social', icone: '🤝' },
   { id: 'rural', nome: 'Rural', icone: '🌾' },
   { id: 'industria', nome: 'Indústria', icone: '🏭' },
   { id: 'transporte', nome: 'Transporte', icone: '🚦' },
@@ -6138,6 +6376,9 @@ const MISSOES = [
   { id: 'm19', texto: 'Travessia segura: Semáforo de pedestres e Lombada', ok: s => conta(s, 'semaforoPedestre') >= 1 && conta(s, 'lombada') >= 1, xp: 25, din: 120 },
   { id: 'm20', texto: 'Receba os visitantes: construa a Rodoviária e o Portal da cidade', ok: s => conta(s, 'rodoviaria') >= 1 && conta(s, 'portal') >= 1, xp: 40, din: 250 },
   { id: 'm21', texto: 'Cidade do esporte e da cultura: Teatro, Biblioteca, Quadra de basquete e Quadra de futsal', ok: s => ['teatro', 'biblioteca', 'quadraBasquete', 'quadraFutsal'].every(k => conta(s, k) >= 1), xp: 40, din: 250 },
+  { id: 'm22', texto: 'Rede de proteção: Delegacia da Mulher, Conselho Tutelar, CRAS e Creche', ok: s => ['delegaciaMulher', 'conselhoTutelar', 'cras', 'creche'].every(k => conta(s, k) >= 1), xp: 45, din: 260 },
+  { id: 'm23', texto: 'Justiça para todos: Defensoria Pública, Ministério Público e Procon', ok: s => ['defensoria', 'ministerioPublico', 'procon'].every(k => conta(s, k) >= 1), xp: 45, din: 260 },
+  { id: 'm24', texto: 'Cidade segura e saudável: Hospital e UPA 24h e Delegacia de Crimes Cibernéticos', ok: s => ['hospital', 'direitoDigital'].every(k => conta(s, k) >= 1), xp: 50, din: 300 },
   { id: 'm11', texto: 'Compre todos os bairros da cidade', ok: s => BAIRROS.every(b => (s.bairros || {})[b.id]), xp: 120, din: 0 },
 ];
 
@@ -7025,6 +7266,90 @@ function conta(s, tipo) {
   for (const t of s.mapa) if (t && (t.tipo === tipo || t.via === tipo || (t.acess && t.acess.includes(tipo)))) n++;
   return n;
 }
+
+/* Casos da rede de proteção (sempre no fim da lista: os índices ficam salvos no jogo) */
+CASOS.push(
+  { predio: 'delegaciaMulher', titulo: 'Ele nunca me bateu', quem: '👩 Renata',
+    texto: 'Meu marido não me bate, mas me xinga, pega meu salário e quebrou meu celular para eu não falar com ninguém. Isso é violência?',
+    ops: ['Não, violência é só agressão física', 'Sim: é violência psicológica, patrimonial e moral, e ela pode pedir medida protetiva', 'Só se houver testemunhas'], c: 1,
+    exp: 'A Lei Maria da Penha reconhece cinco formas de violência doméstica, não só a física. Controlar, humilhar e destruir bens da mulher também é violência.', base: 'Lei 11.340/2006, art. 7º' },
+  { predio: 'delegaciaMulher', titulo: 'Retirar a queixa', quem: '👮‍♀️ Delegada Sônia',
+    texto: 'O agressor quebrou o braço da companheira. Agora ela quer "retirar a queixa" para ele não ser processado. O processo pode parar?',
+    ops: ['Sim, basta ela desistir', 'Não: lesão corporal na violência doméstica é crime de ação pública incondicionada', 'Só se ele pagar uma cesta básica'], c: 1,
+    exp: 'Na lesão corporal contra a mulher em violência doméstica, o MP processa independentemente da vontade da vítima. E a pena não pode ser trocada por cesta básica.', base: 'STJ, Súmula 542; Lei 11.340/2006, arts. 17 e 41' },
+  { predio: 'conselhoTutelar', titulo: 'Balas no semáforo', quem: '🧑‍🏫 Professora Ana',
+    texto: 'Meu aluno de 11 anos falta às aulas para vender balas no semáforo com o tio. O que eu faço?',
+    ops: ['Nada, ele ajuda a família', 'Comunicar ao Conselho Tutelar: é trabalho infantil e evasão escolar', 'Reprovar o aluno por falta'], c: 1,
+    exp: 'Trabalho infantil é proibido e a escola deve comunicar faltas reiteradas e suspeitas de violação de direitos ao Conselho Tutelar.', base: 'CF, art. 7º, XXXIII; ECA, arts. 56 e 136' },
+  { predio: 'conselhoTutelar', titulo: 'A palmada educativa', quem: '👨 Seu Valdir',
+    texto: 'O vizinho bate no filho de cinto quando ele tira nota baixa. Diz que é "educação". O Conselho Tutelar pode fazer algo?',
+    ops: ['Não, é assunto da família', 'Sim: a criança tem direito de ser educada sem castigo físico, e o Conselho pode aplicar medidas aos pais', 'Só se a criança for parar no hospital'], c: 1,
+    exp: 'A Lei Menino Bernardo proíbe castigo físico e tratamento cruel. O Conselho Tutelar pode encaminhar a família a programas e advertir os pais.', base: 'ECA, arts. 18-A, 18-B e 129' },
+  { predio: 'creche', titulo: 'Não tem vaga', quem: '👩‍👦 Jéssica, mãe do Davi',
+    texto: 'A prefeitura disse que não tem vaga na creche para meu filho de 2 anos e que é para eu esperar. Preciso trabalhar! Não há o que fazer?',
+    ops: ['Não, a creche é um favor da prefeitura', 'Ela pode exigir a vaga na Justiça, com ajuda da Defensoria', 'Só aos 6 anos a criança tem direito à escola'], c: 1,
+    exp: 'A educação infantil em creche é dever do município, e o STF decidiu que esse direito pode ser cobrado judicialmente.', base: 'CF, art. 208, IV; STF, Tema 548' },
+  { predio: 'creche', titulo: 'Fila da creche', quem: '👷 Secretário de Educação',
+    texto: 'Podemos dar as vagas da creche primeiro para os filhos dos funcionários da prefeitura?',
+    ops: ['Pode, eles merecem', 'Não: os critérios devem ser públicos e impessoais, sem privilégios', 'Pode, se for em segredo'], c: 1,
+    exp: 'A administração pública deve agir com impessoalidade. A fila da creche precisa de critérios objetivos e públicos.', base: 'CF, art. 37' },
+  { predio: 'defensoria', titulo: 'Sem dinheiro para advogado', quem: '👴 Seu Joaquim',
+    texto: 'Recebi uma citação da Justiça, mas não tenho dinheiro para advogado. Vou perder o processo?',
+    ops: ['Vai, quem não paga advogado perde', 'A Defensoria Pública pode defendê-lo de graça', 'Ele precisa vender a casa para pagar'], c: 1,
+    exp: 'A assistência jurídica integral e gratuita é direito de quem não pode pagar, e é prestada pela Defensoria Pública.', base: 'CF, arts. 5º, LXXIV, e 134' },
+  { predio: 'defensoria', titulo: 'Custas do processo', quem: '👩 Cláudia, diarista',
+    texto: 'Quero processar a empresa que me deve, mas as custas do processo são caras. Tenho que pagar?',
+    ops: ['Sim, sempre', 'Ela pode pedir gratuidade da justiça, declarando que não pode pagar', 'Só se ganhar a causa'], c: 1,
+    exp: 'A gratuidade da justiça dispensa as custas. A declaração de insuficiência da pessoa física é presumida verdadeira, salvo prova em contrário.', base: 'CPC, arts. 98 e 99, §3º' },
+  { predio: 'ministerioPublico', titulo: 'O lixão ilegal', quem: '🌳 Associação de moradores',
+    texto: 'Uma empresa está jogando lixo num terreno perto do rio e ninguém faz nada. A quem podemos recorrer?',
+    ops: ['A ninguém', 'Ao Ministério Público, que pode abrir inquérito civil e propor ação civil pública', 'Só ao síndico'], c: 1,
+    exp: 'Defender o meio ambiente é função institucional do MP, que pode investigar e processar quem polui.', base: 'CF, art. 129, III; Lei 7.347/1985' },
+  { predio: 'ministerioPublico', titulo: 'Quem acusa?', quem: '👩 Dona Rita, vítima de furto',
+    texto: 'Roubaram minha bicicleta e a polícia já sabe quem foi. Eu preciso contratar advogado para acusar o ladrão?',
+    ops: ['Sim, sem advogado não há processo', 'Não: no crime de ação penal pública, quem acusa é o Ministério Público', 'Quem acusa é o delegado'], c: 1,
+    exp: 'O Ministério Público é o titular da ação penal pública. A vítima pode colaborar, mas não precisa contratar advogado para que o réu seja processado.', base: 'CF, art. 129, I' },
+  { predio: 'procon', titulo: 'A geladeira que parou', quem: '👨 Seu Edson',
+    texto: 'A geladeira quebrou com 2 meses. A assistência levou 40 dias e não consertou. A loja diz que o problema é com o fabricante.',
+    ops: ['Ele só pode reclamar com o fabricante', 'Passados 30 dias sem conserto, ele escolhe troca, dinheiro de volta ou abatimento, e a loja também responde', 'Ele perdeu o prazo'], c: 1,
+    exp: 'Loja e fabricante respondem juntos pelo vício do produto. Se o defeito não é sanado em 30 dias, o consumidor escolhe a solução.', base: 'CDC, art. 18, §1º' },
+  { predio: 'procon', titulo: 'Cobrança em dobro', quem: '👩 Larissa',
+    texto: 'A operadora cobrou duas vezes a mesma conta e eu paguei as duas. Tenho direito a quê?',
+    ops: ['Só ao valor pago a mais', 'À devolução em dobro do que pagou indevidamente, com correção', 'A nada'], c: 1,
+    exp: 'Quem paga cobrança indevida tem direito à repetição do indébito em dobro, salvo engano justificável do fornecedor.', base: 'CDC, art. 42, parágrafo único' },
+  { predio: 'cras', titulo: 'Nunca contribuí, e agora?', quem: '👵 Dona Lúcia, 67 anos',
+    texto: 'Trabalhei a vida toda sem carteira e nunca paguei INSS. Hoje não tenho renda nenhuma. Tenho direito a alguma coisa?',
+    ops: ['Não, sem contribuição não há nada', 'Pode ter direito ao BPC, de 1 salário mínimo, após se inscrever no CadÚnico', 'Só se tiver filhos'], c: 1,
+    exp: 'O BPC é assistência social: não exige contribuição. Idosos a partir de 65 anos sem meios de se manter podem receber 1 salário mínimo.', base: 'CF, art. 203, V; LOAS, art. 20' },
+  { predio: 'cras', titulo: 'Faltas na escola', quem: '🤝 Assistente social Bruna',
+    texto: 'Uma família do Bolsa Família tem um filho de 12 anos que quase não vai à escola. Isso afeta o benefício?',
+    ops: ['Não, o dinheiro é livre', 'Sim: frequência escolar é compromisso do programa; o CRAS deve acompanhar a família', 'O benefício aumenta'], c: 1,
+    exp: 'O Bolsa Família exige frequência escolar mínima, vacinação e acompanhamento de saúde. O descumprimento leva ao acompanhamento da família e pode afetar o benefício.', base: 'Lei 14.601/2023, art. 10' },
+  { predio: 'hospital', titulo: 'O cheque-caução', quem: '🚑 Socorrista Marcos',
+    texto: 'Trouxe um homem infartando para o hospital particular e a recepção quer um cheque-caução antes de atender. Pode?',
+    ops: ['Pode, o hospital é particular', 'Não: exigir garantia para atender emergência é crime', 'Pode, se devolverem o cheque depois'], c: 1,
+    exp: 'Condicionar o atendimento médico-hospitalar emergencial a cheque-caução ou qualquer garantia é crime.', base: 'CP, art. 135-A' },
+  { predio: 'hospital', titulo: 'Meu prontuário', quem: '👩 Patrícia',
+    texto: 'Quero levar meu prontuário para outro médico, mas o hospital diz que o documento é só deles.',
+    ops: ['O hospital tem razão', 'A paciente tem direito de acessar e receber cópia do seu prontuário', 'Só com ordem do juiz'], c: 1,
+    exp: 'O prontuário é guardado pelo hospital, mas as informações pertencem ao paciente, que tem direito de acesso e cópia.', base: 'Código de Ética Médica, art. 88; Lei 13.787/2018' },
+  { predio: 'hospital', titulo: 'Fila da emergência', quem: '😠 Sr. Paulo',
+    texto: 'Cheguei primeiro com dor de garganta e passaram na minha frente um rapaz que chegou depois, sangrando. Isso é justo?',
+    ops: ['Não, a ordem de chegada é lei', 'Sim: na emergência vale a classificação de risco, e os casos graves vêm primeiro', 'Depende de quem tem plano'], c: 1,
+    exp: 'Nas urgências, o atendimento segue a classificação de risco (gravidade), para salvar quem corre mais perigo.', base: 'Política Nacional de Humanização do SUS; Lei 8.080/1990, art. 7º' },
+  { predio: 'direitoDigital', titulo: 'O perfil falso', quem: '👦 Lucas, 14 anos',
+    texto: 'Criaram um perfil falso meu e postam montagens me humilhando todo dia. Dizem que é só zoeira.',
+    ops: ['É só brincadeira, ignore', 'É cyberbullying, que é crime: guarde as provas, conte à escola e à família e registre ocorrência', 'Ele deve fazer o mesmo de volta'], c: 1,
+    exp: 'A intimidação sistemática pela internet é crime desde 2024. A escola tem o dever de prevenir e combater o bullying.', base: 'CP, art. 146-A; Lei 13.185/2015' },
+  { predio: 'direitoDigital', titulo: 'O falso filho no WhatsApp', quem: '👵 Dona Cida',
+    texto: 'Um número desconhecido disse que era meu filho com celular novo e pediu um Pix urgente. Eu mandei R$ 800! E agora?',
+    ops: ['Não há nada a fazer', 'Avisar o banco imediatamente para acionar a devolução do Pix (MED) e registrar boletim de ocorrência', 'Mandar mais dinheiro para recuperar'], c: 1,
+    exp: 'É fraude eletrônica. Quanto antes o banco for avisado, maior a chance de bloquear o valor na conta do golpista pelo Mecanismo Especial de Devolução.', base: 'CP, art. 171, §2º-A; Regulamento do Pix (Banco Central)' },
+  { predio: 'direitoDigital', titulo: 'A foto vazada', quem: '👩 Bianca',
+    texto: 'Meu ex-namorado espalhou uma foto íntima minha no grupo da escola. O que posso fazer?',
+    ops: ['Nada, ela mandou a foto para ele', 'É crime: ela pode registrar ocorrência e pedir a remoção às plataformas', 'Só mudar de escola'], c: 1,
+    exp: 'Divulgar cena íntima sem consentimento é crime, e a plataforma que não remove o conteúdo após notificação da vítima responde junto.', base: 'CP, art. 218-C; Marco Civil da Internet, art. 21' },
+);
 
 </script>
 <script>
@@ -10272,6 +10597,116 @@ const Cena = (() => {
     g.userData = { pe1, pe2, br1, br2 };
     return g;
   }
+  // Rede de proteção, justiça e cidadania digital
+  function plaquinhaEmoji(g, emoji, fundo, x, y, z, tam = .1) {
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(tam, tam), new THREE.MeshStandardMaterial({ map: texEmoji(emoji, fundo) }));
+    p.position.set(x, y, z); g.add(p);
+  }
+  function carroParado(g, tipo, cor, x, z) {
+    const c = criarVeiculo(tipo, cor); c.scale.setScalar(.85); c.rotation.y = Math.PI / 2; c.position.set(x, .03, z); g.add(c);
+  }
+  Object.assign(MODELOS, {
+    delegaciaMulher(g) {
+      calcada(g);
+      g.add(caixa(.78, .5, .6, fachada('#F3E5F5', 4, 2, { parede: 'concreto', vidro: '#B39DDB' }), 0, .03, -.06));
+      g.add(caixa(.82, .08, .64, '#8E24AA', 0, .53, -.06));
+      porta(g, .48, '#6A1B9A');
+      plaquinhaEmoji(g, '💜', '#F3E5F5', .26, .16, .245);
+      carroParado(g, 'policia', '#FFFFFF', -.26, .36);
+      g.userData.altura = .8;
+    },
+    conselhoTutelar(g) {
+      calcada(g);
+      g.add(caixa(.6, .36, .46, fachada('#FFF3E0', 3, 1, { parede: 'reboco' }), 0, .03, -.08));
+      const telhado = duasAguas(.68, .22, .54, '#E65100', .39); telhado.position.z = -.08; g.add(telhado);
+      porta(g, .3, '#E65100');
+      plaquinhaEmoji(g, '🧒', '#FFF3E0', .2, .14, .155, .09);
+      carroParado(g, 'carro', '#FFFFFF', .26, .34);
+      g.userData.altura = .7;
+    },
+    creche(g) {
+      calcada(g);
+      g.add(caixa(.86, .006, .38, IMG.grama_cor ? pbr('grama', 1, 1, { color: '#DDF5C8' }) : mat('#8BC34A'), 0, .03, .24));
+      g.add(caixa(.72, .3, .42, fachada('#FFFDE7', 4, 1, { parede: 'reboco', vidro: '#81D4FA' }), 0, .03, -.2));
+      ['#E53935', '#FBC02D', '#43A047', '#1E88E5'].forEach((c, k) => g.add(caixa(.18, .05, .46, c, -.27 + k * .18, .33, -.2)));
+      porta(g, .02, '#1E88E5');
+      // escorregador, balanço e caixa de areia
+      g.add(caixa(.05, .16, .05, '#E53935', .22, .03, .14));
+      const esc = caixa(.06, .01, .22, '#1E88E5', .22, .1, .25); esc.rotation.x = .6; g.add(esc);
+      g.add(cilindro(.008, .008, .16, '#757575', -.32, .03, .2, 6)); g.add(cilindro(.008, .008, .16, '#757575', -.12, .03, .2, 6));
+      g.add(caixa(.22, .012, .012, '#757575', -.22, .19, .2));
+      g.add(caixa(.06, .008, .03, '#FBC02D', -.22, .08, .2));
+      g.add(caixa(.16, .02, .12, '#E6D3A3', .02, .03, .36));
+      g.add(caixa(.9, .05, .008, '#81C784', 0, .03, .45));
+      g.userData.altura = .5;
+    },
+    defensoria(g) {
+      calcada(g);
+      g.add(caixa(.8, .55, .6, fachada('#E8F5E9', 4, 2, { parede: 'concreto' }), 0, .03, -.06));
+      g.add(caixa(.84, .08, .64, '#2E7D32', 0, .58, -.06));
+      porta(g, .48, '#1B5E20');
+      const rampa = caixa(.34, .02, .18, '#B0BEC5', -.2, .03, .34); rampa.rotation.x = -.16; g.add(rampa);
+      plaquinhaEmoji(g, '🛡️', '#E8F5E9', .26, .16, .245);
+      g.userData.altura = .85;
+    },
+    ministerioPublico(g) {
+      calcada(g);
+      g.add(caixa(.84, .06, .7, '#CFD8DC', 0, .03, -.04));
+      g.add(caixa(.8, .6, .52, fachada('#ECEFF1', 4, 2, { parede: 'concreto' }), 0, .09, -.1));
+      for (let k = 0; k < 4; k++) g.add(cilindro(.03, .032, .5, '#FAFAFA', -.27 + k * .18, .09, .24, 12));
+      g.add(caixa(.84, .08, .14, '#ECEFF1', 0, .59, .24));
+      g.add(caixa(.86, .07, .66, '#B71C1C', 0, .69, -.05));
+      const b = bandeiraBrasil(g, .38, .03, .4);
+      g.userData.tick = t => { b.rotation.y = Math.sin(t * 2.3) * .25; };
+      g.userData.altura = 1.05;
+    },
+    procon(g) {
+      calcada(g);
+      g.add(caixa(.7, .42, .5, fachada('#E3F2FD', 3, 2, { parede: 'reboco' }), 0, .03, -.1));
+      g.add(caixa(.74, .07, .54, '#1565C0', 0, .45, -.1));
+      g.add(caixa(.74, .02, .54, '#FDD835', 0, .52, -.1));
+      porta(g, .3, '#0D47A1');
+      plaquinhaEmoji(g, '🧾', '#E3F2FD', .22, .14, .155, .09);
+      g.userData.altura = .7;
+    },
+    cras(g) {
+      calcada(g);
+      g.add(caixa(.74, .4, .52, fachada('#FFF3E0', 4, 1, { parede: 'tijolo' }), 0, .03, -.12));
+      g.add(caixa(.78, .05, .56, '#EF6C00', 0, .43, -.12));
+      porta(g, .28, '#BF360C');
+      g.add(caixa(.5, .02, .2, '#EF6C00', 0, .28, .25));
+      [-.23, .23].forEach(x => g.add(cilindro(.01, .01, .25, '#9E9E9E', x, .03, .34, 6)));
+      g.add(caixa(.2, .03, .06, '#8D6E63', -.12, .08, .3)); g.add(caixa(.2, .05, .015, '#8D6E63', -.12, .1, .27));
+      plaquinhaEmoji(g, '🤝', '#FFF3E0', .24, .15, .145, .09);
+      g.userData.altura = .65;
+    },
+    hospital(g) {
+      calcada(g);
+      g.add(caixa(.86, 1.1, .6, fachada('#FFFFFF', 4, 4, { parede: 'concreto', vidro: '#90CAF9' }), 0, .03, -.14));
+      const vermelho = new THREE.MeshStandardMaterial({ color: '#E53935', emissive: '#7A1010' });
+      g.add(caixa(.07, .22, .02, vermelho, 0, .74, .165)); g.add(caixa(.22, .07, .02, vermelho, 0, .815, .165));
+      g.add(caixa(.9, .04, .64, '#D32F2F', 0, 1.13, -.14));
+      g.add(cilindro(.22, .22, .02, '#607D8B', 0, 1.17, -.14, 24));
+      g.add(caixa(.025, .006, .14, '#FFFFFF', -.04, 1.19, -.14)); g.add(caixa(.025, .006, .14, '#FFFFFF', .04, 1.19, -.14)); g.add(caixa(.08, .006, .025, '#FFFFFF', 0, 1.19, -.14));
+      g.add(caixa(.42, .03, .24, '#D32F2F', .2, .3, .28));
+      [.02, .38].forEach(x => g.add(cilindro(.01, .01, .27, '#B0BEC5', x, .03, .38, 6)));
+      porta(g, .32, '#90A4AE');
+      carroParado(g, 'ambulancia', '#FFFFFF', -.26, .34);
+      g.userData.altura = 1.35;
+    },
+    direitoDigital(g) {
+      calcada(g);
+      g.add(caixa(.66, .8, .56, fachada('#263238', 3, 4, { parede: 'vidro', vidro: '#5C6BC0' }), 0, .03, -.08));
+      g.add(caixa(.7, .05, .6, '#1A237E', 0, .83, -.08));
+      g.add(cilindro(.01, .01, .32, '#B0BEC5', .2, .88, -.14, 6));
+      g.add(malha(new THREE.SphereGeometry(.025, 10, 8), luzPiscante('#00E5FF'), .2, 1.2, -.14));
+      const disco = malha(new THREE.SphereGeometry(.06, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat('#ECEFF1', { side: THREE.DoubleSide }), -.18, .88, -.14);
+      disco.rotation.x = -.9; g.add(disco);
+      porta(g, .4, '#1A237E');
+      plaquinhaEmoji(g, '💻', '#1A237E', .22, .16, .205, .09);
+      g.userData.altura = 1.2;
+    },
+  });
   function animarPasso(obj, fase, andando) {
     const passo = andando && !reduzido ? Math.sin(fase) : 0;
     obj.userData.pe1.rotation.x = passo * .5; obj.userData.pe2.rotation.x = -passo * .5;
@@ -10283,6 +10718,7 @@ const Cena = (() => {
     parque: { n: 5, criancas: 2, raio: .33 }, praca: { n: 3, raio: .28 }, escola: { n: 4, criancas: 4, raio: .44 },
     mercado: { n: 2, raio: .47 }, terminal: { n: 3, parados: true }, banco: { n: 3, fila: true }, inss: { n: 3, fila: true },
     pontoAcessivel: { n: 3, parados: true }, shopping: { n: 5, raio: .46 }, teatro: { n: 4, fila: true }, museu: { n: 3, raio: .46 }, biblioteca: { n: 2, raio: .46 }, rodoviaria: { n: 4, parados: true }, templo: { n: 2, raio: .47 }, cultura: { n: 3, raio: .47 }, condominio: { n: 2, raio: .47 }, saude: { n: 2, fila: true },
+    creche: { n: 2, criancas: 3, raio: .42 }, defensoria: { n: 3, fila: true }, procon: { n: 3, fila: true }, cras: { n: 3, fila: true }, hospital: { n: 3, parados: true }, delegaciaMulher: { n: 2, fila: true },
     lagoa: { n: 3, criancas: 1, raio: .47 }, pontoOnibus: { n: 2, parados: true }, iluminacao: { n: 2, raio: .33 },
   };
   function criarFrequentadores(g, tipo, semente) {
@@ -10299,7 +10735,7 @@ const Cena = (() => {
     }
   }
   function moverFrequentadores(g, dt, t, luzes) {
-    const l = s.mapa[g.userData.tile], fechado = l && ['mercado', 'banco', 'inss', 'empresa', 'cartorio', 'escola', 'cultura'].includes(l.tipo) && (hora >= 22 || hora < 6);
+    const l = s.mapa[g.userData.tile], fechado = l && ['mercado', 'banco', 'inss', 'empresa', 'cartorio', 'escola', 'cultura', 'creche', 'procon', 'cras', 'defensoria'].includes(l.tipo) && (hora >= 22 || hora < 6);
     (g.userData.gente || []).forEach((e, k) => {
       e.obj.visible = !fechado && !(luzes > .6 && k % 2);
       if (e.modo === 'roda') {
@@ -10484,6 +10920,11 @@ const Cena = (() => {
     pontoTaxi: ['TÁXI', .16, .05, -.28, .15, -.2, '#F9A825', '#212121'], posto: ['CONVENIÊNCIA', .24, .045, -.3, .17, .25, '#C62828'],
     estacaoTrem: ['ESTAÇÃO', .3, .05, 0, .17, .43, '#00897B'], shopping: ['SHOPPING', .4, .07, 0, .36, .152, '#AD1457'],
     teatro: ['TEATRO MUNICIPAL', .48, .05, 0, .47, .274, '#4A148C'], museu: ['MUSEU', .3, .05, 0, .44, .262, '#5D4037'], biblioteca: ['BIBLIOTECA', .36, .06, 0, .3, .135, '#5D4037'], rodoviaria: ['RODOVIÁRIA', .46, .065, 0, .3, -.149, '#1565C0'], motofrete: ['MOTOFRETE', .4, .06, -.1, .2, -.038, '#E65100'], aeroporto: ['AEROPORTO', .3, .04, -.16, .175, -.188, '#283593'],
+    delegaciaMulher: ['DELEGACIA DA MULHER', .56, .05, 0, .45, .245, '#6A1B9A'], conselhoTutelar: ['CONSELHO TUTELAR', .44, .05, 0, .3, .155, '#E65100'],
+    creche: ['CRECHE', .3, .06, 0, .24, .015, '#F9A825', '#3E2723'], defensoria: ['DEFENSORIA PÚBLICA', .56, .05, 0, .5, .245, '#1B5E20'],
+    ministerioPublico: ['MINISTÉRIO PÚBLICO', .56, .05, 0, .63, .315, '#7F0000'], procon: ['PROCON', .3, .07, 0, .36, .155, '#0D47A1', '#FDD835'],
+    cras: ['CRAS', .22, .06, 0, .36, .145, '#BF360C'], hospital: ['HOSPITAL · UPA 24h', .5, .06, 0, .5, .165, '#C62828'],
+    direitoDigital: ['CRIMES CIBERNÉTICOS', .5, .05, 0, .3, .205, '#1A237E'],
   };
   const cacheLetreiro = {};
   function letreiro(g, tipo, n) {
@@ -11563,6 +12004,7 @@ function render() {
   animarNumero($('s-pop'), s.pop);
   animarNumero($('s-fel'), s.felicidade, '%');
   $('rosto').textContent = rostoFelicidade(s.felicidade);
+  if (typeof renderChipHistoria === 'function') renderChipHistoria();
   animarNumero($('s-xp'), s.xp);
   const seq = $('s-seq');
   seq.classList.toggle('oculto', s.sequencia < 2);
@@ -11591,8 +12033,9 @@ function renderDica(c) {
     const p = PREDIOS[s.selecionado];
     h = `Construindo <b>${p.icone} ${p.nome}</b> — clique num terreno vazio.${p.efeito.renda ? ' Ao lado da rua rende <b>+20%</b>!' : ''} <button class="link" id="cancelar-sel">Cancelar</button>`;
   } else if (s.pendentes.length) {
-    const pe = s.pendentes.find(x => x.oc) || s.pendentes[0], l = s.mapa[pe.tile], p = l && (PREDIOS[l.tipo] || PREDIOS[l.via]);
-    h = pe.oc ? `🚨 <b>${pe.oc === 'incendio' ? 'Incêndio' : 'Acidente'}</b> na cidade — clique no balão para agir.`
+    const pe = s.pendentes.find(x => x.oc) || s.pendentes.find(x => x.elei) || s.pendentes[0], l = s.mapa[pe.tile], p = l && (PREDIOS[l.tipo] || PREDIOS[l.via]);
+    h = pe.elei ? '🗳️ <b>Campanha eleitoral!</b> Clique no balão da Prefeitura para fazer campanha.'
+      : pe.oc ? `🚨 <b>${pe.oc === 'incendio' ? 'Incêndio' : 'Acidente'}</b> na cidade — clique no balão para agir.`
       : `❗ <b>${s.pendentes.length} cidadão(s)</b> esperando atendimento — clique no balão${p ? ` sobre ${p.icone} ${p.nome}` : ''}.`;
   } else if (c.faltas.length) {
     h = `⚠️ Faltam serviços públicos: ${c.faltas.map(k => SERVICOS[k]).join(', ')}.`;
@@ -11739,7 +12182,7 @@ function abrirBairro(b) {
 
 function renderMissoes() {
   const feitas = MISSOES.filter(m => s.missoesFeitas[m.id]).length;
-  let h = htmlIndicadores() + htmlDesafios() + `<h3>🎯 Missões</h3><div class="progresso-missoes"><div style="width:${feitas / MISSOES.length * 100}%"></div><span>${feitas}/${MISSOES.length} missões</span></div><ul class="lista-missoes">`;
+  let h = (typeof htmlHistoria === 'function' ? htmlHistoria() : '') + htmlIndicadores() + htmlDesafios() + `<h3>🎯 Missões</h3><div class="progresso-missoes"><div style="width:${feitas / MISSOES.length * 100}%"></div><span>${feitas}/${MISSOES.length} missões</span></div><ul class="lista-missoes">`;
   let proxima = true;
   MISSOES.forEach(m => {
     const feita = s.missoesFeitas[m.id];
@@ -11760,7 +12203,7 @@ function renderMissoes() {
 function renderVade() {
   const comAula = Object.keys(PREDIOS).filter(k => PREDIOS[k].aula);
   const n = comAula.filter(k => s.licencas[k]).length, total = comAula.length;
-  let h = `<p class="intro-vade">Sua coleção de leis: <b>${n}/${total}</b> áreas liberadas. Tudo o que você aprendeu fica aqui para consulta.</p><div class="colecao">`;
+  let h = (typeof htmlMudancasLegais === 'function' ? htmlMudancasLegais() : '') + (typeof htmlGlossario === 'function' ? htmlGlossario() : '') + `<p class="intro-vade">Sua coleção de leis: <b>${n}/${total}</b> áreas liberadas. Tudo o que você aprendeu fica aqui para consulta.</p><div class="colecao">`;
   for (const k in PREDIOS) {
     const p = PREDIOS[k];
     if (!p.aula) continue;
@@ -11817,15 +12260,16 @@ function abrirAula(tipo, comProva) {
   });
 }
 
-function htmlOpcoes(ordem, chave) {
+function htmlOpcoes(ordem, chave, certa) { // com a resposta certa, a trilha Fundamental ganha o botão de dica
   const letras = 'ABCD';
-  return `<div class="opcoes">${ordem.map((o, n) => `<button class="opcao" data-${chave}="${o.i}"><span class="letra">${letras[n]}</span><span>${esc(o.t)}</span></button>`).join('')}</div>`;
+  return `<div class="opcoes">${ordem.map((o, n) => `<button class="opcao" data-${chave}="${o.i}"><span class="letra">${letras[n]}</span><span>${esc(o.t)}</span></button>`).join('')}</div>${typeof htmlDica === 'function' ? htmlDica(certa, chave) : ''}`;
 }
 
 function iniciarProva(tipo) {
   const p = PREDIOS[tipo];
-  const perguntas = embaralhar(p.licenca).slice(0, 3);
-  const minimo = Math.min(2, perguntas.length);
+  const cfg = typeof configProva === 'function' ? configProva(p) : { n: 3, minimo: 2, bonus: 20 }; // trilha de estudo escolhida
+  const perguntas = embaralhar(p.licenca).slice(0, cfg.n);
+  const minimo = Math.min(cfg.minimo, perguntas.length);
   let idx = 0, acertos = 0;
 
   const mostrar = () => {
@@ -11834,7 +12278,7 @@ function iniciarProva(tipo) {
     abrirModal(`<div class="cab-modal" style="--cor:${p.cor}"><span class="icone-grande">📝</span>
         <div><small>Licença · ${p.area}</small><h2>${q.p}</h2></div></div>
       <div class="passos">${perguntas.map((_, k) => `<i class="${k < idx ? 'feito' : k === idx ? 'agora' : ''}"></i>`).join('')}</div>
-      ${htmlOpcoes(ordem, 'i')}
+      ${htmlOpcoes(ordem, 'i', q.c)}
       <div id="feedback"></div>`, cx => {
       cx.querySelectorAll('.opcao').forEach(b => b.onclick = () => {
         const certo = +b.dataset.i === q.c;
@@ -11860,7 +12304,7 @@ function iniciarProva(tipo) {
     const passou = acertos >= minimo;
     if (passou) {
       s.licencas[tipo] = true;
-      ganharXp(20);
+      ganharXp(cfg.bonus);
       registrar(`📜 Licença concedida: <b>${p.area}</b> (${acertos}/${perguntas.length} acertos).`);
       confete(); som('nivel');
     } else som('erro');
@@ -12080,6 +12524,7 @@ function proximoMes() {
       registrar(`🗄️ O projeto "<b>${pl.titulo}</b>" ficou parado na mesa do prefeito e foi arquivado.`);
       return false;
     }
+    if (p.elei) { registrar('🗳️ A campanha terminou sem que você decidisse nada: sem campanha, menos votos.'); return false; }
     if (p.oc) return false; // ocorrências se encerram sozinhas no fim do mês
     if (p.aud !== undefined) { registrar('⚖️ A audiência no Fórum ficou sem decisão e o processo atrasou. Justiça lenta deixa a cidade insatisfeita.'); return false; }
     registrar(`😤 Um cidadão desistiu de esperar no caso "<b>${CASOS[p.caso].titulo}</b>". A cidade ficou insatisfeita.`);
@@ -12109,17 +12554,14 @@ function sortearClimaEEventos(mesIdx) {
   if (mesIdx === 1) ev.push('carnaval');
   if (mesIdx === 5) ev.push('junina');
   if (mesIdx === 9 && anoDe(s.mes) % 4 === 0) ev.push('eleicao');
+  if (s.historia && s.historia.evento) { ev.push(s.historia.evento); if (s.historia.evento === 'temporal') s.chuva = true; delete s.historia.evento; } // acontecimento do capítulo
   if (s.chuva && Math.random() < .4) ev.push('temporal');
   if (Math.random() < .08) ev.push('auditoria');
   ev.forEach(id => {
     const e = EVENTOS[id];
     let efeito = '';
     if (id === 'carnaval' || id === 'junina') { s.reputacao = Math.min(30, s.reputacao + 3); efeito = 'Felicidade +3.'; }
-    if (id === 'eleicao') {
-      const venceu = s.felicidade >= 55;
-      if (venceu) { ganharXp(40); s.dinheiro += 200; efeito = `Com ${s.felicidade}% de aprovação, você foi <b>reeleito(a)</b>! +40 XP, +200 💰.`; }
-      else { s.reputacao = Math.max(-30, s.reputacao - 3); efeito = `Com só ${s.felicidade}% de aprovação, você venceu por pouco. Cuide mais da cidade!`; }
-    }
+    if (id === 'eleicao') efeito = apurarEleicao();
     if (id === 'temporal') {
       const temBombeiros = conta(s, 'bombeiros') > 0, temPiscinao = conta(s, 'piscinao') > 0;
       const custo = Math.max(10, 120 - (temBombeiros ? 70 : 0) - (temPiscinao ? 40 : 0));
@@ -12264,6 +12706,7 @@ function abrirCaso(pend) {
   if (pend.lei) return abrirProjeto(pend);
   if (pend.aud !== undefined) return abrirAudiencia(pend);
   if (pend.oc) return abrirOcorrencia(pend);
+  if (pend.elei) return abrirCampanha(pend);
   const i = pend.caso, c = CASOS[i], p = PREDIOS[c.predio];
   const restam = pend.expira - s.mes;
   const ordem = embaralhar(c.ops.map((t, k) => ({ t, i: k })));
@@ -12274,7 +12717,7 @@ function abrirCaso(pend) {
     <div class="cena"><span class="avatar">${c.quem.split(' ')[0]}</span>
       <blockquote class="fala"><b>${c.quem.split(' ').slice(1).join(' ')}</b>${c.texto}</blockquote></div>
     <p class="pergunta">O que você responde? <small>${restam > 0 ? `⏳ espera mais ${restam} mês(es)` : '⏳ último mês de espera!'}${s.sequencia >= 2 ? ` · 🔥 sequência de ${s.sequencia}` : ''}</small></p>
-    ${htmlOpcoes(ordem, 'k')}
+    ${htmlOpcoes(ordem, 'k', c.c)}
     <div id="feedback"></div>
     <div class="botoes" id="m-depois-box"><button class="btn" id="m-depois">Atender depois</button></div>`, cx => {
     cx.querySelector('#m-depois').onclick = fecharModal;
@@ -12556,6 +12999,7 @@ function abrirProfessor() {
       <div><small>Respostas</small><b>${total}</b></div>
       <div><small>Áreas estudadas</small><b>${ls.length}</b></div>
       <div><small>Título</small><b class="pequeno">${NIVEIS[nivelAtual()].titulo}</b></div>
+      ${typeof TRILHAS === 'object' ? `<div><small>Trilha</small><b class="pequeno">${TRILHAS[trilhaAtual()].icone} ${TRILHAS[trilhaAtual()].nome}</b></div>` : ''}
     </div>
     ${ls.length ? `<div class="tabela-rolagem"><table class="tabela-desempenho"><thead><tr><th>Área</th><th>Provas</th><th>Casos</th><th>Aproveitamento</th></tr></thead><tbody>
       ${ls.map(l => `<tr><td>${esc(l.area)}</td><td>${l.provaOk}/${l.prova}</td><td>${l.casoOk}/${l.caso}</td>
@@ -12563,6 +13007,7 @@ function abrirProfessor() {
     </tbody></table></div>` : '<p class="nota">Ainda não há respostas. As provas de licença, os casos dos cidadãos e os projetos de lei entram aqui automaticamente.</p>'}
     ${htmlMedalhas()}
     ${atencao.length ? `<p class="pratica"><b>📌 Para revisar:</b> ${atencao.map(l => esc(l.area)).join(', ')}.</p>` : ''}
+    ${typeof htmlReportesProfessor === 'function' ? htmlReportesProfessor() : ''}
     <div class="botoes">
       <button class="btn" id="m-entrega">📤 Código de entrega</button>
       <button class="btn" id="m-turma-painel">👩‍🏫 Painel da turma</button>
@@ -12659,12 +13104,17 @@ function boasVindas() {
       <li><span>🎓</span><div>Ganhe <b>conhecimento</b> e suba de título — de Estudante a <b>Ministro(a) do STF</b>.</div></li>
     </ol>
     <label class="campo">Nome da sua cidade<input id="m-nome" maxlength="30" value="Cidade Legal"></label>
+    ${typeof htmlEscolhaTrilha === 'function' ? `<p class="rotulo-campo">Sua trilha de estudo</p>${htmlEscolhaTrilha('medio')}
+      <label class="opcao-acess"><input type="checkbox" id="m-historia" checked><span><b>📖 Jogar o modo campanha</b><small>A história da cidade em capítulos, com objetivos e recompensas. Dá para sair quando quiser.</small></span></label>` : ''}
     <div class="botoes"><button class="btn primario grande" id="m-comecar">Começar mandato ▶</button></div>`, cx => {
     cx.querySelector('#m-comecar').onclick = () => {
       s.nome = cx.querySelector('#m-nome').value.trim() || 'Cidade Legal';
+      const tr = cx.querySelector('input[name="trilha"]:checked'); if (tr) s.trilha = tr.value;
+      const hist = cx.querySelector('#m-historia'); if (hist && hist.checked) s.historia = { cap: 0, feitos: [], ativo: true };
       registrar(`🏛️ Fundação de <b>${esc(s.nome)}</b>. A Prefeitura abre as portas — clique nela para a primeira aula.`);
       fecharModal(); confete(60); som('nivel'); render();
       if (typeof iniciarGuia === 'function' && !guiaJaVisto()) setTimeout(iniciarGuia, 900); // primeiro acesso: tour guiado
+      else if (s.historia && s.historia.ativo) setTimeout(() => abrirCapitulo(true), 900);
     };
   });
 }
@@ -12981,7 +13431,7 @@ function abrirAudiencia(pend) {
       <div><small>Audiência no Fórum · ${a.area}</small><h2>${a.titulo}</h2></div></div>
     <div class="audiencia">${parte(a.autor, 'autor')}${parte(a.reu, 'reu')}</div>
     <p class="pergunta">Você é o(a) juiz(a). Qual é a decisão?</p>
-    ${htmlOpcoes(ordem, 'k')}<div id="feedback"></div>
+    ${htmlOpcoes(ordem, 'k', a.c)}<div id="feedback"></div>
     <div class="botoes" id="m-depois-box"><button class="btn" id="m-depois">Decidir depois</button></div>`, cx => {
     cx.querySelector('#m-depois').onclick = fecharModal;
     cx.querySelectorAll('.opcao').forEach(b => b.onclick = () => {
@@ -13000,7 +13450,7 @@ function abrirAudiencia(pend) {
 }
 
 /* ── Licitação das obras públicas ─────────────────────────────────────────── */
-const OBRAS_PUBLICAS = ['escola', 'saude', 'delegacia', 'bombeiros', 'forum', 'camara', 'terminal', 'estacaoAgua', 'esgoto', 'usina', 'aterro', 'estacaoTrem', 'pontoAcessivel', 'fazenda', 'inss', 'rodoviaria', 'teatro', 'museu', 'biblioteca', 'estadio', 'pistaAtletismo'];
+const OBRAS_PUBLICAS = ['escola', 'saude', 'delegacia', 'bombeiros', 'forum', 'camara', 'terminal', 'estacaoAgua', 'esgoto', 'usina', 'aterro', 'estacaoTrem', 'pontoAcessivel', 'fazenda', 'inss', 'rodoviaria', 'teatro', 'museu', 'biblioteca', 'estadio', 'pistaAtletismo', 'delegaciaMulher', 'conselhoTutelar', 'creche', 'defensoria', 'ministerioPublico', 'procon', 'cras', 'hospital', 'direitoDigital'];
 const precisaLicitacao = tipo => OBRAS_PUBLICAS.includes(tipo) && PREDIOS[tipo].custo >= 200;
 function abrirLicitacao(tipo, i) {
   const p = PREDIOS[tipo], preco = f => Math.round(p.custo * f);
@@ -13081,6 +13531,7 @@ function perguntaDaRevisao(r) {
   if (r.t === 'prova') { const q = PREDIOS[r.k] && PREDIOS[r.k].licenca[r.q]; return q && { area: PREDIOS[r.k].area, p: q.p, ops: q.ops, c: q.c, exp: q.exp }; }
   if (r.t === 'caso') { const c = CASOS[r.k]; return c && { area: PREDIOS[c.predio].area, p: `${c.titulo}: ${c.texto}`, ops: c.ops, c: c.c, exp: `${c.exp} (${c.base})` }; }
   if (r.t === 'aud') { const a = AUDIENCIAS[r.k]; return a && { area: a.area, p: `${a.titulo}: ${a.autor[1]}`, ops: a.ops, c: a.c, exp: `${a.exp} (${a.base})` }; }
+  if (r.t === 'elei') { const d = DILEMAS_ELEICAO[r.k]; return d && { area: 'Direito Eleitoral', p: `${d.titulo}: ${d.texto}`, ops: d.ops, c: d.c, exp: `${d.exp} (${d.base})` }; }
   if (r.t === 'licitacao') return { area: 'Licitações e contratos', p: 'Numa licitação, qual empresa deve vencer?', ops: ['A mais barata, mesmo sem documentos', 'A de menor preço entre as que cumpriram os requisitos de habilitação', 'A do parente do prefeito, que é de confiança'], c: 1, exp: 'Lei 14.133/2021: julgamento por menor preço entre as habilitadas; parentes de dirigentes ficam impedidos (art. 14, IV).' };
   return null;
 }
@@ -13112,11 +13563,12 @@ function aoPassarMes() {
   verificarDesafio(true);
   verificarOrcamentoParticipativo();
   crescerBairros();
+  if ((s.mes - 1) % 12 === 7 && anoEleitoral(s.mes)) iniciarCampanha();
   if (conta(s, 'forum') && Math.random() < .35) gerarAudiencia();
   if (s.mes % 6 === 0) setTimeout(() => { if ($('modal').classList.contains('oculto')) abrirOrcamentoParticipativo(); }, 1500);
   else if ((s.revisar || []).some(x => x.quando <= s.mes)) setTimeout(() => { if ($('modal').classList.contains('oculto')) abrirRevisao(); }, 1600);
 }
-function verificarExtras() { verificarDesafio(false); verificarMedalhas(); }
+function verificarExtras() { verificarDesafio(false); verificarMedalhas(); if (typeof verificarHistoria === 'function') verificarHistoria(); }
 
 /* ── Turma: código de entrega, painel da turma e competição ───────────────── */
 function codigoEntrega() {
@@ -13207,7 +13659,8 @@ function abrirAcessibilidade() {
     ${op('contraste', 'Alto contraste', 'Cores fortes, bordas marcadas e fundo sólido.')}
     ${op('calmo', 'Menos animação', 'Desliga confetes e movimentos da interface.')}
     <p class="nota">🔊 Nas aulas e nos casos, o botão "Ouvir" lê o texto em voz alta. Tecle <b>?</b> a qualquer momento para ver os atalhos de teclado.</p>
-    <div class="botoes"><button class="btn" id="m-atalhos">⌨️ Atalhos</button><button class="btn primario" id="m-fechar">Pronto</button></div>`, cx => {
+    <div class="botoes"><button class="btn" id="m-trilha">🧭 Trilha de estudo</button><button class="btn" id="m-atalhos">⌨️ Atalhos</button><button class="btn primario" id="m-fechar">Pronto</button></div>`, cx => {
+    cx.querySelector('#m-trilha').onclick = abrirTrilhas;
     cx.querySelectorAll('[data-pref]').forEach(c => c.onchange = () => {
       const np = prefsAcess(); np[c.dataset.pref] = c.checked;
       try { localStorage.setItem(PREF_ACESS, JSON.stringify(np)); } catch (e) { /* sem storage */ }
@@ -13440,6 +13893,138 @@ document.addEventListener('DOMContentLoaded', () => {
   addEventListener('pointerdown', comecar, { once: true }); addEventListener('keydown', comecar, { once: true });
   setInterval(() => { try { Ambiente.atualizar(); } catch (e) { /* sem áudio */ } }, 1000);
 });
+
+/* ── Eleição jogável: campanha em agosto, urnas em outubro, a cada 4 anos ───
+   A campanha é uma sequência de decisões; escolhas ilegais custam votos, e
+   compra de votos ou uso da máquina pública levam à cassação. */
+const DILEMAS_ELEICAO = [
+  { titulo: 'Outdoors pela cidade', quem: '📣 Coordenador de campanha',
+    texto: 'Vamos espalhar outdoors gigantes com sua foto e o número da chapa em todas as avenidas?',
+    ops: ['Pode, é campanha', 'Não: outdoor é proibido na propaganda eleitoral', 'Pode, se for só nas avenidas'], c: 1,
+    exp: 'A propaganda eleitoral por outdoor, inclusive eletrônico, é proibida e sujeita a multa e retirada.', base: 'Lei 9.504/1997, art. 39, §8º' },
+  { titulo: 'Cestas básicas', quem: '🤫 Cabo eleitoral Nestor', grave: true,
+    texto: 'Tenho 200 cestas básicas. A gente entrega nas casas e pede o voto em troca. Ninguém vai saber!',
+    ops: ['Ótima ideia', 'Não: oferecer bens em troca de voto é compra de votos, com multa e cassação', 'Só se as cestas forem pequenas'], c: 1,
+    exp: 'Oferecer ou entregar qualquer vantagem para obter o voto é captação ilícita de sufrágio (multa e cassação do registro ou do diploma) e também crime eleitoral.', base: 'Lei 9.504/1997, art. 41-A; Código Eleitoral, art. 299' },
+  { titulo: 'Carros da prefeitura', quem: '🚗 Secretário de Administração', grave: true,
+    texto: 'Podemos usar os carros da prefeitura e os servidores, no horário de trabalho, para levar material de campanha?',
+    ops: ['Pode, são nossos', 'Não: usar bens e servidores públicos na campanha é conduta vedada', 'Pode, se for depois das 17h'], c: 1,
+    exp: 'Agentes públicos não podem usar bens, veículos e servidores da administração em favor de candidato. Isso desequilibra a disputa e pode levar à cassação.', base: 'Lei 9.504/1997, art. 73, I e III' },
+  { titulo: 'A grande inauguração', quem: '🎤 Assessor de eventos',
+    texto: 'A creche nova fica pronta em setembro. Vamos fazer a inauguração com show de uma banda famosa e você discursando?',
+    ops: ['Perfeito, mais votos', 'A obra pode ser entregue, mas candidato não pode ir a inaugurações nos 3 meses antes da eleição, e showmício é proibido', 'Pode, se o show for de graça'], c: 1,
+    exp: 'Nos três meses antes da eleição, candidato não pode comparecer a inaugurações de obras públicas. E o showmício é proibido em qualquer época de campanha.', base: 'Lei 9.504/1997, arts. 77 e 39, §7º' },
+  { titulo: 'O vice condenado', quem: '🗂️ Presidente do partido',
+    texto: 'Nosso candidato a vice foi condenado pelo Tribunal de Justiça, em decisão colegiada, por desviar dinheiro público. Ainda cabe recurso. Ele pode concorrer?',
+    ops: ['Pode, ainda cabe recurso', 'Não: pela Lei da Ficha Limpa, a condenação por órgão colegiado já o torna inelegível', 'Pode, se trocar de partido'], c: 1,
+    exp: 'A Lei da Ficha Limpa torna inelegível quem for condenado por órgão judicial colegiado por crimes contra a administração pública, mesmo antes do fim dos recursos.', base: 'LC 64/1990, art. 1º, I, e (Lei da Ficha Limpa, LC 135/2010)' },
+  { titulo: 'Camisetas e bonés', quem: '👕 Gráfica do Seu Zé',
+    texto: 'Faço 5 mil camisetas e bonés com seu número para distribuir na feira. Fechado?',
+    ops: ['Fechado', 'Não: brindes como camisetas e bonés são proibidos na campanha', 'Só se forem de algodão'], c: 1,
+    exp: 'É proibido distribuir camisetas, chaveiros, bonés, canetas, brindes ou quaisquer bens que possam dar vantagem ao eleitor.', base: 'Lei 9.504/1997, art. 39, §6º' },
+  { titulo: 'O vídeo falso', quem: '📱 Apoiador animado',
+    texto: 'Fiz com inteligência artificial um vídeo do seu adversário dizendo que vai fechar as escolas. Parece real! Posto?',
+    ops: ['Posta, é só uma montagem', 'Não: conteúdo falso e deepfake são proibidos na propaganda e podem levar à cassação', 'Posta sem dizer quem fez'], c: 1,
+    exp: 'A Justiça Eleitoral proíbe divulgar fatos sabidamente inverídicos e usar deepfake na propaganda; o uso pode levar à cassação do registro ou do mandato.', base: 'Resolução TSE 23.610/2019, arts. 9º-A e 9º-C' },
+  { titulo: 'Impulsionar nas redes', quem: '💻 Agência de marketing',
+    texto: 'Podemos pagar para impulsionar seus vídeos nas redes sociais?',
+    ops: ['Não, internet é proibida', 'Pode, se for contratado pela campanha e identificado como propaganda eleitoral', 'Pode, usando perfis falsos'], c: 1,
+    exp: 'O impulsionamento pago é permitido quando contratado pelo candidato, partido ou coligação e identificado de forma clara como propaganda eleitoral.', base: 'Lei 9.504/1997, art. 57-C' },
+  { titulo: 'Doação da construtora', quem: '🏗️ Construtora Alfa',
+    texto: 'Nossa empresa quer doar R$ 50 mil para sua campanha. Podemos fazer a transferência hoje?',
+    ops: ['Pode, doação é legal', 'Não: empresas não podem doar para campanhas eleitorais', 'Pode, se for em dinheiro vivo'], c: 1,
+    exp: 'O STF declarou inconstitucional a doação de pessoas jurídicas para campanhas. Só pessoas físicas podem doar, dentro do limite legal.', base: 'STF, ADI 4.650; Lei 9.504/1997, art. 23' },
+  { titulo: 'Pesquisa encomendada', quem: '📊 Instituto Certeza',
+    texto: 'Fizemos uma pesquisa que dá sua vitória. Divulgamos amanhã, sem registrar na Justiça Eleitoral?',
+    ops: ['Divulguem logo', 'Não: a pesquisa precisa ser registrada na Justiça Eleitoral até 5 dias antes da divulgação', 'Pode, se for só no grupo da família'], c: 1,
+    exp: 'Pesquisas eleitorais só podem ser divulgadas depois de registradas na Justiça Eleitoral, com 5 dias de antecedência. Divulgar sem registro gera multa.', base: 'Lei 9.504/1997, art. 33' },
+  { titulo: 'Kits de graça', quem: '🎒 Secretária de Educação',
+    texto: 'Em ano de eleição, vamos criar agora um programa novo para dar tablets de graça às famílias, com seu nome na caixa?',
+    ops: ['Ótimo, a população merece', 'Não: no ano da eleição é proibido distribuir bens gratuitamente, salvo programas já em execução e previstos em lei', 'Pode, se for só para eleitores'], c: 1,
+    exp: 'No ano eleitoral, a distribuição gratuita de bens pela administração é proibida, salvo em calamidade ou programas sociais autorizados em lei e já em execução no ano anterior.', base: 'Lei 9.504/1997, art. 73, §10' },
+];
+const anoEleitoral = mes => anoDe(mes) % 4 === 0;
+function iniciarCampanha() {
+  const pref = s.mapa.findIndex(l => l && l.tipo === 'prefeitura');
+  if (pref < 0 || s.pendentes.some(p => p.elei)) return;
+  s.campanha = { pontos: 0, irregular: [], feito: false };
+  s.pendentes.push({ elei: 1, tile: pref, expira: s.mes + 1 });
+  registrar('🗳️ Começou a <b>campanha eleitoral</b> (a propaganda só é permitida a partir de 16 de agosto, Lei 9.504/1997, art. 36). Clique no balão da Prefeitura para decidir como fazer campanha.');
+  setTimeout(() => { som('alerta'); toast('🗳️ Começou a campanha eleitoral! Clique no balão da Prefeitura.', true); }, 1500);
+}
+function abrirCampanha(pend) {
+  const lista = embaralhar(DILEMAS_ELEICAO.map((_, k) => k)).slice(0, 4);
+  const sucessor = (s.reeleicoes || 0) >= 1;
+  let idx = 0;
+  const intro = () => abrirModal(`<div class="cab-modal" style="--cor:#00897B"><span class="icone-grande">🗳️</span>
+      <div><small>Eleições municipais · Ano ${anoDe(s.mes)}</small><h2>Campanha eleitoral</h2></div></div>
+    <p>${sucessor ? 'Você já foi reeleito(a) uma vez e <b>não pode concorrer a um terceiro mandato seguido</b> (CF, art. 14, §5º). Seu grupo lançou um(a) sucessor(a), e você vai coordenar a campanha dele(a).' : 'O prefeito pode ser reeleito para <b>um único período seguido</b> (CF, art. 14, §5º). Chegou a hora de pedir o voto da população!'}</p>
+    <p class="nota">Você vai tomar ${lista.length} decisões de campanha. Escolhas legais rendem votos; propaganda irregular gera multa, e compra de votos ou uso da máquina pública podem levar à <b>cassação</b>. O resultado sai em outubro e também depende da felicidade da cidade.</p>
+    <div class="botoes"><button class="btn" id="m-depois">Depois</button><button class="btn primario" id="m-ir">Começar ▶</button></div>`, cx => {
+    cx.querySelector('#m-depois').onclick = fecharModal;
+    cx.querySelector('#m-ir').onclick = mostrar;
+  });
+  const mostrar = () => {
+    const d = DILEMAS_ELEICAO[lista[idx]], ordem = embaralhar(d.ops.map((t, i) => ({ t, i })));
+    abrirModal(`<div class="cab-modal" style="--cor:#00897B"><span class="icone-grande">🗳️</span>
+        <div><small>Campanha eleitoral · decisão ${idx + 1} de ${lista.length}</small><h2>${d.titulo}</h2></div></div>
+      <blockquote class="fala"><b>${d.quem}</b>${d.texto}</blockquote>
+      <p class="pergunta">O que você responde?</p>${htmlOpcoes(ordem, 'k', d.c)}<div id="feedback"></div>`, cx => {
+      cx.querySelectorAll('.opcao').forEach(b => b.onclick = () => {
+        const certo = +b.dataset.k === d.c;
+        registrarDesempenho('Direito Eleitoral', 'caso', certo);
+        cx.querySelectorAll('.opcao').forEach(o => { o.disabled = true; if (+o.dataset.k === d.c) o.classList.add('certa'); });
+        let titulo;
+        if (certo) { s.campanha.pontos += 3; ganharXp(10); som('certo'); titulo = '✅ Campanha limpa! +10 XP e mais votos'; }
+        else {
+          b.classList.add('errada'); som('erro'); s.campanha.irregular.push(lista[idx]);
+          if (d.grave) { s.campanha.cassacao = d.titulo; titulo = '🚨 Ilegal! O adversário denunciou e a Justiça Eleitoral abriu investigação.'; }
+          else { s.campanha.pontos -= 2; s.dinheiro -= 60; titulo = '❌ Irregularidade na campanha: multa de 💰 60 e menos votos.'; }
+          agendarRevisao({ t: 'elei', k: lista[idx] });
+        }
+        const ultima = idx === lista.length - 1;
+        cx.querySelector('#feedback').innerHTML = `<div class="explicacao ${certo ? 'ok' : 'erro'}"><b>${titulo}</b> ${d.exp}<small class="base">📌 ${d.base}</small></div>
+          <div class="botoes"><button class="btn primario" id="m-prox">${ultima ? 'Encerrar campanha' : 'Próxima ▶'}</button></div>`;
+        cx.querySelector('#m-prox').onclick = () => { idx++; idx < lista.length ? mostrar() : fim(); };
+        cx.querySelector('#m-prox').focus();
+      });
+    });
+  };
+  const fim = () => {
+    s.pendentes = s.pendentes.filter(x => x !== pend);
+    s.campanha.feito = true;
+    const c = s.campanha;
+    registrar(`🗳️ Campanha encerrada: ${c.irregular.length ? `${c.irregular.length} irregularidade(s)` : 'nenhuma irregularidade'}. O resultado sai em outubro.`);
+    abrirModal(`<div class="cab-modal" style="--cor:#00897B"><span class="icone-grande">🗳️</span>
+        <div><small>Eleições municipais</small><h2>Campanha encerrada</h2></div></div>
+      <p>${c.cassacao ? '🚨 Há uma investigação na Justiça Eleitoral contra a campanha. Mesmo que vença nas urnas, o mandato pode ser cassado.' : c.irregular.length ? 'A campanha teve algumas irregularidades, mas nada que leve à cassação.' : '✅ Campanha 100% dentro da lei!'}</p>
+      <p class="nota">Até outubro, cuide da felicidade da cidade: ela pesa muito na hora do voto.</p>
+      <div class="botoes"><button class="btn primario" id="m-ok">Voltar à cidade</button></div>`, cx => {
+      cx.querySelector('#m-ok').onclick = () => { fecharModal(); verificarMissoes(); render(); };
+    });
+  };
+  intro();
+}
+// apuração de outubro: devolve o texto do efeito para o Diário Oficial
+function apurarEleicao() {
+  const c = s.campanha || { pontos: 0, irregular: [] };
+  const sucessor = (s.reeleicoes || 0) >= 1, quem = sucessor ? 'seu(sua) sucessor(a)' : 'você';
+  if (s.historia && c.feito && !c.irregular.length) s.historia.campanhaLimpa = true;
+  const votos = Math.max(18, Math.min(82, Math.round(s.felicidade * .8 + 8 + (c.feito ? c.pontos : -4) + (s.reputacao || 0) * .2)));
+  let efeito;
+  if (c.cassacao) {
+    s.dinheiro -= 300; s.reputacao = Math.max(-30, (s.reputacao || 0) - 8);
+    efeito = `Com ${votos}% dos votos, ${quem} venceu nas urnas, mas a Justiça Eleitoral <b>cassou o diploma</b> pela irregularidade "${c.cassacao}" e aplicou multa de 💰 300. Haverá nova eleição, e a confiança na prefeitura despencou.`;
+  } else if (votos >= 50) {
+    ganharXp(40); s.dinheiro += 200; if (!sucessor) s.reeleicoes = (s.reeleicoes || 0) + 1;
+    efeito = `${sucessor ? 'Seu(sua) sucessor(a) foi eleito(a)' : 'Você foi <b>reeleito(a)</b>'} com ${votos}% dos votos válidos! +40 XP, +200 💰.`;
+  } else {
+    s.reputacao = Math.max(-30, (s.reputacao || 0) - 3);
+    efeito = `Só ${votos}% dos votos: a oposição venceu. No jogo, você segue governando, mas a cidade ficou insatisfeita. Cuide melhor dela e faça campanha dentro da lei!`;
+  }
+  s.campanha = null;
+  return efeito;
+}
 
 </script>
 <script>
@@ -13846,6 +14431,430 @@ function fecharGuia() {
   if (typeof render === 'function') render();
 }
 const guiaJaVisto = () => { try { return localStorage.getItem(CHAVE_GUIA) === '1'; } catch (e) { return false; } };
+
+</script>
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   CIDADE LEGAL — Confiabilidade do conteúdo
+   Data da última atualização do conteúdo, mudanças recentes nas leis e o
+   botão "Reportar erro" em aulas, casos, audiências e ocorrências.
+   Na página publicada no Claude, os reportes vão para uma caixa de sugestões
+   que só o dono da página (e editores) leem; fora dele, ficam neste aparelho
+   e podem ser copiados para o professor ou responsável.
+══════════════════════════════════════════════════════════════════════════ */
+
+const ATUALIZACAO_CONTEUDO = 'outubro de 2026';
+const MUDANCAS_LEGAIS = [
+  { ano: 2025, titulo: 'ECA Digital', texto: 'A Lei 15.211/2025 criou regras para proteger crianças e adolescentes em aplicativos, redes sociais e jogos, como verificação de idade e ferramentas de supervisão dos pais.' },
+  { ano: 2024, titulo: 'Feminicídio virou crime autônomo', texto: 'A Lei 14.994/2024 transformou o feminicídio em crime próprio (Código Penal, art. 121-A), com pena de 20 a 40 anos, e endureceu a Lei Maria da Penha.' },
+  { ano: 2024, titulo: 'Bullying e cyberbullying são crimes', texto: 'A Lei 14.811/2024 incluiu no Código Penal o crime de intimidação sistemática (art. 146-A); pela internet, a pena é de 2 a 4 anos de reclusão.' },
+  { ano: 2025, titulo: 'Reforma Tributária em transição', texto: 'A EC 132/2023 e a LC 214/2025 criam o IBS e a CBS. O ISS (municipal) e o ICMS (estadual) serão extintos aos poucos até 2033. Durante a transição o ISS continua valendo, por isso o jogo ainda o ensina.' },
+  { ano: 2023, titulo: 'Nova Lei de Licitações em vigor sozinha', texto: 'Desde 30/12/2023 só vale a Lei 14.133/2021; a antiga Lei 8.666/1993 foi revogada.' },
+  { ano: 2023, titulo: 'Lei Geral do Esporte', texto: 'A Lei 14.597/2023 passou a reunir as regras do esporte e dos direitos do torcedor, que antes estavam no Estatuto do Torcedor.' },
+  { ano: 2023, titulo: 'Injúria racial é racismo', texto: 'A Lei 14.532/2023 equiparou a injúria racial ao crime de racismo: inafiançável e imprescritível.' },
+  { ano: 2023, titulo: 'Nova Lei dos Agrotóxicos', texto: 'A Lei 14.785/2023 substituiu a Lei 7.802/1989 nas regras de registro, venda e uso de agrotóxicos.' },
+  { ano: 2022, titulo: 'Estatuto da Pessoa Idosa', texto: 'A Lei 14.423/2022 trocou o nome "Estatuto do Idoso" por "Estatuto da Pessoa Idosa" (Lei 10.741/2003).' },
+];
+const CHAVE_REPORTES = 'cidade-legal-reportes';
+const TIPOS_REPORTE = ['A lei citada está errada ou desatualizada', 'A resposta considerada certa está errada', 'O texto está confuso ou difícil', 'Outro problema'];
+
+function reportesLocais() { try { return JSON.parse(localStorage.getItem(CHAVE_REPORTES)) || []; } catch (e) { return []; } }
+function guardarReporteLocal(r) { try { const l = reportesLocais(); l.unshift(r); localStorage.setItem(CHAVE_REPORTES, JSON.stringify(l.slice(0, 100))); } catch (e) { /* sem storage */ } }
+
+// caixa de sugestões na conta (página publicada): cada pessoa grava os seus, o dono lê todos
+const CaixaReportes = (() => {
+  let col = null;
+  async function iniciar() {
+    if (!window.claude || !claude.use) return;
+    try {
+      const [db, u] = await Promise.all([claude.use('db'), claude.use('user')]);
+      const uid = u && await u.id();
+      if (db && uid) col = db.doc('reportes/' + uid).collection('itens');
+    } catch (e) { col = null; }
+  }
+  async function enviar(r) {
+    if (!col) return false;
+    try { await col.doc(r.id).set(r); return true; } catch (e) { return false; }
+  }
+  return { iniciar, enviar, ativa: () => !!col };
+})();
+
+// o formulário abre por cima da própria janela (aula, prova ou caso), sem perder o que estava nela
+function abrirReporte(contexto) {
+  const cx = $('modal-caixa');
+  if (cx.querySelector('.painel-reporte')) return;
+  const antes = [...cx.children];
+  antes.forEach(el => el.classList.add('oculto-reporte'));
+  const pn = document.createElement('div');
+  pn.className = 'painel-reporte';
+  pn.innerHTML = `<div class="cab-modal" style="--cor:#E65100"><span class="icone-grande">⚠️</span>
+      <div><small>Reportar erro no conteúdo</small><h2>${esc(contexto.titulo)}</h2></div></div>
+    <p class="nota">Obrigado por ajudar! O conteúdo é revisado por pessoas, e seu aviso entra na fila de revisão.</p>
+    <div class="opcoes-reporte">${TIPOS_REPORTE.map((t, k) => `<label><input type="radio" name="tipo-rep" value="${k}" ${k === 0 ? 'checked' : ''}> ${t}</label>`).join('')}</div>
+    <label class="campo">O que está errado? (se souber, diga a lei ou o artigo certo)<textarea id="m-rep-texto" rows="3" maxlength="800" placeholder="Ex.: o prazo certo é de 30 dias, conforme o CDC, art. 18."></textarea></label>
+    <p class="nota" id="m-rep-erro" role="alert"></p>
+    <div class="botoes"><button class="btn" id="m-rep-cancelar">Voltar</button><button class="btn primario" id="m-rep-enviar">Enviar aviso</button></div>`;
+  cx.appendChild(pn);
+  cx.scrollTop = 0;
+  const fechar = () => { pn.remove(); antes.forEach(el => el.classList.remove('oculto-reporte')); };
+  pn.querySelector('#m-rep-cancelar').onclick = fechar;
+  pn.querySelector('#m-rep-enviar').onclick = async () => {
+    const texto = pn.querySelector('#m-rep-texto').value.trim();
+    const tipo = TIPOS_REPORTE[+pn.querySelector('input[name="tipo-rep"]:checked').value];
+    if (!texto && tipo === TIPOS_REPORTE[3]) { pn.querySelector('#m-rep-erro').textContent = 'Conte em poucas palavras qual é o problema.'; return; }
+    const r = { id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), quando: new Date().toISOString(), onde: contexto.titulo, area: contexto.area || '',
+      trecho: (contexto.trecho || '').slice(0, 600), tipo, texto, cidade: s.nome, conteudo: ATUALIZACAO_CONTEUDO };
+    guardarReporteLocal(r);
+    fechar(); som('certo');
+    const naConta = await CaixaReportes.enviar(r);
+    toast(naConta ? '⚠️ Aviso enviado aos responsáveis pelo conteúdo. Obrigado!' : '⚠️ Aviso guardado neste aparelho. Para enviá-lo, use 🎓 Modo professor → Erros reportados → Copiar.');
+  };
+  pn.querySelector('input').focus();
+}
+
+// texto que acompanha o reporte: título da janela e o trecho mais próximo do link
+function contextoDoReporte(link) {
+  const cx = $('modal-caixa');
+  const titulo = (cx.querySelector('.cab-modal h2') || {}).innerText || 'Conteúdo do jogo';
+  const area = (cx.querySelector('.cab-modal small') || {}).innerText || '';
+  const bloco = link.closest('.explicacao, .aula-texto') || cx;
+  if (!cx.querySelector('.cab-modal h2')) return { titulo: 'Conteúdo do jogo', area: '', trecho: bloco.innerText };
+  const pergunta = (cx.querySelector('.pergunta, .fala') || {}).innerText || '';
+  return { titulo, area, trecho: [pergunta, bloco.innerText.replace(/⚠️ Reportar erro.*$/s, '')].filter(Boolean).join(' | ') };
+}
+function rodapeConteudo() {
+  const a = document.createElement('p');
+  a.className = 'rodape-conteudo';
+  a.innerHTML = `📅 Conteúdo atualizado em ${ATUALIZACAO_CONTEUDO} · <button class="link" data-reportar>⚠️ Reportar erro</button>`;
+  return a;
+}
+// coloca o rodapé em toda aula e toda explicação de resposta que aparecer nas janelas
+function marcarConteudo() {
+  $('modal-caixa').querySelectorAll('.aula-texto, .explicacao').forEach(b => {
+    if (b.querySelector('.rodape-conteudo')) return;
+    b.appendChild(rodapeConteudo());
+  });
+}
+
+function htmlMudancasLegais() {
+  return `<details class="mudancas-legais"><summary>📅 Conteúdo atualizado em <b>${ATUALIZACAO_CONTEUDO}</b> · mudanças recentes nas leis</summary>
+    <ul>${MUDANCAS_LEGAIS.map(m => `<li><b>${m.ano} · ${m.titulo}.</b> ${m.texto}</li>`).join('')}</ul>
+    <p class="nota">Achou algo desatualizado? Use ⚠️ Reportar erro nas aulas e nos casos.</p></details>`;
+}
+function htmlReportesProfessor() {
+  const l = reportesLocais();
+  return `<h3>⚠️ Erros reportados ${l.length ? `(${l.length})` : ''}</h3>${l.length
+    ? `<ul class="lista-reportes">${l.slice(0, 20).map(r => `<li><b>${esc(r.onde)}</b> · ${esc(r.tipo)}<small>${esc(r.texto || '(sem comentário)')} · ${new Date(r.quando).toLocaleDateString('pt-BR')}</small></li>`).join('')}</ul>
+       <div class="botoes esquerda"><button class="btn" id="m-copiar-reportes">📋 Copiar erros reportados</button></div>`
+    : '<p class="nota">Nenhum erro reportado neste aparelho. O botão ⚠️ Reportar erro aparece no fim de cada aula e de cada explicação.</p>'}
+    ${CaixaReportes.ativa() ? '<p class="nota">Na página publicada, os avisos também vão para a caixa de sugestões que só o dono da página lê.</p>' : ''}`;
+}
+const textoReportes = () => reportesLocais().map(r => `• ${r.onde} (${r.area}) — ${r.tipo}\n  ${r.texto || '(sem comentário)'}\n  Trecho: ${r.trecho}\n  ${new Date(r.quando).toLocaleString('pt-BR')} · cidade ${r.cidade} · conteúdo de ${r.conteudo}`).join('\n\n');
+
+document.addEventListener('DOMContentLoaded', () => {
+  new MutationObserver(marcarConteudo).observe($('modal-caixa'), { childList: true, subtree: true });
+  $('modal-caixa').addEventListener('click', e => {
+    const b = e.target.closest('[data-reportar]');
+    if (b) { e.preventDefault(); abrirReporte(contextoDoReporte(b)); }
+    if (e.target.id === 'm-copiar-reportes') copiarTexto(textoReportes(), $('modal-caixa').querySelector('#m-texto') || document.createElement('textarea'), '📋 Erros copiados! Envie ao responsável pelo conteúdo.');
+  });
+  CaixaReportes.iniciar();
+});
+
+</script>
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   CIDADE LEGAL — Jeitos de aprender
+   Trilhas por público (Fundamental, Médio, Graduação, OAB), glossário clicável
+   nos textos jurídicos e o modo campanha, com capítulos contados como história.
+══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Trilhas por público ──────────────────────────────────────────────────── */
+const TRILHAS = {
+  fundamental: { nome: 'Ensino Fundamental', icone: '🎒', desc: 'Provas de 3 perguntas com 💡 dica que elimina uma alternativa errada.', n: 3, minimo: 2, dica: true, bonus: 20 },
+  medio: { nome: 'Ensino Médio', icone: '📘', desc: 'O jogo padrão: 3 perguntas por prova, aprovação com 2 acertos.', n: 3, minimo: 2, dica: false, bonus: 20 },
+  graduacao: { nome: 'Graduação em Direito', icone: '🎓', desc: 'Todas as perguntas da área; só pode errar uma. Licença vale +30 XP.', n: 9, erros: 1, dica: false, bonus: 30 },
+  oab: { nome: 'Preparação para a OAB', icone: '⚖️', desc: 'Todas as perguntas, sem errar nenhuma. Licença vale +40 XP.', n: 9, erros: 0, dica: false, bonus: 40 },
+};
+const trilhaAtual = () => TRILHAS[s.trilha] ? s.trilha : 'medio';
+function configProva(p) {
+  const t = TRILHAS[trilhaAtual()], n = Math.min(t.n, p.licenca.length);
+  return { n, minimo: t.erros !== undefined ? Math.max(1, n - t.erros) : Math.min(t.minimo, n), dica: t.dica, bonus: t.bonus };
+}
+// botão de dica (só na trilha Fundamental): elimina uma alternativa errada
+function htmlDica(certa, chave) {
+  if (certa === undefined || !TRILHAS[trilhaAtual()].dica) return '';
+  return `<div class="botoes esquerda"><button class="btn pequeno btn-dica" data-dica="${certa}" data-chave="${chave}">💡 Dica: eliminar uma alternativa errada</button></div>`;
+}
+function htmlEscolhaTrilha(atual) {
+  return `<div class="trilhas" role="radiogroup" aria-label="Trilha de estudo">${Object.entries(TRILHAS).map(([k, t]) =>
+    `<label class="trilha"><input type="radio" name="trilha" value="${k}" ${k === atual ? 'checked' : ''}><span><b>${t.icone} ${t.nome}</b><small>${t.desc}</small></span></label>`).join('')}</div>`;
+}
+function abrirTrilhas() {
+  abrirModal(`<div class="cab-modal" style="--cor:#7B40E8"><span class="icone-grande">🧭</span>
+      <div><small>Do seu jeito</small><h2>Trilha de estudo</h2></div></div>
+    <p class="nota">A trilha muda a dificuldade das provas de licença. Dá para trocar quando quiser; o que você já conquistou continua valendo.</p>
+    ${htmlEscolhaTrilha(trilhaAtual())}
+    <div class="botoes"><button class="btn primario" id="m-fechar">Pronto</button></div>`, cx => {
+    cx.querySelectorAll('input[name="trilha"]').forEach(r => r.onchange = () => { s.trilha = r.value; salvar(); toast(`${TRILHAS[r.value].icone} Trilha: ${TRILHAS[r.value].nome}`); });
+    cx.querySelector('#m-fechar').onclick = fecharModal;
+  });
+}
+
+/* ── Glossário clicável ───────────────────────────────────────────────────── */
+const GLOSSARIO = {
+  'Constituição': 'A lei mais importante do país (CF/1988). Nenhuma outra lei pode contrariá-la.',
+  'inconstitucional': 'Que contraria a Constituição. Uma lei inconstitucional não deve ser aplicada e pode ser anulada pelo Judiciário.',
+  'licitação': 'Disputa pública e aberta que a administração faz para escolher quem vai fazer uma obra ou vender um produto, buscando a proposta mais vantajosa (Lei 14.133/2021).',
+  'impessoalidade': 'Princípio que obriga o governo a tratar todos igualmente, sem favorecer amigos e parentes nem promover a imagem pessoal do governante (CF, art. 37).',
+  'improbidade': 'Desonestidade de quem cuida de dinheiro ou bens públicos, como desviar recursos ou enriquecer ilicitamente (Lei 8.429/1992).',
+  'súmula': 'Resumo de um entendimento firme de um tribunal, que orienta como casos parecidos devem ser julgados.',
+  'jurisprudência': 'Conjunto de decisões dos tribunais sobre um mesmo tema, que mostra como a lei vem sendo interpretada.',
+  'trânsito em julgado': 'Momento em que uma decisão judicial não pode mais ser contestada por recurso.',
+  'flagrante': 'Quando a pessoa é surpreendida cometendo o crime ou logo depois dele. Qualquer pessoa pode prender em flagrante (CPP, art. 301).',
+  'audiência de custódia': 'Apresentação do preso a um juiz em até 24 horas, para verificar se a prisão foi legal e se houve maus-tratos.',
+  'legítima defesa': 'Reagir a uma agressão injusta, atual ou iminente, usando moderadamente os meios necessários. Não é crime (CP, art. 25).',
+  'inquérito': 'Investigação feita antes do processo para reunir provas. O inquérito policial é feito pela polícia; o inquérito civil, pelo Ministério Público.',
+  'ação civil pública': 'Processo para proteger direitos de muitas pessoas ao mesmo tempo, como o meio ambiente e os consumidores (Lei 7.347/1985).',
+  'ação penal pública': 'Processo criminal em que quem acusa é o Ministério Público, não a vítima.',
+  'Ministério Público': 'Instituição que defende a sociedade: acusa nos crimes, protege direitos coletivos e fiscaliza o cumprimento da lei (CF, art. 127).',
+  'Defensoria Pública': 'Instituição que dá orientação e defesa jurídica gratuita a quem não pode pagar advogado (CF, art. 134).',
+  'Juizado Especial': 'Parte da Justiça que julga causas mais simples de forma rápida; em causas de até 20 salários mínimos, dá para entrar sem advogado (Lei 9.099/1995).',
+  'gratuidade da justiça': 'Direito de processar ou se defender sem pagar custas, para quem não tem condições (CPC, art. 98).',
+  'medida protetiva': 'Ordem urgente do juiz para proteger a vítima, como afastar o agressor do lar ou proibir que ele se aproxime (Lei Maria da Penha).',
+  'Conselho Tutelar': 'Órgão do município, escolhido pela comunidade, que zela pelos direitos das crianças e adolescentes (ECA, art. 131).',
+  'ECA': 'Estatuto da Criança e do Adolescente (Lei 8.069/1990): reúne os direitos de quem tem até 18 anos.',
+  'CDC': 'Código de Defesa do Consumidor (Lei 8.078/1990): protege quem compra produtos e contrata serviços.',
+  'fornecedor': 'Quem vende produtos ou presta serviços no mercado: fabricante, loja, banco, operadora etc. (CDC, art. 3º).',
+  'venda casada': 'Obrigar o consumidor a levar um produto ou serviço para poder comprar outro. É proibida (CDC, art. 39, I).',
+  'LGPD': 'Lei Geral de Proteção de Dados (Lei 13.709/2018): regras para coletar, usar e guardar dados pessoais.',
+  'dados pessoais': 'Informações que identificam uma pessoa, como nome, CPF, endereço, foto e localização.',
+  'usucapião': 'Forma de se tornar dono de um imóvel por morar nele por longo tempo, sem oposição, como se fosse dono (CC, arts. 1.238 a 1.242).',
+  'IPTU': 'Imposto municipal sobre a propriedade de imóveis urbanos (CF, art. 156, I).',
+  'ISS': 'Imposto municipal sobre serviços (CF, art. 156, III). Será substituído aos poucos pelo IBS até 2033.',
+  'tributo': 'Valor que a lei obriga a pagar ao Estado, como impostos, taxas e contribuições (CTN, art. 3º).',
+  'Plano Diretor': 'Lei municipal que organiza o crescimento da cidade; é obrigatória para cidades com mais de 20 mil habitantes (CF, art. 182).',
+  'tombamento': 'Proteção legal de um bem de valor histórico ou cultural: ele não pode ser destruído nem descaracterizado.',
+  'desapropriação': 'Quando o poder público toma um imóvel por necessidade ou interesse público, pagando indenização justa e prévia (CF, art. 5º, XXIV).',
+  'prescrição': 'Perda do direito de cobrar ou de punir porque passou o prazo previsto em lei.',
+  'pensão alimentícia': 'Valor pago para garantir o sustento de quem precisa, como filhos menores (CC, art. 1.694).',
+  'guarda compartilhada': 'Quando pai e mãe dividem as decisões e responsabilidades sobre os filhos, mesmo separados (CC, art. 1.584).',
+  'aviso prévio': 'Comunicação antecipada do fim do contrato de trabalho, de no mínimo 30 dias (CF, art. 7º, XXI).',
+  'FGTS': 'Fundo de Garantia do Tempo de Serviço: depósito mensal de 8% do salário feito pelo empregador numa conta do trabalhador.',
+  'CLT': 'Consolidação das Leis do Trabalho: reúne as regras dos empregos com carteira assinada.',
+  'carência': 'Tempo mínimo de contribuição ou de contrato exigido antes de poder usar um benefício ou serviço.',
+  'BPC': 'Benefício de Prestação Continuada: 1 salário mínimo por mês ao idoso a partir de 65 anos ou à pessoa com deficiência sem meios de se manter.',
+  'CadÚnico': 'Cadastro Único do governo federal que identifica famílias de baixa renda para os programas sociais.',
+  'cassação': 'Perda do registro de candidatura ou do mandato por decisão da Justiça Eleitoral ou do Legislativo.',
+  'inelegível': 'Quem não pode se candidatar, por exemplo, por condenação prevista na Lei da Ficha Limpa.',
+  'Ficha Limpa': 'Lei Complementar 135/2010: impede de se candidatar quem foi condenado por órgão colegiado em certos crimes ou atos de improbidade.',
+  'veto': 'Recusa do chefe do Executivo (prefeito, governador ou presidente) em transformar um projeto aprovado em lei.',
+  'sanção': 'No processo legislativo, é a concordância do chefe do Executivo com o projeto, que vira lei. Também pode significar punição.',
+  'responsabilidade objetiva': 'Dever de indenizar que não depende de provar culpa: basta o dano e a ligação com a atividade.',
+  'dano moral': 'Ofensa à honra, à imagem ou à dignidade da pessoa, que dá direito a indenização (CF, art. 5º, X).',
+  'prontuário': 'Documento com todo o histórico de atendimento do paciente. É sigiloso e o paciente tem direito de acessá-lo.',
+  'estelionato': 'Crime de obter vantagem enganando alguém (CP, art. 171). Pela internet, chama-se fraude eletrônica.',
+  'reclusão': 'Pena de prisão para crimes mais graves, que pode começar no regime fechado.',
+  'Tribunal de Contas': 'Órgão que fiscaliza como o dinheiro público é gasto e dá parecer sobre as contas do governante (CF, arts. 71 e 31).',
+  'Lei de Responsabilidade Fiscal': 'LC 101/2000: obriga os governantes a planejar e equilibrar receitas e despesas.',
+};
+const TERMOS_GLOSSARIO = Object.keys(GLOSSARIO).sort((a, b) => b.length - a.length);
+const reGlossario = new RegExp(`(?<![\\p{L}\\d])(${TERMOS_GLOSSARIO.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})(?![\\p{L}\\d])`, 'iu');
+const termoCanonico = achado => TERMOS_GLOSSARIO.find(t => t.toLowerCase() === achado.toLowerCase());
+const BLOCOS_GLOSSARIO = '.aula-texto, .explicacao, .fala, .cartao-lei';
+
+// marca, em cada bloco, a primeira vez que cada termo aparece
+function marcarGlossario(raiz) {
+  raiz.querySelectorAll(BLOCOS_GLOSSARIO).forEach(bloco => {
+    if (bloco.dataset.glossario) return;
+    bloco.dataset.glossario = '1';
+    const vistos = new Set(), nos = [];
+    const w = document.createTreeWalker(bloco, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement.closest('button, a, .termo, .rodape-conteudo, small.base') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+    while (w.nextNode()) nos.push(w.currentNode);
+    nos.forEach(no => {
+      let texto = no.nodeValue, m;
+      const frag = document.createDocumentFragment();
+      let mudou = false;
+      while ((m = reGlossario.exec(texto))) {
+        const termo = termoCanonico(m[1]);
+        if (vistos.has(termo)) { frag.append(texto.slice(0, m.index + m[1].length)); texto = texto.slice(m.index + m[1].length); continue; }
+        vistos.add(termo); mudou = true;
+        frag.append(texto.slice(0, m.index));
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'termo'; b.dataset.termo = termo; b.textContent = m[1];
+        b.setAttribute('aria-label', `${m[1]}: ver no glossário`);
+        frag.append(b);
+        texto = texto.slice(m.index + m[1].length);
+      }
+      if (!mudou) return;
+      frag.append(texto);
+      no.replaceWith(frag);
+    });
+  });
+}
+function mostrarTermo(botao) {
+  fecharTermo();
+  const termo = botao.dataset.termo, pop = document.createElement('div');
+  pop.id = 'pop-termo'; pop.className = 'pop-termo hud'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', `Glossário: ${termo}`);
+  pop.innerHTML = `<b>📚 ${esc(termo)}</b><p>${GLOSSARIO[termo]}</p><button class="btn pequeno" id="pop-termo-ok">Entendi</button>`;
+  document.body.appendChild(pop);
+  const r = botao.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+  const x = Math.min(Math.max(8, r.left + r.width / 2 - pop.offsetWidth / 2), W - pop.offsetWidth - 8);
+  const y = r.bottom + 8 + pop.offsetHeight < H - 8 ? r.bottom + 8 : Math.max(8, r.top - 8 - pop.offsetHeight);
+  Object.assign(pop.style, { left: x + 'px', top: y + 'px' });
+  botao.setAttribute('aria-expanded', 'true');
+  pop.querySelector('#pop-termo-ok').onclick = () => { fecharTermo(); botao.focus(); };
+  pop.querySelector('#pop-termo-ok').focus();
+  s.termosVistos = s.termosVistos || [];
+  if (!s.termosVistos.includes(termo)) { s.termosVistos.push(termo); salvar(); }
+}
+function fecharTermo() {
+  const p = document.getElementById('pop-termo'); if (p) p.remove();
+  document.querySelectorAll('.termo[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+function htmlGlossario() {
+  const vistos = s.termosVistos || [];
+  return `<details class="glossario"><summary>📚 Glossário jurídico · ${Object.keys(GLOSSARIO).length} termos${vistos.length ? ` · você já consultou ${vistos.length}` : ''}</summary>
+    <dl>${Object.keys(GLOSSARIO).sort((a, b) => a.localeCompare(b, 'pt')).map(t => `<dt>${vistos.includes(t) ? '✅ ' : ''}${esc(t)}</dt><dd>${GLOSSARIO[t]}</dd>`).join('')}</dl>
+    <p class="nota">Nas aulas e nos casos, os termos <span class="termo exemplo">sublinhados</span> abrem a explicação com um clique.</p></details>`;
+}
+
+/* ── Modo campanha: capítulos com história ────────────────────────────────── */
+const CAPITULOS = [
+  { titulo: 'O primeiro mandato', icone: '🏛️',
+    historia: 'A cidade tem só uma Prefeitura e muita esperança. No discurso de posse, você prometeu moradia, escola e saúde para todos. A população está de olho: promessa de campanha é compromisso!',
+    objetivos: [
+      { texto: 'Construa 3 Casas', ok: s => conta(s, 'casa') >= 3 },
+      { texto: 'Construa uma Escola', ok: s => conta(s, 'escola') >= 1 },
+      { texto: 'Construa um Posto de Saúde', ok: s => conta(s, 'saude') >= 1 },
+      { texto: 'Atenda 2 cidadãos', ok: s => s.casosResolvidos >= 2 },
+    ], din: 200, xp: 30 },
+  { titulo: 'A cidade cresce', icone: '🏘️',
+    historia: 'A notícia se espalhou e novas famílias chegaram. O comércio quer abrir as portas e os moradores pedem mais espaço. Hora de planejar o crescimento, com o Plano Diretor na mão.',
+    objetivos: [
+      { texto: 'Compre um bairro novo', ok: s => Object.keys(s.bairros || {}).filter(k => k !== 'centro' && s.bairros[k]).length >= 1 },
+      { texto: 'Construa um Mercado', ok: s => conta(s, 'mercado') >= 1 },
+      { texto: 'Alcance 60 habitantes', ok: s => s.pop >= 60 },
+      { texto: 'Tenha 6 licenças jurídicas', ok: s => Object.keys(s.licencas).length >= 6 },
+    ], din: 300, xp: 40 },
+  { titulo: 'A grande enchente', icone: '🌊', evento: 'temporal',
+    historia: 'A Defesa Civil avisou: um temporal histórico se aproxima. Bairros inteiros podem alagar. A lei manda o município mapear as áreas de risco e ter um plano de contingência. Prepare a cidade!',
+    objetivos: [
+      { texto: 'Construa os Bombeiros', ok: s => conta(s, 'bombeiros') >= 1 },
+      { texto: 'Construa um Piscinão', ok: s => conta(s, 'piscinao') >= 1 },
+      { texto: 'Construa uma Estação de Esgoto', ok: s => conta(s, 'esgoto') >= 1 },
+      { texto: 'Mantenha a felicidade em 50% ou mais', ok: s => s.felicidade >= 50 },
+    ], din: 350, xp: 50 },
+  { titulo: 'Justiça para todos', icone: '⚖️',
+    historia: 'Depois da enchente, muita gente perdeu documentos, casas e empregos, e não sabe a quem recorrer. Uma vítima de violência doméstica não encontrou atendimento. A cidade precisa de uma rede de proteção.',
+    objetivos: [
+      { texto: 'Construa o Fórum', ok: s => conta(s, 'forum') >= 1 },
+      { texto: 'Construa a Defensoria Pública', ok: s => conta(s, 'defensoria') >= 1 },
+      { texto: 'Construa a Delegacia da Mulher', ok: s => conta(s, 'delegaciaMulher') >= 1 },
+      { texto: 'Construa o Conselho Tutelar', ok: s => conta(s, 'conselhoTutelar') >= 1 },
+    ], din: 400, xp: 60 },
+  { titulo: 'Cidade conectada', icone: '📡',
+    historia: 'A internet chegou a todos os bairros, e com ela vieram os golpes do Pix, o cyberbullying nas escolas e empresas querendo os dados dos moradores. Proteger a cidade agora é também proteger o mundo digital.',
+    objetivos: [
+      { texto: 'Construa uma Torre de Telecom', ok: s => conta(s, 'telecom') >= 1 },
+      { texto: 'Construa o Centro de Dados', ok: s => conta(s, 'dados') >= 1 },
+      { texto: 'Construa a Delegacia de Crimes Cibernéticos', ok: s => conta(s, 'direitoDigital') >= 1 },
+      { texto: 'Consulte 5 termos no glossário', ok: s => (s.termosVistos || []).length >= 5 },
+    ], din: 450, xp: 70 },
+  { titulo: 'O povo decide', icone: '🗳️',
+    historia: 'O mandato está chegando ao fim. Em agosto do ano eleitoral começa a campanha, e em outubro a população vai às urnas. Faça uma campanha limpa e mostre o que você construiu.',
+    objetivos: [
+      { texto: 'Chegue à campanha eleitoral (agosto do Ano 4)', ok: s => s.mes >= 44 },
+      { texto: 'Faça a campanha sem irregularidades', ok: s => !!s.historia.campanhaLimpa },
+      { texto: 'Vença a eleição', ok: s => (s.reeleicoes || 0) >= 1 },
+    ], din: 600, xp: 100 },
+];
+function historiaAtiva() { return s.historia && s.historia.ativo && s.historia.cap < CAPITULOS.length; }
+function ativarHistoria() {
+  s.historia = s.historia || { cap: 0, feitos: [] };
+  s.historia.ativo = true;
+  salvar(); render();
+  abrirCapitulo(true);
+}
+function abrirCapitulo(novo) {
+  if (!s.historia) return;
+  if (s.historia.cap >= CAPITULOS.length) {
+    abrirModal(`<div class="resultado ok"><span class="icone-grande pulando">🏆</span><h2>Campanha concluída!</h2>
+      <p>Você completou os ${CAPITULOS.length} capítulos de ${esc(s.nome)}. A cidade continua: há sempre mais leis para aprender!</p></div>
+      <div class="botoes"><button class="btn primario" id="m-ok">Continuar</button></div>`, cx => { cx.querySelector('#m-ok').onclick = fecharModal; });
+    return;
+  }
+  const c = CAPITULOS[s.historia.cap];
+  abrirModal(`<div class="cab-modal" style="--cor:#00897B"><span class="icone-grande">${c.icone}</span>
+      <div><small>Modo campanha · capítulo ${s.historia.cap + 1} de ${CAPITULOS.length}</small><h2>${c.titulo}</h2></div></div>
+    <button class="btn pequeno ouvir" data-ler=".historia-texto" title="Ouvir a história">🔊 Ouvir</button>
+    <blockquote class="fala historia-texto">${c.historia}</blockquote>
+    ${htmlObjetivos(c)}
+    <p class="nota">Recompensa do capítulo: 💰 ${c.din} · 📚 ${c.xp} XP</p>
+    <div class="botoes">${novo ? '' : '<button class="btn" id="m-sair-hist">Sair do modo campanha</button>'}<button class="btn primario" id="m-ok">${novo ? 'Vamos lá! ▶' : 'Voltar à cidade'}</button></div>`, cx => {
+    cx.querySelector('#m-ok').onclick = fecharModal;
+    const sair = cx.querySelector('#m-sair-hist');
+    if (sair) sair.onclick = () => { s.historia.ativo = false; salvar(); fecharModal(); render(); toast('📖 Modo campanha pausado. Retome pela aba Missões.'); };
+  });
+  if (novo && c.evento) s.historia.evento = c.evento; // o capítulo traz um acontecimento no próximo mês
+}
+function htmlObjetivos(c) {
+  return `<ul class="objetivos">${c.objetivos.map(o => { const ok = o.ok(s); return `<li class="${ok ? 'feito' : ''}"><span>${ok ? '✅' : '⬜'}</span>${o.texto}</li>`; }).join('')}</ul>`;
+}
+function verificarHistoria() {
+  if (!historiaAtiva()) return;
+  const c = CAPITULOS[s.historia.cap];
+  if (!c.objetivos.every(o => o.ok(s))) return;
+  s.historia.feitos.push(s.historia.cap);
+  s.dinheiro += c.din; ganharXp(c.xp);
+  registrar(`📖 Capítulo concluído: <b>${c.titulo}</b>! +💰 ${c.din}, +${c.xp} XP.`);
+  s.historia.cap++;
+  confete(); som('nivel');
+  setTimeout(() => { if ($('modal').classList.contains('oculto')) abrirCapitulo(true); else toast(`📖 Capítulo concluído: ${c.titulo}! O próximo já começou.`, true); }, 900);
+}
+function htmlHistoria() {
+  if (!s.historia || !s.historia.ativo) {
+    return `<div class="cartao-historia"><b>📖 Modo campanha</b><p>Jogue a história da cidade em ${CAPITULOS.length} capítulos, de "O primeiro mandato" à eleição, com objetivos e recompensas.</p>
+      <button class="btn primario pequeno" id="btn-ativar-historia">${s.historia ? 'Retomar campanha' : 'Começar campanha'}</button></div>`;
+  }
+  if (s.historia.cap >= CAPITULOS.length) return '<div class="cartao-historia"><b>🏆 Campanha concluída!</b></div>';
+  const c = CAPITULOS[s.historia.cap];
+  return `<div class="cartao-historia ativo"><b>${c.icone} Capítulo ${s.historia.cap + 1}: ${c.titulo}</b>${htmlObjetivos(c)}
+    <button class="btn pequeno" id="btn-ver-capitulo">📖 Ler a história</button></div>`;
+}
+function renderChipHistoria() {
+  let chip = document.getElementById('chip-historia');
+  if (!historiaAtiva()) { if (chip) chip.remove(); return; }
+  if (!chip) {
+    chip = document.createElement('button');
+    chip.id = 'chip-historia'; chip.className = 'chip-historia hud';
+    chip.onclick = () => { som('clique'); abrirCapitulo(false); };
+    $('dica').after(chip);
+  }
+  const c = CAPITULOS[s.historia.cap], n = c.objetivos.filter(o => o.ok(s)).length;
+  chip.innerHTML = `${c.icone} Cap. ${s.historia.cap + 1} · <b>${c.titulo}</b> · ${n}/${c.objetivos.length}`;
+  chip.title = 'Ver o capítulo atual do modo campanha';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const cx = $('modal-caixa');
+  new MutationObserver(() => marcarGlossario(cx)).observe(cx, { childList: true, subtree: true });
+  new MutationObserver(() => marcarGlossario($('aba-vade'))).observe($('aba-vade'), { childList: true });
+  document.addEventListener('click', e => {
+    const t = e.target.closest('.termo:not(.exemplo)');
+    if (t) { e.preventDefault(); e.stopPropagation(); return mostrarTermo(t); }
+    if (!e.target.closest('#pop-termo')) fecharTermo();
+    const d = e.target.closest('[data-dica]');
+    if (d) {
+      const chave = d.dataset.chave, erradas = [...cx.querySelectorAll('.opcao:not([disabled])')].filter(o => o.dataset[chave] !== d.dataset.dica);
+      if (erradas.length > 1) { const o = erradas[Math.floor(Math.random() * erradas.length)]; o.disabled = true; o.classList.add('eliminada'); }
+      d.closest('.botoes').remove();
+    }
+    if (e.target.id === 'btn-ativar-historia') ativarHistoria();
+    if (e.target.id === 'btn-ver-capitulo') abrirCapitulo(false);
+  }, true);
+  addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('pop-termo')) { e.stopPropagation(); fecharTermo(); } }, true);
+});
 
 </script>
 </body>
