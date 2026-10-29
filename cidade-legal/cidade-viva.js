@@ -166,7 +166,7 @@ function abrirAudiencia(pend) {
 }
 
 /* ── Licitação das obras públicas ─────────────────────────────────────────── */
-const OBRAS_PUBLICAS = ['escola', 'saude', 'delegacia', 'bombeiros', 'forum', 'camara', 'terminal', 'estacaoAgua', 'esgoto', 'usina', 'aterro', 'estacaoTrem', 'pontoAcessivel', 'fazenda', 'inss', 'rodoviaria', 'teatro', 'museu', 'biblioteca', 'estadio', 'pistaAtletismo'];
+const OBRAS_PUBLICAS = ['escola', 'saude', 'delegacia', 'bombeiros', 'forum', 'camara', 'terminal', 'estacaoAgua', 'esgoto', 'usina', 'aterro', 'estacaoTrem', 'pontoAcessivel', 'fazenda', 'inss', 'rodoviaria', 'teatro', 'museu', 'biblioteca', 'estadio', 'pistaAtletismo', 'delegaciaMulher', 'conselhoTutelar', 'creche', 'defensoria', 'ministerioPublico', 'procon', 'cras', 'hospital', 'direitoDigital'];
 const precisaLicitacao = tipo => OBRAS_PUBLICAS.includes(tipo) && PREDIOS[tipo].custo >= 200;
 function abrirLicitacao(tipo, i) {
   const p = PREDIOS[tipo], preco = f => Math.round(p.custo * f);
@@ -247,6 +247,7 @@ function perguntaDaRevisao(r) {
   if (r.t === 'prova') { const q = PREDIOS[r.k] && PREDIOS[r.k].licenca[r.q]; return q && { area: PREDIOS[r.k].area, p: q.p, ops: q.ops, c: q.c, exp: q.exp }; }
   if (r.t === 'caso') { const c = CASOS[r.k]; return c && { area: PREDIOS[c.predio].area, p: `${c.titulo}: ${c.texto}`, ops: c.ops, c: c.c, exp: `${c.exp} (${c.base})` }; }
   if (r.t === 'aud') { const a = AUDIENCIAS[r.k]; return a && { area: a.area, p: `${a.titulo}: ${a.autor[1]}`, ops: a.ops, c: a.c, exp: `${a.exp} (${a.base})` }; }
+  if (r.t === 'elei') { const d = DILEMAS_ELEICAO[r.k]; return d && { area: 'Direito Eleitoral', p: `${d.titulo}: ${d.texto}`, ops: d.ops, c: d.c, exp: `${d.exp} (${d.base})` }; }
   if (r.t === 'licitacao') return { area: 'Licitações e contratos', p: 'Numa licitação, qual empresa deve vencer?', ops: ['A mais barata, mesmo sem documentos', 'A de menor preço entre as que cumpriram os requisitos de habilitação', 'A do parente do prefeito, que é de confiança'], c: 1, exp: 'Lei 14.133/2021: julgamento por menor preço entre as habilitadas; parentes de dirigentes ficam impedidos (art. 14, IV).' };
   return null;
 }
@@ -278,6 +279,7 @@ function aoPassarMes() {
   verificarDesafio(true);
   verificarOrcamentoParticipativo();
   crescerBairros();
+  if ((s.mes - 1) % 12 === 7 && anoEleitoral(s.mes)) iniciarCampanha();
   if (conta(s, 'forum') && Math.random() < .35) gerarAudiencia();
   if (s.mes % 6 === 0) setTimeout(() => { if ($('modal').classList.contains('oculto')) abrirOrcamentoParticipativo(); }, 1500);
   else if ((s.revisar || []).some(x => x.quando <= s.mes)) setTimeout(() => { if ($('modal').classList.contains('oculto')) abrirRevisao(); }, 1600);
@@ -606,3 +608,134 @@ document.addEventListener('DOMContentLoaded', () => {
   addEventListener('pointerdown', comecar, { once: true }); addEventListener('keydown', comecar, { once: true });
   setInterval(() => { try { Ambiente.atualizar(); } catch (e) { /* sem áudio */ } }, 1000);
 });
+
+/* ── Eleição jogável: campanha em agosto, urnas em outubro, a cada 4 anos ───
+   A campanha é uma sequência de decisões; escolhas ilegais custam votos, e
+   compra de votos ou uso da máquina pública levam à cassação. */
+const DILEMAS_ELEICAO = [
+  { titulo: 'Outdoors pela cidade', quem: '📣 Coordenador de campanha',
+    texto: 'Vamos espalhar outdoors gigantes com sua foto e o número da chapa em todas as avenidas?',
+    ops: ['Pode, é campanha', 'Não: outdoor é proibido na propaganda eleitoral', 'Pode, se for só nas avenidas'], c: 1,
+    exp: 'A propaganda eleitoral por outdoor, inclusive eletrônico, é proibida e sujeita a multa e retirada.', base: 'Lei 9.504/1997, art. 39, §8º' },
+  { titulo: 'Cestas básicas', quem: '🤫 Cabo eleitoral Nestor', grave: true,
+    texto: 'Tenho 200 cestas básicas. A gente entrega nas casas e pede o voto em troca. Ninguém vai saber!',
+    ops: ['Ótima ideia', 'Não: oferecer bens em troca de voto é compra de votos, com multa e cassação', 'Só se as cestas forem pequenas'], c: 1,
+    exp: 'Oferecer ou entregar qualquer vantagem para obter o voto é captação ilícita de sufrágio (multa e cassação do registro ou do diploma) e também crime eleitoral.', base: 'Lei 9.504/1997, art. 41-A; Código Eleitoral, art. 299' },
+  { titulo: 'Carros da prefeitura', quem: '🚗 Secretário de Administração', grave: true,
+    texto: 'Podemos usar os carros da prefeitura e os servidores, no horário de trabalho, para levar material de campanha?',
+    ops: ['Pode, são nossos', 'Não: usar bens e servidores públicos na campanha é conduta vedada', 'Pode, se for depois das 17h'], c: 1,
+    exp: 'Agentes públicos não podem usar bens, veículos e servidores da administração em favor de candidato. Isso desequilibra a disputa e pode levar à cassação.', base: 'Lei 9.504/1997, art. 73, I e III' },
+  { titulo: 'A grande inauguração', quem: '🎤 Assessor de eventos',
+    texto: 'A creche nova fica pronta em setembro. Vamos fazer a inauguração com show de uma banda famosa e você discursando?',
+    ops: ['Perfeito, mais votos', 'A obra pode ser entregue, mas candidato não pode ir a inaugurações nos 3 meses antes da eleição, e showmício é proibido', 'Pode, se o show for de graça'], c: 1,
+    exp: 'Nos três meses antes da eleição, candidato não pode comparecer a inaugurações de obras públicas. E o showmício é proibido em qualquer época de campanha.', base: 'Lei 9.504/1997, arts. 77 e 39, §7º' },
+  { titulo: 'O vice condenado', quem: '🗂️ Presidente do partido',
+    texto: 'Nosso candidato a vice foi condenado pelo Tribunal de Justiça, em decisão colegiada, por desviar dinheiro público. Ainda cabe recurso. Ele pode concorrer?',
+    ops: ['Pode, ainda cabe recurso', 'Não: pela Lei da Ficha Limpa, a condenação por órgão colegiado já o torna inelegível', 'Pode, se trocar de partido'], c: 1,
+    exp: 'A Lei da Ficha Limpa torna inelegível quem for condenado por órgão judicial colegiado por crimes contra a administração pública, mesmo antes do fim dos recursos.', base: 'LC 64/1990, art. 1º, I, e (Lei da Ficha Limpa, LC 135/2010)' },
+  { titulo: 'Camisetas e bonés', quem: '👕 Gráfica do Seu Zé',
+    texto: 'Faço 5 mil camisetas e bonés com seu número para distribuir na feira. Fechado?',
+    ops: ['Fechado', 'Não: brindes como camisetas e bonés são proibidos na campanha', 'Só se forem de algodão'], c: 1,
+    exp: 'É proibido distribuir camisetas, chaveiros, bonés, canetas, brindes ou quaisquer bens que possam dar vantagem ao eleitor.', base: 'Lei 9.504/1997, art. 39, §6º' },
+  { titulo: 'O vídeo falso', quem: '📱 Apoiador animado',
+    texto: 'Fiz com inteligência artificial um vídeo do seu adversário dizendo que vai fechar as escolas. Parece real! Posto?',
+    ops: ['Posta, é só uma montagem', 'Não: conteúdo falso e deepfake são proibidos na propaganda e podem levar à cassação', 'Posta sem dizer quem fez'], c: 1,
+    exp: 'A Justiça Eleitoral proíbe divulgar fatos sabidamente inverídicos e usar deepfake na propaganda; o uso pode levar à cassação do registro ou do mandato.', base: 'Resolução TSE 23.610/2019, arts. 9º-A e 9º-C' },
+  { titulo: 'Impulsionar nas redes', quem: '💻 Agência de marketing',
+    texto: 'Podemos pagar para impulsionar seus vídeos nas redes sociais?',
+    ops: ['Não, internet é proibida', 'Pode, se for contratado pela campanha e identificado como propaganda eleitoral', 'Pode, usando perfis falsos'], c: 1,
+    exp: 'O impulsionamento pago é permitido quando contratado pelo candidato, partido ou coligação e identificado de forma clara como propaganda eleitoral.', base: 'Lei 9.504/1997, art. 57-C' },
+  { titulo: 'Doação da construtora', quem: '🏗️ Construtora Alfa',
+    texto: 'Nossa empresa quer doar R$ 50 mil para sua campanha. Podemos fazer a transferência hoje?',
+    ops: ['Pode, doação é legal', 'Não: empresas não podem doar para campanhas eleitorais', 'Pode, se for em dinheiro vivo'], c: 1,
+    exp: 'O STF declarou inconstitucional a doação de pessoas jurídicas para campanhas. Só pessoas físicas podem doar, dentro do limite legal.', base: 'STF, ADI 4.650; Lei 9.504/1997, art. 23' },
+  { titulo: 'Pesquisa encomendada', quem: '📊 Instituto Certeza',
+    texto: 'Fizemos uma pesquisa que dá sua vitória. Divulgamos amanhã, sem registrar na Justiça Eleitoral?',
+    ops: ['Divulguem logo', 'Não: a pesquisa precisa ser registrada na Justiça Eleitoral até 5 dias antes da divulgação', 'Pode, se for só no grupo da família'], c: 1,
+    exp: 'Pesquisas eleitorais só podem ser divulgadas depois de registradas na Justiça Eleitoral, com 5 dias de antecedência. Divulgar sem registro gera multa.', base: 'Lei 9.504/1997, art. 33' },
+  { titulo: 'Kits de graça', quem: '🎒 Secretária de Educação',
+    texto: 'Em ano de eleição, vamos criar agora um programa novo para dar tablets de graça às famílias, com seu nome na caixa?',
+    ops: ['Ótimo, a população merece', 'Não: no ano da eleição é proibido distribuir bens gratuitamente, salvo programas já em execução e previstos em lei', 'Pode, se for só para eleitores'], c: 1,
+    exp: 'No ano eleitoral, a distribuição gratuita de bens pela administração é proibida, salvo em calamidade ou programas sociais autorizados em lei e já em execução no ano anterior.', base: 'Lei 9.504/1997, art. 73, §10' },
+];
+const anoEleitoral = mes => anoDe(mes) % 4 === 0;
+function iniciarCampanha() {
+  const pref = s.mapa.findIndex(l => l && l.tipo === 'prefeitura');
+  if (pref < 0 || s.pendentes.some(p => p.elei)) return;
+  s.campanha = { pontos: 0, irregular: [], feito: false };
+  s.pendentes.push({ elei: 1, tile: pref, expira: s.mes + 1 });
+  registrar('🗳️ Começou a <b>campanha eleitoral</b> (a propaganda só é permitida a partir de 16 de agosto, Lei 9.504/1997, art. 36). Clique no balão da Prefeitura para decidir como fazer campanha.');
+  setTimeout(() => { som('alerta'); toast('🗳️ Começou a campanha eleitoral! Clique no balão da Prefeitura.', true); }, 1500);
+}
+function abrirCampanha(pend) {
+  const lista = embaralhar(DILEMAS_ELEICAO.map((_, k) => k)).slice(0, 4);
+  const sucessor = (s.reeleicoes || 0) >= 1;
+  let idx = 0;
+  const intro = () => abrirModal(`<div class="cab-modal" style="--cor:#00897B"><span class="icone-grande">🗳️</span>
+      <div><small>Eleições municipais · Ano ${anoDe(s.mes)}</small><h2>Campanha eleitoral</h2></div></div>
+    <p>${sucessor ? 'Você já foi reeleito(a) uma vez e <b>não pode concorrer a um terceiro mandato seguido</b> (CF, art. 14, §5º). Seu grupo lançou um(a) sucessor(a), e você vai coordenar a campanha dele(a).' : 'O prefeito pode ser reeleito para <b>um único período seguido</b> (CF, art. 14, §5º). Chegou a hora de pedir o voto da população!'}</p>
+    <p class="nota">Você vai tomar ${lista.length} decisões de campanha. Escolhas legais rendem votos; propaganda irregular gera multa, e compra de votos ou uso da máquina pública podem levar à <b>cassação</b>. O resultado sai em outubro e também depende da felicidade da cidade.</p>
+    <div class="botoes"><button class="btn" id="m-depois">Depois</button><button class="btn primario" id="m-ir">Começar ▶</button></div>`, cx => {
+    cx.querySelector('#m-depois').onclick = fecharModal;
+    cx.querySelector('#m-ir').onclick = mostrar;
+  });
+  const mostrar = () => {
+    const d = DILEMAS_ELEICAO[lista[idx]], ordem = embaralhar(d.ops.map((t, i) => ({ t, i })));
+    abrirModal(`<div class="cab-modal" style="--cor:#00897B"><span class="icone-grande">🗳️</span>
+        <div><small>Campanha eleitoral · decisão ${idx + 1} de ${lista.length}</small><h2>${d.titulo}</h2></div></div>
+      <blockquote class="fala"><b>${d.quem}</b>${d.texto}</blockquote>
+      <p class="pergunta">O que você responde?</p>${htmlOpcoes(ordem, 'k')}<div id="feedback"></div>`, cx => {
+      cx.querySelectorAll('.opcao').forEach(b => b.onclick = () => {
+        const certo = +b.dataset.k === d.c;
+        registrarDesempenho('Direito Eleitoral', 'caso', certo);
+        cx.querySelectorAll('.opcao').forEach(o => { o.disabled = true; if (+o.dataset.k === d.c) o.classList.add('certa'); });
+        let titulo;
+        if (certo) { s.campanha.pontos += 3; ganharXp(10); som('certo'); titulo = '✅ Campanha limpa! +10 XP e mais votos'; }
+        else {
+          b.classList.add('errada'); som('erro'); s.campanha.irregular.push(lista[idx]);
+          if (d.grave) { s.campanha.cassacao = d.titulo; titulo = '🚨 Ilegal! O adversário denunciou e a Justiça Eleitoral abriu investigação.'; }
+          else { s.campanha.pontos -= 2; s.dinheiro -= 60; titulo = '❌ Irregularidade na campanha: multa de 💰 60 e menos votos.'; }
+          agendarRevisao({ t: 'elei', k: lista[idx] });
+        }
+        const ultima = idx === lista.length - 1;
+        cx.querySelector('#feedback').innerHTML = `<div class="explicacao ${certo ? 'ok' : 'erro'}"><b>${titulo}</b> ${d.exp}<small class="base">📌 ${d.base}</small></div>
+          <div class="botoes"><button class="btn primario" id="m-prox">${ultima ? 'Encerrar campanha' : 'Próxima ▶'}</button></div>`;
+        cx.querySelector('#m-prox').onclick = () => { idx++; idx < lista.length ? mostrar() : fim(); };
+        cx.querySelector('#m-prox').focus();
+      });
+    });
+  };
+  const fim = () => {
+    s.pendentes = s.pendentes.filter(x => x !== pend);
+    s.campanha.feito = true;
+    const c = s.campanha;
+    registrar(`🗳️ Campanha encerrada: ${c.irregular.length ? `${c.irregular.length} irregularidade(s)` : 'nenhuma irregularidade'}. O resultado sai em outubro.`);
+    abrirModal(`<div class="cab-modal" style="--cor:#00897B"><span class="icone-grande">🗳️</span>
+        <div><small>Eleições municipais</small><h2>Campanha encerrada</h2></div></div>
+      <p>${c.cassacao ? '🚨 Há uma investigação na Justiça Eleitoral contra a campanha. Mesmo que vença nas urnas, o mandato pode ser cassado.' : c.irregular.length ? 'A campanha teve algumas irregularidades, mas nada que leve à cassação.' : '✅ Campanha 100% dentro da lei!'}</p>
+      <p class="nota">Até outubro, cuide da felicidade da cidade: ela pesa muito na hora do voto.</p>
+      <div class="botoes"><button class="btn primario" id="m-ok">Voltar à cidade</button></div>`, cx => {
+      cx.querySelector('#m-ok').onclick = () => { fecharModal(); verificarMissoes(); render(); };
+    });
+  };
+  intro();
+}
+// apuração de outubro: devolve o texto do efeito para o Diário Oficial
+function apurarEleicao() {
+  const c = s.campanha || { pontos: 0, irregular: [] };
+  const sucessor = (s.reeleicoes || 0) >= 1, quem = sucessor ? 'seu(sua) sucessor(a)' : 'você';
+  const votos = Math.max(18, Math.min(82, Math.round(s.felicidade * .8 + 8 + (c.feito ? c.pontos : -4) + (s.reputacao || 0) * .2)));
+  let efeito;
+  if (c.cassacao) {
+    s.dinheiro -= 300; s.reputacao = Math.max(-30, (s.reputacao || 0) - 8);
+    efeito = `Com ${votos}% dos votos, ${quem} venceu nas urnas, mas a Justiça Eleitoral <b>cassou o diploma</b> pela irregularidade "${c.cassacao}" e aplicou multa de 💰 300. Haverá nova eleição, e a confiança na prefeitura despencou.`;
+  } else if (votos >= 50) {
+    ganharXp(40); s.dinheiro += 200; if (!sucessor) s.reeleicoes = (s.reeleicoes || 0) + 1;
+    efeito = `${sucessor ? 'Seu(sua) sucessor(a) foi eleito(a)' : 'Você foi <b>reeleito(a)</b>'} com ${votos}% dos votos válidos! +40 XP, +200 💰.`;
+  } else {
+    s.reputacao = Math.max(-30, (s.reputacao || 0) - 3);
+    efeito = `Só ${votos}% dos votos: a oposição venceu. No jogo, você segue governando, mas a cidade ficou insatisfeita. Cuide melhor dela e faça campanha dentro da lei!`;
+  }
+  s.campanha = null;
+  return efeito;
+}

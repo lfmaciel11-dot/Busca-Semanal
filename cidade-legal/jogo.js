@@ -413,8 +413,9 @@ function renderDica(c) {
     const p = PREDIOS[s.selecionado];
     h = `Construindo <b>${p.icone} ${p.nome}</b> — clique num terreno vazio.${p.efeito.renda ? ' Ao lado da rua rende <b>+20%</b>!' : ''} <button class="link" id="cancelar-sel">Cancelar</button>`;
   } else if (s.pendentes.length) {
-    const pe = s.pendentes.find(x => x.oc) || s.pendentes[0], l = s.mapa[pe.tile], p = l && (PREDIOS[l.tipo] || PREDIOS[l.via]);
-    h = pe.oc ? `🚨 <b>${pe.oc === 'incendio' ? 'Incêndio' : 'Acidente'}</b> na cidade — clique no balão para agir.`
+    const pe = s.pendentes.find(x => x.oc) || s.pendentes.find(x => x.elei) || s.pendentes[0], l = s.mapa[pe.tile], p = l && (PREDIOS[l.tipo] || PREDIOS[l.via]);
+    h = pe.elei ? '🗳️ <b>Campanha eleitoral!</b> Clique no balão da Prefeitura para fazer campanha.'
+      : pe.oc ? `🚨 <b>${pe.oc === 'incendio' ? 'Incêndio' : 'Acidente'}</b> na cidade — clique no balão para agir.`
       : `❗ <b>${s.pendentes.length} cidadão(s)</b> esperando atendimento — clique no balão${p ? ` sobre ${p.icone} ${p.nome}` : ''}.`;
   } else if (c.faltas.length) {
     h = `⚠️ Faltam serviços públicos: ${c.faltas.map(k => SERVICOS[k]).join(', ')}.`;
@@ -902,6 +903,7 @@ function proximoMes() {
       registrar(`🗄️ O projeto "<b>${pl.titulo}</b>" ficou parado na mesa do prefeito e foi arquivado.`);
       return false;
     }
+    if (p.elei) { registrar('🗳️ A campanha terminou sem que você decidisse nada: sem campanha, menos votos.'); return false; }
     if (p.oc) return false; // ocorrências se encerram sozinhas no fim do mês
     if (p.aud !== undefined) { registrar('⚖️ A audiência no Fórum ficou sem decisão e o processo atrasou. Justiça lenta deixa a cidade insatisfeita.'); return false; }
     registrar(`😤 Um cidadão desistiu de esperar no caso "<b>${CASOS[p.caso].titulo}</b>". A cidade ficou insatisfeita.`);
@@ -937,11 +939,7 @@ function sortearClimaEEventos(mesIdx) {
     const e = EVENTOS[id];
     let efeito = '';
     if (id === 'carnaval' || id === 'junina') { s.reputacao = Math.min(30, s.reputacao + 3); efeito = 'Felicidade +3.'; }
-    if (id === 'eleicao') {
-      const venceu = s.felicidade >= 55;
-      if (venceu) { ganharXp(40); s.dinheiro += 200; efeito = `Com ${s.felicidade}% de aprovação, você foi <b>reeleito(a)</b>! +40 XP, +200 💰.`; }
-      else { s.reputacao = Math.max(-30, s.reputacao - 3); efeito = `Com só ${s.felicidade}% de aprovação, você venceu por pouco. Cuide mais da cidade!`; }
-    }
+    if (id === 'eleicao') efeito = apurarEleicao();
     if (id === 'temporal') {
       const temBombeiros = conta(s, 'bombeiros') > 0, temPiscinao = conta(s, 'piscinao') > 0;
       const custo = Math.max(10, 120 - (temBombeiros ? 70 : 0) - (temPiscinao ? 40 : 0));
@@ -1086,6 +1084,7 @@ function abrirCaso(pend) {
   if (pend.lei) return abrirProjeto(pend);
   if (pend.aud !== undefined) return abrirAudiencia(pend);
   if (pend.oc) return abrirOcorrencia(pend);
+  if (pend.elei) return abrirCampanha(pend);
   const i = pend.caso, c = CASOS[i], p = PREDIOS[c.predio];
   const restam = pend.expira - s.mes;
   const ordem = embaralhar(c.ops.map((t, k) => ({ t, i: k })));

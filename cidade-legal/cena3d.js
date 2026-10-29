@@ -2653,6 +2653,116 @@ const Cena = (() => {
     g.userData = { pe1, pe2, br1, br2 };
     return g;
   }
+  // Rede de proteção, justiça e cidadania digital
+  function plaquinhaEmoji(g, emoji, fundo, x, y, z, tam = .1) {
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(tam, tam), new THREE.MeshStandardMaterial({ map: texEmoji(emoji, fundo) }));
+    p.position.set(x, y, z); g.add(p);
+  }
+  function carroParado(g, tipo, cor, x, z) {
+    const c = criarVeiculo(tipo, cor); c.scale.setScalar(.85); c.rotation.y = Math.PI / 2; c.position.set(x, .03, z); g.add(c);
+  }
+  Object.assign(MODELOS, {
+    delegaciaMulher(g) {
+      calcada(g);
+      g.add(caixa(.78, .5, .6, fachada('#F3E5F5', 4, 2, { parede: 'concreto', vidro: '#B39DDB' }), 0, .03, -.06));
+      g.add(caixa(.82, .08, .64, '#8E24AA', 0, .53, -.06));
+      porta(g, .48, '#6A1B9A');
+      plaquinhaEmoji(g, '💜', '#F3E5F5', .26, .16, .245);
+      carroParado(g, 'policia', '#FFFFFF', -.26, .36);
+      g.userData.altura = .8;
+    },
+    conselhoTutelar(g) {
+      calcada(g);
+      g.add(caixa(.6, .36, .46, fachada('#FFF3E0', 3, 1, { parede: 'reboco' }), 0, .03, -.08));
+      const telhado = duasAguas(.68, .22, .54, '#E65100', .39); telhado.position.z = -.08; g.add(telhado);
+      porta(g, .3, '#E65100');
+      plaquinhaEmoji(g, '🧒', '#FFF3E0', .2, .14, .155, .09);
+      carroParado(g, 'carro', '#FFFFFF', .26, .34);
+      g.userData.altura = .7;
+    },
+    creche(g) {
+      calcada(g);
+      g.add(caixa(.86, .006, .38, IMG.grama_cor ? pbr('grama', 1, 1, { color: '#DDF5C8' }) : mat('#8BC34A'), 0, .03, .24));
+      g.add(caixa(.72, .3, .42, fachada('#FFFDE7', 4, 1, { parede: 'reboco', vidro: '#81D4FA' }), 0, .03, -.2));
+      ['#E53935', '#FBC02D', '#43A047', '#1E88E5'].forEach((c, k) => g.add(caixa(.18, .05, .46, c, -.27 + k * .18, .33, -.2)));
+      porta(g, .02, '#1E88E5');
+      // escorregador, balanço e caixa de areia
+      g.add(caixa(.05, .16, .05, '#E53935', .22, .03, .14));
+      const esc = caixa(.06, .01, .22, '#1E88E5', .22, .1, .25); esc.rotation.x = .6; g.add(esc);
+      g.add(cilindro(.008, .008, .16, '#757575', -.32, .03, .2, 6)); g.add(cilindro(.008, .008, .16, '#757575', -.12, .03, .2, 6));
+      g.add(caixa(.22, .012, .012, '#757575', -.22, .19, .2));
+      g.add(caixa(.06, .008, .03, '#FBC02D', -.22, .08, .2));
+      g.add(caixa(.16, .02, .12, '#E6D3A3', .02, .03, .36));
+      g.add(caixa(.9, .05, .008, '#81C784', 0, .03, .45));
+      g.userData.altura = .5;
+    },
+    defensoria(g) {
+      calcada(g);
+      g.add(caixa(.8, .55, .6, fachada('#E8F5E9', 4, 2, { parede: 'concreto' }), 0, .03, -.06));
+      g.add(caixa(.84, .08, .64, '#2E7D32', 0, .58, -.06));
+      porta(g, .48, '#1B5E20');
+      const rampa = caixa(.34, .02, .18, '#B0BEC5', -.2, .03, .34); rampa.rotation.x = -.16; g.add(rampa);
+      plaquinhaEmoji(g, '🛡️', '#E8F5E9', .26, .16, .245);
+      g.userData.altura = .85;
+    },
+    ministerioPublico(g) {
+      calcada(g);
+      g.add(caixa(.84, .06, .7, '#CFD8DC', 0, .03, -.04));
+      g.add(caixa(.8, .6, .52, fachada('#ECEFF1', 4, 2, { parede: 'concreto' }), 0, .09, -.1));
+      for (let k = 0; k < 4; k++) g.add(cilindro(.03, .032, .5, '#FAFAFA', -.27 + k * .18, .09, .24, 12));
+      g.add(caixa(.84, .08, .14, '#ECEFF1', 0, .59, .24));
+      g.add(caixa(.86, .07, .66, '#B71C1C', 0, .69, -.05));
+      const b = bandeiraBrasil(g, .38, .03, .4);
+      g.userData.tick = t => { b.rotation.y = Math.sin(t * 2.3) * .25; };
+      g.userData.altura = 1.05;
+    },
+    procon(g) {
+      calcada(g);
+      g.add(caixa(.7, .42, .5, fachada('#E3F2FD', 3, 2, { parede: 'reboco' }), 0, .03, -.1));
+      g.add(caixa(.74, .07, .54, '#1565C0', 0, .45, -.1));
+      g.add(caixa(.74, .02, .54, '#FDD835', 0, .52, -.1));
+      porta(g, .3, '#0D47A1');
+      plaquinhaEmoji(g, '🧾', '#E3F2FD', .22, .14, .155, .09);
+      g.userData.altura = .7;
+    },
+    cras(g) {
+      calcada(g);
+      g.add(caixa(.74, .4, .52, fachada('#FFF3E0', 4, 1, { parede: 'tijolo' }), 0, .03, -.12));
+      g.add(caixa(.78, .05, .56, '#EF6C00', 0, .43, -.12));
+      porta(g, .28, '#BF360C');
+      g.add(caixa(.5, .02, .2, '#EF6C00', 0, .28, .25));
+      [-.23, .23].forEach(x => g.add(cilindro(.01, .01, .25, '#9E9E9E', x, .03, .34, 6)));
+      g.add(caixa(.2, .03, .06, '#8D6E63', -.12, .08, .3)); g.add(caixa(.2, .05, .015, '#8D6E63', -.12, .1, .27));
+      plaquinhaEmoji(g, '🤝', '#FFF3E0', .24, .15, .145, .09);
+      g.userData.altura = .65;
+    },
+    hospital(g) {
+      calcada(g);
+      g.add(caixa(.86, 1.1, .6, fachada('#FFFFFF', 4, 4, { parede: 'concreto', vidro: '#90CAF9' }), 0, .03, -.14));
+      const vermelho = new THREE.MeshStandardMaterial({ color: '#E53935', emissive: '#7A1010' });
+      g.add(caixa(.07, .22, .02, vermelho, 0, .74, .165)); g.add(caixa(.22, .07, .02, vermelho, 0, .815, .165));
+      g.add(caixa(.9, .04, .64, '#D32F2F', 0, 1.13, -.14));
+      g.add(cilindro(.22, .22, .02, '#607D8B', 0, 1.17, -.14, 24));
+      g.add(caixa(.025, .006, .14, '#FFFFFF', -.04, 1.19, -.14)); g.add(caixa(.025, .006, .14, '#FFFFFF', .04, 1.19, -.14)); g.add(caixa(.08, .006, .025, '#FFFFFF', 0, 1.19, -.14));
+      g.add(caixa(.42, .03, .24, '#D32F2F', .2, .3, .28));
+      [.02, .38].forEach(x => g.add(cilindro(.01, .01, .27, '#B0BEC5', x, .03, .38, 6)));
+      porta(g, .32, '#90A4AE');
+      carroParado(g, 'ambulancia', '#FFFFFF', -.26, .34);
+      g.userData.altura = 1.35;
+    },
+    direitoDigital(g) {
+      calcada(g);
+      g.add(caixa(.66, .8, .56, fachada('#263238', 3, 4, { parede: 'vidro', vidro: '#5C6BC0' }), 0, .03, -.08));
+      g.add(caixa(.7, .05, .6, '#1A237E', 0, .83, -.08));
+      g.add(cilindro(.01, .01, .32, '#B0BEC5', .2, .88, -.14, 6));
+      g.add(malha(new THREE.SphereGeometry(.025, 10, 8), luzPiscante('#00E5FF'), .2, 1.2, -.14));
+      const disco = malha(new THREE.SphereGeometry(.06, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat('#ECEFF1', { side: THREE.DoubleSide }), -.18, .88, -.14);
+      disco.rotation.x = -.9; g.add(disco);
+      porta(g, .4, '#1A237E');
+      plaquinhaEmoji(g, '💻', '#1A237E', .22, .16, .205, .09);
+      g.userData.altura = 1.2;
+    },
+  });
   function animarPasso(obj, fase, andando) {
     const passo = andando && !reduzido ? Math.sin(fase) : 0;
     obj.userData.pe1.rotation.x = passo * .5; obj.userData.pe2.rotation.x = -passo * .5;
@@ -2664,6 +2774,7 @@ const Cena = (() => {
     parque: { n: 5, criancas: 2, raio: .33 }, praca: { n: 3, raio: .28 }, escola: { n: 4, criancas: 4, raio: .44 },
     mercado: { n: 2, raio: .47 }, terminal: { n: 3, parados: true }, banco: { n: 3, fila: true }, inss: { n: 3, fila: true },
     pontoAcessivel: { n: 3, parados: true }, shopping: { n: 5, raio: .46 }, teatro: { n: 4, fila: true }, museu: { n: 3, raio: .46 }, biblioteca: { n: 2, raio: .46 }, rodoviaria: { n: 4, parados: true }, templo: { n: 2, raio: .47 }, cultura: { n: 3, raio: .47 }, condominio: { n: 2, raio: .47 }, saude: { n: 2, fila: true },
+    creche: { n: 2, criancas: 3, raio: .42 }, defensoria: { n: 3, fila: true }, procon: { n: 3, fila: true }, cras: { n: 3, fila: true }, hospital: { n: 3, parados: true }, delegaciaMulher: { n: 2, fila: true },
     lagoa: { n: 3, criancas: 1, raio: .47 }, pontoOnibus: { n: 2, parados: true }, iluminacao: { n: 2, raio: .33 },
   };
   function criarFrequentadores(g, tipo, semente) {
@@ -2680,7 +2791,7 @@ const Cena = (() => {
     }
   }
   function moverFrequentadores(g, dt, t, luzes) {
-    const l = s.mapa[g.userData.tile], fechado = l && ['mercado', 'banco', 'inss', 'empresa', 'cartorio', 'escola', 'cultura'].includes(l.tipo) && (hora >= 22 || hora < 6);
+    const l = s.mapa[g.userData.tile], fechado = l && ['mercado', 'banco', 'inss', 'empresa', 'cartorio', 'escola', 'cultura', 'creche', 'procon', 'cras', 'defensoria'].includes(l.tipo) && (hora >= 22 || hora < 6);
     (g.userData.gente || []).forEach((e, k) => {
       e.obj.visible = !fechado && !(luzes > .6 && k % 2);
       if (e.modo === 'roda') {
@@ -2865,6 +2976,11 @@ const Cena = (() => {
     pontoTaxi: ['TÁXI', .16, .05, -.28, .15, -.2, '#F9A825', '#212121'], posto: ['CONVENIÊNCIA', .24, .045, -.3, .17, .25, '#C62828'],
     estacaoTrem: ['ESTAÇÃO', .3, .05, 0, .17, .43, '#00897B'], shopping: ['SHOPPING', .4, .07, 0, .36, .152, '#AD1457'],
     teatro: ['TEATRO MUNICIPAL', .48, .05, 0, .47, .274, '#4A148C'], museu: ['MUSEU', .3, .05, 0, .44, .262, '#5D4037'], biblioteca: ['BIBLIOTECA', .36, .06, 0, .3, .135, '#5D4037'], rodoviaria: ['RODOVIÁRIA', .46, .065, 0, .3, -.149, '#1565C0'], motofrete: ['MOTOFRETE', .4, .06, -.1, .2, -.038, '#E65100'], aeroporto: ['AEROPORTO', .3, .04, -.16, .175, -.188, '#283593'],
+    delegaciaMulher: ['DELEGACIA DA MULHER', .56, .05, 0, .45, .245, '#6A1B9A'], conselhoTutelar: ['CONSELHO TUTELAR', .44, .05, 0, .3, .155, '#E65100'],
+    creche: ['CRECHE', .3, .06, 0, .24, .015, '#F9A825', '#3E2723'], defensoria: ['DEFENSORIA PÚBLICA', .56, .05, 0, .5, .245, '#1B5E20'],
+    ministerioPublico: ['MINISTÉRIO PÚBLICO', .56, .05, 0, .63, .315, '#7F0000'], procon: ['PROCON', .3, .07, 0, .36, .155, '#0D47A1', '#FDD835'],
+    cras: ['CRAS', .22, .06, 0, .36, .145, '#BF360C'], hospital: ['HOSPITAL · UPA 24h', .5, .06, 0, .5, .165, '#C62828'],
+    direitoDigital: ['CRIMES CIBERNÉTICOS', .5, .05, 0, .3, .205, '#1A237E'],
   };
   const cacheLetreiro = {};
   function letreiro(g, tipo, n) {

@@ -9,6 +9,9 @@
 
 const ATUALIZACAO_CONTEUDO = 'outubro de 2026';
 const MUDANCAS_LEGAIS = [
+  { ano: 2025, titulo: 'ECA Digital', texto: 'A Lei 15.211/2025 criou regras para proteger crianças e adolescentes em aplicativos, redes sociais e jogos, como verificação de idade e ferramentas de supervisão dos pais.' },
+  { ano: 2024, titulo: 'Feminicídio virou crime autônomo', texto: 'A Lei 14.994/2024 transformou o feminicídio em crime próprio (Código Penal, art. 121-A), com pena de 20 a 40 anos, e endureceu a Lei Maria da Penha.' },
+  { ano: 2024, titulo: 'Bullying e cyberbullying são crimes', texto: 'A Lei 14.811/2024 incluiu no Código Penal o crime de intimidação sistemática (art. 146-A); pela internet, a pena é de 2 a 4 anos de reclusão.' },
   { ano: 2025, titulo: 'Reforma Tributária em transição', texto: 'A EC 132/2023 e a LC 214/2025 criam o IBS e a CBS. O ISS (municipal) e o ICMS (estadual) serão extintos aos poucos até 2033. Durante a transição o ISS continua valendo, por isso o jogo ainda o ensina.' },
   { ano: 2023, titulo: 'Nova Lei de Licitações em vigor sozinha', texto: 'Desde 30/12/2023 só vale a Lei 14.133/2021; a antiga Lei 8.666/1993 foi revogada.' },
   { ano: 2023, titulo: 'Lei Geral do Esporte', texto: 'A Lei 14.597/2023 passou a reunir as regras do esporte e dos direitos do torcedor, que antes estavam no Estatuto do Torcedor.' },

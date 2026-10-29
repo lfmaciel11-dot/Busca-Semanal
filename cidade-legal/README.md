@@ -109,6 +109,28 @@ A partir de 60 habitantes, a cidade precisa de **água, esgoto e energia** (cada
 
 Também há **enfeites** sem licença (🌳 árvore, 🌷 canteiro, ⛲ praça com calçadão de pedra portuguesa, 🏞️ lagoa com patos e 🚏 ponto de ônibus; e, na infraestrutura, 🛣️ rua e 🌉 ponte — prédios colados em rua rendem +20%) e um menu de construção por categorias.
 
+### Rede de proteção, justiça e cidadania digital
+
+Nove prédios novos, cada um com aula, prova de licença, casos de cidadãos e modelo 3D com letreiro:
+
+| Prédio | Categoria | O que ensina |
+|---|---|---|
+| 💜 Delegacia da Mulher | Serviços | Lei Maria da Penha: 5 formas de violência, medidas protetivas em 48 h, mesmo sem BO, Ligue 180 |
+| 🧒 Conselho Tutelar | Social | ECA, prioridade absoluta, trabalho infantil, Lei Menino Bernardo, dever de comunicar maus-tratos |
+| 🍼 Creche municipal | Social | Vaga em creche como direito exigível (STF, Tema 548), educação obrigatória dos 4 aos 17 |
+| 🛡️ Defensoria Pública | Governo | Assistência jurídica gratuita, gratuidade da justiça, ação civil pública |
+| 📜 Ministério Público | Governo | Ação penal pública, inquérito civil, independência funcional |
+| 🧾 Procon | Social | Vício do produto (30 dias), prazos de reclamação, cobrança em dobro, sanções do CDC |
+| 🤝 CRAS | Social | LOAS, BPC, Bolsa Família e CadÚnico |
+| 🚑 Hospital e UPA 24h | Serviços | Cheque-caução é crime, classificação de risco, prontuário, acompanhante, carência de 24 h |
+| 💻 Delegacia de Crimes Cibernéticos | Serviços | Cyberbullying, golpe do Pix e MED, invasão de dispositivo, foto íntima, LGPD e ECA Digital |
+
+Missões m22 a m24 pedem a rede completa. Os casos novos ficam no fim de `CASOS` para não mudar os índices salvos.
+
+### Eleição jogável
+
+A cada 4 anos, em agosto, começa a **campanha eleitoral**: um balão na Prefeitura abre 4 decisões sorteadas entre 11 dilemas (outdoor, compra de votos, uso da máquina pública, inauguração e showmício, Ficha Limpa, brindes, deepfake, impulsionamento, doação de empresa, pesquisa sem registro, distribuição de bens no ano eleitoral). Escolhas legais rendem votos; as irregulares geram multa, e compra de votos ou uso da máquina levam à cassação do diploma. Em outubro sai a apuração, que soma felicidade, reputação e campanha. Depois de uma reeleição, o jogador coordena a campanha de um(a) sucessor(a), porque a Constituição só permite um mandato seguido.
+
 ### Zona rural, indústria, transporte, porto e aeroporto
 
 | Construção | Área do Direito |
