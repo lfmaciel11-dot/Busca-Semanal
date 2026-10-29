@@ -696,3 +696,35 @@ html.sem-animacao .guia-holofote, html.sem-animacao .guia-balao { transition: no
 .lista-reportes small { color: var(--muted); }
 .botoes.esquerda { justify-content: flex-start; }
 .oculto-reporte { display: none !important; }
+
+/* trilhas, glossário e modo campanha */
+.rotulo-campo { margin: 10px 0 4px; font-weight: 700; font-size: 14px; }
+.trilhas { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 6px; }
+.trilha { display: flex; gap: 8px; align-items: flex-start; padding: 7px 9px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; font-size: 13px; }
+.trilha:has(input:checked) { border-color: var(--accent, #7B40E8); background: var(--panel2); }
+.trilha input { margin-top: 3px; }
+.trilha small { display: block; color: var(--muted); font-size: 12px; }
+.opcao.eliminada { opacity: .35; text-decoration: line-through; }
+.btn-dica { margin-top: 6px; }
+.termo { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: help; text-decoration: underline dotted; text-decoration-thickness: 2px; text-underline-offset: 3px; text-decoration-color: #7B40E8; }
+.termo:hover, .termo:focus-visible { background: rgba(123,64,232,.12); border-radius: 4px; }
+.pop-termo { position: fixed; z-index: 400; max-width: min(320px, calc(100vw - 16px)); padding: 10px 12px; border-radius: 14px; font-size: 14px; line-height: 1.45; background: var(--panel); color: var(--ink); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.pop-termo p { margin: 4px 0 8px; }
+.glossario { margin: 0 0 10px; padding: 8px 10px; background: var(--panel2); border-radius: 10px; font-size: 13px; }
+.glossario summary { cursor: pointer; }
+.glossario dl { margin: 8px 0 4px; max-height: 320px; overflow: auto; }
+.glossario dt { font-weight: 800; margin-top: 6px; }
+.glossario dd { margin: 0 0 0 10px; color: var(--muted); }
+.cartao-historia { padding: 10px 12px; margin-bottom: 10px; border-radius: 12px; background: linear-gradient(135deg, rgba(0,137,123,.14), rgba(123,64,232,.1)); border: 1px solid rgba(0,137,123,.35); font-size: 14px; }
+.cartao-historia p { margin: 4px 0 8px; color: var(--muted); }
+.objetivos { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
+.objetivos li { display: flex; gap: 8px; align-items: center; }
+.objetivos li.feito { color: var(--muted); text-decoration: line-through; }
+.historia-texto { font-style: italic; }
+.app .chip-historia { position: absolute; z-index: 15; left: max(var(--gap-hud), env(safe-area-inset-left, 0px)); bottom: calc(max(var(--gap-hud), env(safe-area-inset-bottom, 0px)) + 70px);
+  max-width: min(360px, calc(100% - var(--painel-l) - 80px)); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px; color: var(--ink); cursor: pointer; text-align: left; border: 1px solid rgba(0,137,123,.45); }
+.app.com-visao .chip-historia { display: none; }
+@media (max-width: 760px) {
+  .app .chip-historia { bottom: calc(var(--painel-h) + 74px); max-width: calc(100% - 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: bottom .35s; }
+  .app.painel-fechado .chip-historia { bottom: 114px; }
+}

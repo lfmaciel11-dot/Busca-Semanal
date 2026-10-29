@@ -385,6 +385,7 @@ function render() {
   animarNumero($('s-pop'), s.pop);
   animarNumero($('s-fel'), s.felicidade, '%');
   $('rosto').textContent = rostoFelicidade(s.felicidade);
+  if (typeof renderChipHistoria === 'function') renderChipHistoria();
   animarNumero($('s-xp'), s.xp);
   const seq = $('s-seq');
   seq.classList.toggle('oculto', s.sequencia < 2);
@@ -562,7 +563,7 @@ function abrirBairro(b) {
 
 function renderMissoes() {
   const feitas = MISSOES.filter(m => s.missoesFeitas[m.id]).length;
-  let h = htmlIndicadores() + htmlDesafios() + `<h3>🎯 Missões</h3><div class="progresso-missoes"><div style="width:${feitas / MISSOES.length * 100}%"></div><span>${feitas}/${MISSOES.length} missões</span></div><ul class="lista-missoes">`;
+  let h = (typeof htmlHistoria === 'function' ? htmlHistoria() : '') + htmlIndicadores() + htmlDesafios() + `<h3>🎯 Missões</h3><div class="progresso-missoes"><div style="width:${feitas / MISSOES.length * 100}%"></div><span>${feitas}/${MISSOES.length} missões</span></div><ul class="lista-missoes">`;
   let proxima = true;
   MISSOES.forEach(m => {
     const feita = s.missoesFeitas[m.id];
@@ -583,7 +584,7 @@ function renderMissoes() {
 function renderVade() {
   const comAula = Object.keys(PREDIOS).filter(k => PREDIOS[k].aula);
   const n = comAula.filter(k => s.licencas[k]).length, total = comAula.length;
-  let h = (typeof htmlMudancasLegais === 'function' ? htmlMudancasLegais() : '') + `<p class="intro-vade">Sua coleção de leis: <b>${n}/${total}</b> áreas liberadas. Tudo o que você aprendeu fica aqui para consulta.</p><div class="colecao">`;
+  let h = (typeof htmlMudancasLegais === 'function' ? htmlMudancasLegais() : '') + (typeof htmlGlossario === 'function' ? htmlGlossario() : '') + `<p class="intro-vade">Sua coleção de leis: <b>${n}/${total}</b> áreas liberadas. Tudo o que você aprendeu fica aqui para consulta.</p><div class="colecao">`;
   for (const k in PREDIOS) {
     const p = PREDIOS[k];
     if (!p.aula) continue;
@@ -640,15 +641,16 @@ function abrirAula(tipo, comProva) {
   });
 }
 
-function htmlOpcoes(ordem, chave) {
+function htmlOpcoes(ordem, chave, certa) { // com a resposta certa, a trilha Fundamental ganha o botão de dica
   const letras = 'ABCD';
-  return `<div class="opcoes">${ordem.map((o, n) => `<button class="opcao" data-${chave}="${o.i}"><span class="letra">${letras[n]}</span><span>${esc(o.t)}</span></button>`).join('')}</div>`;
+  return `<div class="opcoes">${ordem.map((o, n) => `<button class="opcao" data-${chave}="${o.i}"><span class="letra">${letras[n]}</span><span>${esc(o.t)}</span></button>`).join('')}</div>${typeof htmlDica === 'function' ? htmlDica(certa, chave) : ''}`;
 }
 
 function iniciarProva(tipo) {
   const p = PREDIOS[tipo];
-  const perguntas = embaralhar(p.licenca).slice(0, 3);
-  const minimo = Math.min(2, perguntas.length);
+  const cfg = typeof configProva === 'function' ? configProva(p) : { n: 3, minimo: 2, bonus: 20 }; // trilha de estudo escolhida
+  const perguntas = embaralhar(p.licenca).slice(0, cfg.n);
+  const minimo = Math.min(cfg.minimo, perguntas.length);
   let idx = 0, acertos = 0;
 
   const mostrar = () => {
@@ -657,7 +659,7 @@ function iniciarProva(tipo) {
     abrirModal(`<div class="cab-modal" style="--cor:${p.cor}"><span class="icone-grande">📝</span>
         <div><small>Licença · ${p.area}</small><h2>${q.p}</h2></div></div>
       <div class="passos">${perguntas.map((_, k) => `<i class="${k < idx ? 'feito' : k === idx ? 'agora' : ''}"></i>`).join('')}</div>
-      ${htmlOpcoes(ordem, 'i')}
+      ${htmlOpcoes(ordem, 'i', q.c)}
       <div id="feedback"></div>`, cx => {
       cx.querySelectorAll('.opcao').forEach(b => b.onclick = () => {
         const certo = +b.dataset.i === q.c;
@@ -683,7 +685,7 @@ function iniciarProva(tipo) {
     const passou = acertos >= minimo;
     if (passou) {
       s.licencas[tipo] = true;
-      ganharXp(20);
+      ganharXp(cfg.bonus);
       registrar(`📜 Licença concedida: <b>${p.area}</b> (${acertos}/${perguntas.length} acertos).`);
       confete(); som('nivel');
     } else som('erro');
@@ -933,6 +935,7 @@ function sortearClimaEEventos(mesIdx) {
   if (mesIdx === 1) ev.push('carnaval');
   if (mesIdx === 5) ev.push('junina');
   if (mesIdx === 9 && anoDe(s.mes) % 4 === 0) ev.push('eleicao');
+  if (s.historia && s.historia.evento) { ev.push(s.historia.evento); if (s.historia.evento === 'temporal') s.chuva = true; delete s.historia.evento; } // acontecimento do capítulo
   if (s.chuva && Math.random() < .4) ev.push('temporal');
   if (Math.random() < .08) ev.push('auditoria');
   ev.forEach(id => {
@@ -1095,7 +1098,7 @@ function abrirCaso(pend) {
     <div class="cena"><span class="avatar">${c.quem.split(' ')[0]}</span>
       <blockquote class="fala"><b>${c.quem.split(' ').slice(1).join(' ')}</b>${c.texto}</blockquote></div>
     <p class="pergunta">O que você responde? <small>${restam > 0 ? `⏳ espera mais ${restam} mês(es)` : '⏳ último mês de espera!'}${s.sequencia >= 2 ? ` · 🔥 sequência de ${s.sequencia}` : ''}</small></p>
-    ${htmlOpcoes(ordem, 'k')}
+    ${htmlOpcoes(ordem, 'k', c.c)}
     <div id="feedback"></div>
     <div class="botoes" id="m-depois-box"><button class="btn" id="m-depois">Atender depois</button></div>`, cx => {
     cx.querySelector('#m-depois').onclick = fecharModal;
@@ -1377,6 +1380,7 @@ function abrirProfessor() {
       <div><small>Respostas</small><b>${total}</b></div>
       <div><small>Áreas estudadas</small><b>${ls.length}</b></div>
       <div><small>Título</small><b class="pequeno">${NIVEIS[nivelAtual()].titulo}</b></div>
+      ${typeof TRILHAS === 'object' ? `<div><small>Trilha</small><b class="pequeno">${TRILHAS[trilhaAtual()].icone} ${TRILHAS[trilhaAtual()].nome}</b></div>` : ''}
     </div>
     ${ls.length ? `<div class="tabela-rolagem"><table class="tabela-desempenho"><thead><tr><th>Área</th><th>Provas</th><th>Casos</th><th>Aproveitamento</th></tr></thead><tbody>
       ${ls.map(l => `<tr><td>${esc(l.area)}</td><td>${l.provaOk}/${l.prova}</td><td>${l.casoOk}/${l.caso}</td>
@@ -1481,12 +1485,17 @@ function boasVindas() {
       <li><span>🎓</span><div>Ganhe <b>conhecimento</b> e suba de título — de Estudante a <b>Ministro(a) do STF</b>.</div></li>
     </ol>
     <label class="campo">Nome da sua cidade<input id="m-nome" maxlength="30" value="Cidade Legal"></label>
+    ${typeof htmlEscolhaTrilha === 'function' ? `<p class="rotulo-campo">Sua trilha de estudo</p>${htmlEscolhaTrilha('medio')}
+      <label class="opcao-acess"><input type="checkbox" id="m-historia" checked><span><b>📖 Jogar o modo campanha</b><small>A história da cidade em capítulos, com objetivos e recompensas. Dá para sair quando quiser.</small></span></label>` : ''}
     <div class="botoes"><button class="btn primario grande" id="m-comecar">Começar mandato ▶</button></div>`, cx => {
     cx.querySelector('#m-comecar').onclick = () => {
       s.nome = cx.querySelector('#m-nome').value.trim() || 'Cidade Legal';
+      const tr = cx.querySelector('input[name="trilha"]:checked'); if (tr) s.trilha = tr.value;
+      const hist = cx.querySelector('#m-historia'); if (hist && hist.checked) s.historia = { cap: 0, feitos: [], ativo: true };
       registrar(`🏛️ Fundação de <b>${esc(s.nome)}</b>. A Prefeitura abre as portas — clique nela para a primeira aula.`);
       fecharModal(); confete(60); som('nivel'); render();
       if (typeof iniciarGuia === 'function' && !guiaJaVisto()) setTimeout(iniciarGuia, 900); // primeiro acesso: tour guiado
+      else if (s.historia && s.historia.ativo) setTimeout(() => abrirCapitulo(true), 900);
     };
   });
 }

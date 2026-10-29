@@ -147,7 +147,7 @@ function abrirAudiencia(pend) {
       <div><small>Audiência no Fórum · ${a.area}</small><h2>${a.titulo}</h2></div></div>
     <div class="audiencia">${parte(a.autor, 'autor')}${parte(a.reu, 'reu')}</div>
     <p class="pergunta">Você é o(a) juiz(a). Qual é a decisão?</p>
-    ${htmlOpcoes(ordem, 'k')}<div id="feedback"></div>
+    ${htmlOpcoes(ordem, 'k', a.c)}<div id="feedback"></div>
     <div class="botoes" id="m-depois-box"><button class="btn" id="m-depois">Decidir depois</button></div>`, cx => {
     cx.querySelector('#m-depois').onclick = fecharModal;
     cx.querySelectorAll('.opcao').forEach(b => b.onclick = () => {
@@ -284,7 +284,7 @@ function aoPassarMes() {
   if (s.mes % 6 === 0) setTimeout(() => { if ($('modal').classList.contains('oculto')) abrirOrcamentoParticipativo(); }, 1500);
   else if ((s.revisar || []).some(x => x.quando <= s.mes)) setTimeout(() => { if ($('modal').classList.contains('oculto')) abrirRevisao(); }, 1600);
 }
-function verificarExtras() { verificarDesafio(false); verificarMedalhas(); }
+function verificarExtras() { verificarDesafio(false); verificarMedalhas(); if (typeof verificarHistoria === 'function') verificarHistoria(); }
 
 /* ── Turma: código de entrega, painel da turma e competição ───────────────── */
 function codigoEntrega() {
@@ -375,7 +375,8 @@ function abrirAcessibilidade() {
     ${op('contraste', 'Alto contraste', 'Cores fortes, bordas marcadas e fundo sólido.')}
     ${op('calmo', 'Menos animação', 'Desliga confetes e movimentos da interface.')}
     <p class="nota">🔊 Nas aulas e nos casos, o botão "Ouvir" lê o texto em voz alta. Tecle <b>?</b> a qualquer momento para ver os atalhos de teclado.</p>
-    <div class="botoes"><button class="btn" id="m-atalhos">⌨️ Atalhos</button><button class="btn primario" id="m-fechar">Pronto</button></div>`, cx => {
+    <div class="botoes"><button class="btn" id="m-trilha">🧭 Trilha de estudo</button><button class="btn" id="m-atalhos">⌨️ Atalhos</button><button class="btn primario" id="m-fechar">Pronto</button></div>`, cx => {
+    cx.querySelector('#m-trilha').onclick = abrirTrilhas;
     cx.querySelectorAll('[data-pref]').forEach(c => c.onchange = () => {
       const np = prefsAcess(); np[c.dataset.pref] = c.checked;
       try { localStorage.setItem(PREF_ACESS, JSON.stringify(np)); } catch (e) { /* sem storage */ }
@@ -684,7 +685,7 @@ function abrirCampanha(pend) {
     abrirModal(`<div class="cab-modal" style="--cor:#00897B"><span class="icone-grande">🗳️</span>
         <div><small>Campanha eleitoral · decisão ${idx + 1} de ${lista.length}</small><h2>${d.titulo}</h2></div></div>
       <blockquote class="fala"><b>${d.quem}</b>${d.texto}</blockquote>
-      <p class="pergunta">O que você responde?</p>${htmlOpcoes(ordem, 'k')}<div id="feedback"></div>`, cx => {
+      <p class="pergunta">O que você responde?</p>${htmlOpcoes(ordem, 'k', d.c)}<div id="feedback"></div>`, cx => {
       cx.querySelectorAll('.opcao').forEach(b => b.onclick = () => {
         const certo = +b.dataset.k === d.c;
         registrarDesempenho('Direito Eleitoral', 'caso', certo);
@@ -724,6 +725,7 @@ function abrirCampanha(pend) {
 function apurarEleicao() {
   const c = s.campanha || { pontos: 0, irregular: [] };
   const sucessor = (s.reeleicoes || 0) >= 1, quem = sucessor ? 'seu(sua) sucessor(a)' : 'você';
+  if (s.historia && c.feito && !c.irregular.length) s.historia.campanhaLimpa = true;
   const votos = Math.max(18, Math.min(82, Math.round(s.felicidade * .8 + 8 + (c.feito ? c.pontos : -4) + (s.reputacao || 0) * .2)));
   let efeito;
   if (c.cassacao) {
