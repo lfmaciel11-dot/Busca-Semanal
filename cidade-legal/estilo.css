@@ -682,3 +682,17 @@ details.avancado > summary { font-weight: 500; color: var(--muted); }
 .guia-passos i.feito { background: #B39DFF; }
 .guia-passos i.agora { background: #8245FC; }
 html.sem-animacao .guia-holofote, html.sem-animacao .guia-balao { transition: none; }
+
+/* confiabilidade do conteúdo */
+.rodape-conteudo { margin: 10px 0 0; padding-top: 6px; border-top: 1px dashed var(--borda, rgba(127,127,127,.35)); font-size: 12px; color: var(--muted); }
+.rodape-conteudo .link { background: none; border: 0; padding: 0; font: inherit; color: #E65100; cursor: pointer; text-decoration: underline; }
+.mudancas-legais { margin: 0 0 10px; padding: 8px 10px; background: var(--panel2); border-radius: 10px; font-size: 13px; }
+.mudancas-legais summary { cursor: pointer; }
+.mudancas-legais ul { margin: 8px 0 4px; padding-left: 18px; display: grid; gap: 6px; }
+.opcoes-reporte { display: grid; gap: 6px; margin: 8px 0; font-size: 14px; }
+.opcoes-reporte label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.lista-reportes { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; max-height: 180px; overflow: auto; }
+.lista-reportes li { display: flex; flex-direction: column; padding: 6px 10px; background: var(--panel2); border-radius: 10px; font-size: 13px; }
+.lista-reportes small { color: var(--muted); }
+.botoes.esquerda { justify-content: flex-start; }
+.oculto-reporte { display: none !important; }

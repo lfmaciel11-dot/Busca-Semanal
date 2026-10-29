@@ -582,7 +582,7 @@ function renderMissoes() {
 function renderVade() {
   const comAula = Object.keys(PREDIOS).filter(k => PREDIOS[k].aula);
   const n = comAula.filter(k => s.licencas[k]).length, total = comAula.length;
-  let h = `<p class="intro-vade">Sua coleção de leis: <b>${n}/${total}</b> áreas liberadas. Tudo o que você aprendeu fica aqui para consulta.</p><div class="colecao">`;
+  let h = (typeof htmlMudancasLegais === 'function' ? htmlMudancasLegais() : '') + `<p class="intro-vade">Sua coleção de leis: <b>${n}/${total}</b> áreas liberadas. Tudo o que você aprendeu fica aqui para consulta.</p><div class="colecao">`;
   for (const k in PREDIOS) {
     const p = PREDIOS[k];
     if (!p.aula) continue;
@@ -1385,6 +1385,7 @@ function abrirProfessor() {
     </tbody></table></div>` : '<p class="nota">Ainda não há respostas. As provas de licença, os casos dos cidadãos e os projetos de lei entram aqui automaticamente.</p>'}
     ${htmlMedalhas()}
     ${atencao.length ? `<p class="pratica"><b>📌 Para revisar:</b> ${atencao.map(l => esc(l.area)).join(', ')}.</p>` : ''}
+    ${typeof htmlReportesProfessor === 'function' ? htmlReportesProfessor() : ''}
     <div class="botoes">
       <button class="btn" id="m-entrega">📤 Código de entrega</button>
       <button class="btn" id="m-turma-painel">👩‍🏫 Painel da turma</button>

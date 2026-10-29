@@ -35,6 +35,13 @@ Na primeira cidade, depois de "Começar mandato", um **tour guiado** (`guia.js`)
 - **💾 Minhas cidades**: várias cidades guardadas; continuar qualquer uma, começar uma nova (a atual fica guardada) ou excluir.
 - **📲 Levar para outro aparelho sem arquivo**: código curto e comprimido (começa com `CL2.`), botão Compartilhar (WhatsApp, e-mail) e, quando o jogo roda num site, link que já abre a cidade. Códigos antigos continuam valendo. O arquivo `.json` ficou em "Opções avançadas".
 
+## Confiabilidade do conteúdo
+
+- **Conteúdo atualizado em**: toda aula e toda explicação de resposta (provas, casos, projetos de lei, audiências e ocorrências) termina com a data da última revisão do conteúdo (`ATUALIZACAO_CONTEUDO` em `revisao.js`).
+- **Mudanças recentes nas leis**: no alto da aba 📖 Leis, a lista `MUDANCAS_LEGAIS` explica o que mudou (Reforma Tributária, Lei 14.133, Lei Geral do Esporte, injúria racial, agrotóxicos, Estatuto da Pessoa Idosa).
+- **⚠️ Reportar erro**: abre um formulário por cima da janela, sem perder a pergunta. O aviso fica no aparelho e aparece no 🎓 Modo professor → *Erros reportados*, com botão para copiar. Na página publicada no Claude, também vai para a caixa `reportes/<pessoa>` do banco da página, que só o dono lê (quem joga precisa de acesso de *Colaborador* para gravar).
+- **Planilha de revisão jurídica**: `revisao/revisao-juridica.xlsx` lista os 803 textos jurídicos do jogo (aulas, provas, casos, projetos, audiências, ocorrências, bairros), com base legal, prioridade, alerta de lei possivelmente desatualizada e colunas para o revisor marcar status, correção, nome e data. A aba *Resumo* conta o andamento.
+
 ## Cidade viva (desafios, Fórum, licitação, turma e acessibilidade)
 
 Tudo em `cidade-viva.js`:
