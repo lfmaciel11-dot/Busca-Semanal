@@ -94,12 +94,17 @@ const GLOSSARIO = {
   'Lei de Responsabilidade Fiscal': 'LC 101/2000: obriga os governantes a planejar e equilibrar receitas e despesas.',
 };
 const TERMOS_GLOSSARIO = Object.keys(GLOSSARIO).sort((a, b) => b.length - a.length);
-const reGlossario = new RegExp(`(?<![\\p{L}\\d])(${TERMOS_GLOSSARIO.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})(?![\\p{L}\\d])`, 'iu');
+// sem lookbehind, que navegadores antigos (Safari antes do iOS 16.4) não entendem: o grupo 1 pega a letra anterior
+let reGlossario = null;
+try {
+  reGlossario = new RegExp(`(^|[^\\p{L}\\d])(${TERMOS_GLOSSARIO.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})(?![\\p{L}\\d])`, 'iu');
+} catch (e) { reGlossario = null; } // sem suporte: o jogo segue sem os termos sublinhados
 const termoCanonico = achado => TERMOS_GLOSSARIO.find(t => t.toLowerCase() === achado.toLowerCase());
 const BLOCOS_GLOSSARIO = '.aula-texto, .explicacao, .fala, .cartao-lei';
 
 // marca, em cada bloco, a primeira vez que cada termo aparece
 function marcarGlossario(raiz) {
+  if (!reGlossario || !raiz) return;
   raiz.querySelectorAll(BLOCOS_GLOSSARIO).forEach(bloco => {
     if (bloco.dataset.glossario) return;
     bloco.dataset.glossario = '1';
@@ -111,15 +116,15 @@ function marcarGlossario(raiz) {
       const frag = document.createDocumentFragment();
       let mudou = false;
       while ((m = reGlossario.exec(texto))) {
-        const termo = termoCanonico(m[1]);
-        if (vistos.has(termo)) { frag.append(texto.slice(0, m.index + m[1].length)); texto = texto.slice(m.index + m[1].length); continue; }
+        const inicio = m.index + m[1].length, fim = inicio + m[2].length, termo = termoCanonico(m[2]);
+        if (vistos.has(termo)) { frag.append(texto.slice(0, fim)); texto = texto.slice(fim); continue; }
         vistos.add(termo); mudou = true;
-        frag.append(texto.slice(0, m.index));
+        frag.append(texto.slice(0, inicio));
         const b = document.createElement('button');
-        b.type = 'button'; b.className = 'termo'; b.dataset.termo = termo; b.textContent = m[1];
-        b.setAttribute('aria-label', `${m[1]}: ver no glossário`);
+        b.type = 'button'; b.className = 'termo'; b.dataset.termo = termo; b.textContent = m[2];
+        b.setAttribute('aria-label', `${m[2]}: ver no glossário`);
         frag.append(b);
-        texto = texto.slice(m.index + m[1].length);
+        texto = texto.slice(fim);
       }
       if (!mudou) return;
       frag.append(texto);

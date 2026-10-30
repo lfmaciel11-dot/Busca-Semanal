@@ -385,7 +385,7 @@ function render() {
   animarNumero($('s-pop'), s.pop);
   animarNumero($('s-fel'), s.felicidade, '%');
   $('rosto').textContent = rostoFelicidade(s.felicidade);
-  if (typeof renderChipHistoria === 'function') renderChipHistoria();
+  try { if (typeof renderChipHistoria === 'function') renderChipHistoria(); } catch (e) { console.warn('selo do capítulo', e); }
   animarNumero($('s-xp'), s.xp);
   const seq = $('s-seq');
   seq.classList.toggle('oculto', s.sequencia < 2);
@@ -563,7 +563,7 @@ function abrirBairro(b) {
 
 function renderMissoes() {
   const feitas = MISSOES.filter(m => s.missoesFeitas[m.id]).length;
-  let h = (typeof htmlHistoria === 'function' ? htmlHistoria() : '') + htmlIndicadores() + htmlDesafios() + `<h3>🎯 Missões</h3><div class="progresso-missoes"><div style="width:${feitas / MISSOES.length * 100}%"></div><span>${feitas}/${MISSOES.length} missões</span></div><ul class="lista-missoes">`;
+  let h = extraSeguro(window.htmlHistoria) + htmlIndicadores() + htmlDesafios() + `<h3>🎯 Missões</h3><div class="progresso-missoes"><div style="width:${feitas / MISSOES.length * 100}%"></div><span>${feitas}/${MISSOES.length} missões</span></div><ul class="lista-missoes">`;
   let proxima = true;
   MISSOES.forEach(m => {
     const feita = s.missoesFeitas[m.id];
@@ -584,7 +584,7 @@ function renderMissoes() {
 function renderVade() {
   const comAula = Object.keys(PREDIOS).filter(k => PREDIOS[k].aula);
   const n = comAula.filter(k => s.licencas[k]).length, total = comAula.length;
-  let h = (typeof htmlMudancasLegais === 'function' ? htmlMudancasLegais() : '') + (typeof htmlGlossario === 'function' ? htmlGlossario() : '') + `<p class="intro-vade">Sua coleção de leis: <b>${n}/${total}</b> áreas liberadas. Tudo o que você aprendeu fica aqui para consulta.</p><div class="colecao">`;
+  let h = extraSeguro(window.htmlMudancasLegais) + extraSeguro(window.htmlGlossario) + `<p class="intro-vade">Sua coleção de leis: <b>${n}/${total}</b> áreas liberadas. Tudo o que você aprendeu fica aqui para consulta.</p><div class="colecao">`;
   for (const k in PREDIOS) {
     const p = PREDIOS[k];
     if (!p.aula) continue;
@@ -641,9 +641,11 @@ function abrirAula(tipo, comProva) {
   });
 }
 
+// partes opcionais da tela (glossário, campanha, revisão): se uma falhar, o resto do jogo continua
+function extraSeguro(fn, ...a) { try { return typeof fn === 'function' ? fn(...a) : ''; } catch (e) { console.warn(e); return ''; } }
 function htmlOpcoes(ordem, chave, certa) { // com a resposta certa, a trilha Fundamental ganha o botão de dica
   const letras = 'ABCD';
-  return `<div class="opcoes">${ordem.map((o, n) => `<button class="opcao" data-${chave}="${o.i}"><span class="letra">${letras[n]}</span><span>${esc(o.t)}</span></button>`).join('')}</div>${typeof htmlDica === 'function' ? htmlDica(certa, chave) : ''}`;
+  return `<div class="opcoes">${ordem.map((o, n) => `<button class="opcao" data-${chave}="${o.i}"><span class="letra">${letras[n]}</span><span>${esc(o.t)}</span></button>`).join('')}</div>${typeof htmlDica === 'function' ? extraSeguro(htmlDica, certa, chave) : ''}`;
 }
 
 function iniciarProva(tipo) {
@@ -700,7 +702,12 @@ function iniciarProva(tipo) {
       <div class="botoes">
         ${passou ? `<button class="btn primario" id="m-ok">🏗️ Construir agora</button>` : `<button class="btn" id="m-aula">Rever a aula</button><button class="btn primario" id="m-denovo">Tentar de novo</button>`}
       </div>`, cx => {
-      if (passou) cx.querySelector('#m-ok').onclick = () => { fecharModal(); if (s.dinheiro >= p.custo) s.selecionado = tipo; render(); };
+      if (passou) cx.querySelector('#m-ok').onclick = () => {
+        fecharModal();
+        if (s.dinheiro >= p.custo) s.selecionado = tipo;
+        else toast(`💸 ${p.icone} ${p.nome} custa 💰 ${p.custo} e o caixa tem 💰 ${fmt(s.dinheiro)}. A licença fica guardada: avance o mês para juntar dinheiro.`, true);
+        render();
+      };
       else {
         cx.querySelector('#m-aula').onclick = () => abrirAula(tipo, true);
         cx.querySelector('#m-denovo').onclick = () => iniciarProva(tipo);

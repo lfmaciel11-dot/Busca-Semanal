@@ -3663,9 +3663,10 @@ const Cena = (() => {
       atualizar(); return mostrarPlacas;
     },
     placas: () => mostrarPlacas,
-    posTela(i) {
+    loteNoPonto: (x, y) => loteNoPonto(x, y),
+    posTela(i, noChao) {
       const b = cv.getBoundingClientRect(), g = predios[i];
-      const p = new THREE.Vector3(posX(i % LARGURA), g ? (g.userData.altura || 1) : .3, posZ(Math.floor(i / LARGURA))).project(camera);
+      const p = new THREE.Vector3(posX(i % LARGURA), noChao ? 0 : g ? (g.userData.altura || 1) : .3, posZ(Math.floor(i / LARGURA))).project(camera);
       return { x: b.left + (p.x + 1) / 2 * b.width, y: b.top + (1 - p.y) / 2 * b.height };
     },
   };
